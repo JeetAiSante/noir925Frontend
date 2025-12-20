@@ -23,9 +23,16 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
   const [show360, setShow360] = useState(false);
   const { addToCart, addToWishlist, isInWishlist } = useCart();
 
+  // Handle products that only have single image vs images array
+  const productImages = product?.images && product.images.length > 0 
+    ? product.images 
+    : product?.image 
+      ? [product.image] 
+      : [];
+
   if (!product) return null;
 
-  const sizes = ['XS', 'S', 'M', 'L', 'XL'];
+  const sizes = product.sizes || ['XS', 'S', 'M', 'L', 'XL'];
   const discount = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -36,7 +43,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice,
-      image: product.images[0],
+      image: productImages[0] || product.image,
       size: selectedSize,
     }, quantity);
     onOpenChange(false);
@@ -48,17 +55,21 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice,
-      image: product.images[0],
+      image: productImages[0] || product.image,
       category: product.category,
     });
   };
 
   const nextImage = () => {
-    setSelectedImage((prev) => (prev + 1) % product.images.length);
+    if (productImages.length > 1) {
+      setSelectedImage((prev) => (prev + 1) % productImages.length);
+    }
   };
 
   const prevImage = () => {
-    setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
+    if (productImages.length > 1) {
+      setSelectedImage((prev) => (prev - 1 + productImages.length) % productImages.length);
+    }
   };
 
   return (
@@ -77,16 +88,16 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
 
           <div className="grid md:grid-cols-2 gap-0">
             {/* Image Section */}
-            <div className="relative bg-champagne/20 aspect-square">
+            <div className="relative bg-muted/20 aspect-square">
               <img 
-                src={product.images[selectedImage]} 
+                src={productImages[selectedImage] || product.image} 
                 alt={product.name}
                 className="w-full h-full object-cover cursor-zoom-in"
                 onClick={() => setShowZoom(true)}
               />
               
               {/* Image Navigation */}
-              {product.images.length > 1 && (
+              {productImages.length > 1 && (
                 <>
                   <Button
                     variant="ghost"
@@ -138,19 +149,21 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
               </div>
 
               {/* Thumbnails */}
-              <div className="absolute bottom-4 right-4 flex gap-2">
-                {product.images.slice(0, 4).map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImage(idx)}
-                    className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${
-                      selectedImage === idx ? 'border-primary' : 'border-transparent'
-                    }`}
-                  >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
+              {productImages.length > 1 && (
+                <div className="absolute bottom-4 right-4 flex gap-2">
+                  {productImages.slice(0, 4).map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImage(idx)}
+                      className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-all ${
+                        selectedImage === idx ? 'border-primary' : 'border-transparent'
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Content Section */}
@@ -273,14 +286,14 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
       </Dialog>
 
       <ProductImageZoom
-        images={product.images}
+        images={productImages}
         currentIndex={selectedImage}
         open={showZoom}
         onOpenChange={setShowZoom}
       />
 
       <Product360View
-        images={product.images}
+        images={productImages}
         open={show360}
         onOpenChange={setShow360}
       />
