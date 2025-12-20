@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 interface CursorPosition {
   x: number;
@@ -13,8 +13,7 @@ interface CursorState {
 }
 
 const LuxuryCursor = () => {
-  const [position, setPosition] = useState<CursorPosition>({ x: 0, y: 0 });
-  const [trailPosition, setTrailPosition] = useState<CursorPosition>({ x: 0, y: 0 });
+  const [position, setPosition] = useState<CursorPosition>({ x: -100, y: -100 });
   const [cursorState, setCursorState] = useState<CursorState>({
     isHoveringProduct: false,
     isHoveringButton: false,
@@ -22,12 +21,32 @@ const LuxuryCursor = () => {
     isClicking: false,
   });
   const [isVisible, setIsVisible] = useState(false);
-  const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
+  const [isTouchDevice, setIsTouchDevice] = useState(true); // Default to true to hide on load
+  const trailRef = useRef<CursorPosition>({ x: -100, y: -100 });
+  const rafRef = useRef<number>();
 
-  const updateCursorState = useCallback((e: MouseEvent) => {
-    const target = e.target as HTMLElement;
+  // Detect touch/mobile devices including Android
+  useEffect(() => {
+    const checkTouchDevice = () => {
+      const hasTouchScreen = 'ontouchstart' in window || 
+        navigator.maxTouchPoints > 0 ||
+        // @ts-ignore
+        navigator.msMaxTouchPoints > 0;
+      
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      
+      setIsTouchDevice(hasTouchScreen || isMobileUA || isCoarsePointer);
+    };
+
+    checkTouchDevice();
+    window.addEventListener('resize', checkTouchDevice);
+    return () => window.removeEventListener('resize', checkTouchDevice);
+  }, []);
+
+  const updateCursorState = useCallback((target: HTMLElement) => {
     const isProduct = target.closest('[data-cursor="product"]') !== null;
-    const isButton = target.closest('button, a, [data-cursor="button"]') !== null;
+    const isButton = target.closest('button, a, [data-cursor="button"], [role="button"]') !== null;
     const isCard = target.closest('[data-cursor="card"]') !== null;
 
     setCursorState(prev => ({
@@ -39,37 +58,28 @@ const LuxuryCursor = () => {
   }, []);
 
   useEffect(() => {
+    if (isTouchDevice) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
-      updateCursorState(e);
+      updateCursorState(e.target as HTMLElement);
       setIsVisible(true);
     };
 
     const handleMouseDown = () => {
       setCursorState(prev => ({ ...prev, isClicking: true }));
-      // Add sparkle on click
-      const newSparkle = { id: Date.now(), x: position.x, y: position.y };
-      setSparkles(prev => [...prev, newSparkle]);
-      setTimeout(() => {
-        setSparkles(prev => prev.filter(s => s.id !== newSparkle.id));
-      }, 600);
     };
 
     const handleMouseUp = () => {
       setCursorState(prev => ({ ...prev, isClicking: false }));
     };
 
-    const handleMouseLeave = () => {
-      setIsVisible(false);
-    };
+    const handleMouseLeave = () => setIsVisible(false);
+    const handleMouseEnter = () => setIsVisible(true);
 
-    const handleMouseEnter = () => {
-      setIsVisible(true);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mousedown', handleMouseDown, { passive: true });
+    window.addEventListener('mouseup', handleMouseUp, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
 
@@ -80,124 +90,113 @@ const LuxuryCursor = () => {
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
     };
-  }, [position.x, position.y, updateCursorState]);
+  }, [isTouchDevice, updateCursorState]);
 
-  // Smooth trail effect
+  // Optimized RAF-based trail animation
   useEffect(() => {
-    const animateTrail = () => {
-      setTrailPosition(prev => ({
-        x: prev.x + (position.x - prev.x) * 0.15,
-        y: prev.y + (position.y - prev.y) * 0.15,
-      }));
+    if (isTouchDevice) return;
+
+    const animate = () => {
+      trailRef.current = {
+        x: trailRef.current.x + (position.x - trailRef.current.x) * 0.25,
+        y: trailRef.current.y + (position.y - trailRef.current.y) * 0.25,
+      };
+      rafRef.current = requestAnimationFrame(animate);
     };
 
-    const interval = setInterval(animateTrail, 16);
-    return () => clearInterval(interval);
-  }, [position]);
+    rafRef.current = requestAnimationFrame(animate);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [position, isTouchDevice]);
 
-  // Hide on touch devices
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
-  useEffect(() => {
-    setIsTouchDevice('ontouchstart' in window);
-  }, []);
-
+  // Don't render on touch devices
   if (isTouchDevice) return null;
 
   const getCursorSize = () => {
-    if (cursorState.isHoveringProduct) return 'w-16 h-16';
-    if (cursorState.isHoveringButton) return 'w-12 h-12';
-    if (cursorState.isHoveringCard) return 'w-10 h-10';
-    if (cursorState.isClicking) return 'w-6 h-6';
-    return 'w-8 h-8';
+    if (cursorState.isClicking) return 20;
+    if (cursorState.isHoveringProduct) return 48;
+    if (cursorState.isHoveringButton) return 36;
+    if (cursorState.isHoveringCard) return 32;
+    return 24;
   };
 
-  const getCursorStyle = () => {
-    if (cursorState.isHoveringProduct) {
-      return 'bg-secondary/20 border-secondary shadow-glow-rose';
-    }
-    if (cursorState.isHoveringButton) {
-      return 'bg-accent/20 border-accent shadow-glow-gold';
-    }
-    if (cursorState.isHoveringCard) {
-      return 'bg-silver/20 border-silver';
-    }
-    return 'bg-primary/10 border-primary/40';
+  const getCursorColor = () => {
+    if (cursorState.isHoveringProduct) return 'rgba(244, 114, 182, 0.3)';
+    if (cursorState.isHoveringButton) return 'rgba(212, 175, 55, 0.3)';
+    if (cursorState.isHoveringCard) return 'rgba(192, 192, 192, 0.3)';
+    return 'rgba(30, 30, 30, 0.15)';
   };
+
+  const getBorderColor = () => {
+    if (cursorState.isHoveringProduct) return 'rgba(244, 114, 182, 0.8)';
+    if (cursorState.isHoveringButton) return 'rgba(212, 175, 55, 0.8)';
+    if (cursorState.isHoveringCard) return 'rgba(192, 192, 192, 0.6)';
+    return 'rgba(30, 30, 30, 0.4)';
+  };
+
+  const size = getCursorSize();
 
   return (
     <>
-      {/* Add global cursor:none style */}
       <style>{`
-        * {
-          cursor: none !important;
+        @media (pointer: fine) {
+          * { cursor: none !important; }
         }
       `}</style>
 
-      {/* Main cursor */}
+      {/* Main cursor - GPU accelerated */}
       <div
-        className={`fixed pointer-events-none z-[9999] rounded-full border-2 transition-all duration-200 ${getCursorSize()} ${getCursorStyle()}`}
         style={{
-          left: position.x,
-          top: position.y,
-          transform: 'translate(-50%, -50%)',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          width: size,
+          height: size,
+          backgroundColor: getCursorColor(),
+          border: `2px solid ${getBorderColor()}`,
+          borderRadius: '50%',
+          pointerEvents: 'none',
+          zIndex: 9999,
+          transform: `translate3d(${position.x - size / 2}px, ${position.y - size / 2}px, 0)`,
+          transition: 'width 0.15s, height 0.15s, background-color 0.15s, border-color 0.15s',
           opacity: isVisible ? 1 : 0,
+          willChange: 'transform',
         }}
       >
         {/* Inner dot */}
-        <div 
-          className={`absolute inset-0 m-auto w-1.5 h-1.5 rounded-full bg-foreground/60 transition-transform duration-200 ${
-            cursorState.isClicking ? 'scale-150' : 'scale-100'
-          }`}
+        <div
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: cursorState.isClicking ? 8 : 4,
+            height: cursorState.isClicking ? 8 : 4,
+            backgroundColor: 'rgba(30, 30, 30, 0.7)',
+            borderRadius: '50%',
+            transform: 'translate(-50%, -50%)',
+            transition: 'width 0.1s, height 0.1s',
+          }}
         />
-
-        {/* Bloom effect for product hover */}
-        {cursorState.isHoveringProduct && (
-          <div className="absolute inset-0 -m-4">
-            <div className="absolute inset-0 animate-bloom rounded-full bg-secondary/30" />
-            <div className="absolute inset-2 animate-bloom delay-100 rounded-full bg-secondary/20" />
-          </div>
-        )}
-
-        {/* Ripple for button hover */}
-        {cursorState.isHoveringButton && (
-          <div className="absolute inset-0 animate-pulse-soft rounded-full border border-accent/50" />
-        )}
       </div>
 
-      {/* Trail cursor */}
+      {/* Trail cursor - follows with delay */}
       <div
-        className="fixed pointer-events-none z-[9998] w-4 h-4 rounded-full bg-silver/30 transition-opacity duration-300"
         style={{
-          left: trailPosition.x,
-          top: trailPosition.y,
-          transform: 'translate(-50%, -50%)',
-          opacity: isVisible ? 0.5 : 0,
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          width: 12,
+          height: 12,
+          backgroundColor: 'rgba(192, 192, 192, 0.4)',
+          borderRadius: '50%',
+          pointerEvents: 'none',
+          zIndex: 9998,
+          transform: `translate3d(${trailRef.current.x - 6}px, ${trailRef.current.y - 6}px, 0)`,
+          opacity: isVisible ? 0.6 : 0,
+          willChange: 'transform',
         }}
       />
-
-      {/* Click sparkles */}
-      {sparkles.map(sparkle => (
-        <div
-          key={sparkle.id}
-          className="fixed pointer-events-none z-[9999]"
-          style={{
-            left: sparkle.x,
-            top: sparkle.y,
-            transform: 'translate(-50%, -50%)',
-          }}
-        >
-          {[...Array(6)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-1 h-1 rounded-full bg-accent animate-sparkle"
-              style={{
-                transform: `rotate(${i * 60}deg) translateY(-12px)`,
-                animationDelay: `${i * 50}ms`,
-              }}
-            />
-          ))}
-        </div>
-      ))}
     </>
   );
 };
