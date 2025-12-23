@@ -1,6 +1,6 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import HeroSection from '@/components/home/HeroSection';
+import VideoHeroSection from '@/components/home/VideoHeroSection';
 import TrustStrip from '@/components/home/TrustStrip';
 import CountdownBanner from '@/components/home/CountdownBanner';
 import CategoriesCarousel from '@/components/home/CategoriesCarousel';
@@ -15,20 +15,26 @@ import PromoBanners from '@/components/home/PromoBanners';
 import ShopByOccasion from '@/components/home/ShopByOccasion';
 import SilverCareSection from '@/components/home/SilverCareSection';
 import BrandPartners from '@/components/home/BrandPartners';
-import CustomerReviewsCarousel from '@/components/home/CustomerReviewsCarousel';
+import PremiumReviewsSection from '@/components/home/PremiumReviewsSection';
 import InstagramFeed from '@/components/home/InstagramFeed';
 import NewsletterSection from '@/components/home/NewsletterSection';
 import RecentlyViewed from '@/components/home/RecentlyViewed';
 import FinalCTA from '@/components/home/FinalCTA';
+import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      {/* SEO Structured Data */}
+      <OrganizationSchema />
+      <WebsiteSchema />
+      <FAQSchema />
+      
       <Header />
       
       <main>
-        {/* Hero Section - Full-screen with video-like background */}
-        <HeroSection />
+        {/* Hero Section - Full-screen with video background */}
+        <VideoHeroSection />
         
         {/* Countdown Sale Banner */}
         <CountdownBanner />
@@ -73,7 +79,7 @@ const Index = () => {
         <BrandPartners />
         
         {/* Customer Reviews Carousel */}
-        <CustomerReviewsCarousel />
+        <PremiumReviewsSection />
         
         {/* Instagram / Lookbook Feed */}
         <InstagramFeed />

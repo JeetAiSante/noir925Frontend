@@ -177,6 +177,18 @@
     animation: shimmer 2s infinite;
   }
 
+  /* Skeleton shimmer effect */
+  .shimmer-skeleton {
+    background: linear-gradient(
+      90deg,
+      hsla(var(--muted), 0) 0%,
+      hsla(var(--muted-foreground), 0.08) 50%,
+      hsla(var(--muted), 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
   /* Floral bloom hover */
   .bloom-hover {
     @apply relative overflow-hidden;
