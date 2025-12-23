@@ -165,28 +165,28 @@
     @apply opacity-100;
   }
 
-  /* Silver shimmer effect */
+  /* Silver shimmer effect - slower, softer */
   .shimmer {
     background: linear-gradient(
       90deg,
       hsla(220, 10%, 78%, 0) 0%,
-      hsla(220, 10%, 90%, 0.6) 50%,
+      hsla(220, 10%, 90%, 0.25) 50%,
       hsla(220, 10%, 78%, 0) 100%
     );
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
+    background-size: 300% 100%;
+    animation: shimmer-slow 4s ease-in-out infinite;
   }
 
-  /* Skeleton shimmer effect */
+  /* Skeleton shimmer effect - slower, subtler */
   .shimmer-skeleton {
     background: linear-gradient(
       90deg,
       hsla(var(--muted), 0) 0%,
-      hsla(var(--muted-foreground), 0.08) 50%,
+      hsla(var(--muted-foreground), 0.04) 50%,
       hsla(var(--muted), 0) 100%
     );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
+    background-size: 300% 100%;
+    animation: shimmer-slow 3.5s ease-in-out infinite;
   }
 
   /* Floral bloom hover */
@@ -281,6 +281,11 @@
 }
 
 /* Keyframe animations */
+@keyframes shimmer-slow {
+  0% { background-position: -300% 0; }
+  100% { background-position: 300% 0; }
+}
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
