@@ -81,6 +81,7 @@ const VideoShowcase = () => {
               muted={isMuted}
               loop
               playsInline
+              preload="none"
               onTimeUpdate={handleTimeUpdate}
             >
               <source

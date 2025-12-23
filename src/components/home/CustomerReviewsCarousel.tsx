@@ -167,6 +167,8 @@ const CustomerReviewsCarousel = () => {
                           <img
                             src={review.avatar}
                             alt={review.name}
+                            loading="lazy"
+                            decoding="async"
                             className="w-12 h-12 rounded-full object-cover"
                           />
                           <div>
