@@ -7,6 +7,7 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import LuxuryCursor from "@/components/LuxuryCursor";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductPage from "./pages/ProductPage";
@@ -16,6 +17,9 @@ import Auth from "./pages/Auth";
 import Account from "./pages/Account";
 import Checkout from "./pages/Checkout";
 import About from "./pages/About";
+import SilverCare from "./pages/SilverCare";
+import Collections from "./pages/Collections";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,9 +34,11 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/shop" element={<Shop />} />
+              <Route path="/shop/:category" element={<Shop />} />
               <Route path="/product/:id" element={<ProductPage />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/wishlist" element={<Wishlist />} />
@@ -40,6 +46,10 @@ const App = () => (
               <Route path="/account" element={<Account />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/about" element={<About />} />
+              <Route path="/silver-care" element={<SilverCare />} />
+              <Route path="/collections" element={<Collections />} />
+              <Route path="/collections/:slug" element={<Collections />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

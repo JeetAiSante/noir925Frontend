@@ -4,11 +4,13 @@ import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { categories } from '@/data/products';
+import SearchModal from '@/components/search/SearchModal';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { cartCount, wishlistCount } = useCart();
   const location = useLocation();
 
@@ -30,6 +32,7 @@ const Header = () => {
     { name: 'Collections', href: '/collections' },
     { name: 'Silver Care', href: '/silver-care' },
     { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   return (
@@ -48,7 +51,7 @@ const Header = () => {
         }`}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-16 md:h-20">
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2"
@@ -65,7 +68,7 @@ const Header = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
               <div className="relative">
-                <span className="font-display text-2xl md:text-3xl font-semibold tracking-wider">
+                <span className="font-display text-xl md:text-2xl lg:text-3xl font-semibold tracking-wider">
                   NOIR<span className="text-primary">925</span>
                 </span>
                 <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-500" />
@@ -73,7 +76,7 @@ const Header = () => {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-6">
               {navLinks.map((link) => (
                 <div
                   key={link.name}
@@ -91,12 +94,12 @@ const Header = () => {
 
                   {/* Mega Menu */}
                   {link.hasMegaMenu && isMegaMenuOpen && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-screen max-w-4xl bg-card/98 backdrop-blur-2xl border border-border/50 shadow-luxury rounded-lg mt-2 p-8 animate-fade-in">
-                      <div className="grid grid-cols-4 gap-8">
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 w-screen max-w-4xl bg-card/98 backdrop-blur-2xl border border-border/50 shadow-luxury rounded-lg mt-2 p-6 animate-fade-in">
+                      <div className="grid grid-cols-4 gap-6">
                         {/* Categories */}
                         <div className="col-span-2">
-                          <h3 className="font-display text-lg mb-4 text-foreground">Shop by Category</h3>
-                          <div className="grid grid-cols-2 gap-3">
+                          <h3 className="font-display text-lg mb-3 text-foreground">Shop by Category</h3>
+                          <div className="grid grid-cols-2 gap-2">
                             {categories.slice(0, 8).map((cat) => (
                               <Link
                                 key={cat.id}
@@ -106,7 +109,8 @@ const Header = () => {
                                 <img
                                   src={cat.image}
                                   alt={cat.name}
-                                  className="w-12 h-12 rounded-lg object-cover group-hover:scale-105 transition-transform"
+                                  className="w-10 h-10 rounded-lg object-cover group-hover:scale-105 transition-transform"
+                                  loading="lazy"
                                 />
                                 <div>
                                   <span className="font-body text-sm">{cat.name}</span>
@@ -119,8 +123,8 @@ const Header = () => {
 
                         {/* Featured */}
                         <div className="col-span-2">
-                          <h3 className="font-display text-lg mb-4 text-foreground">Featured</h3>
-                          <div className="grid grid-cols-2 gap-4">
+                          <h3 className="font-display text-lg mb-3 text-foreground">Featured</h3>
+                          <div className="grid grid-cols-2 gap-3">
                             <Link
                               to="/collections/bridal-heritage"
                               className="relative overflow-hidden rounded-lg aspect-[4/3] group"
@@ -129,8 +133,9 @@ const Header = () => {
                                 src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&h=300&fit=crop"
                                 alt="Bridal Collection"
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                loading="lazy"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-4">
+                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-3">
                                 <span className="text-background font-display text-sm">Bridal Heritage</span>
                               </div>
                             </Link>
@@ -142,8 +147,9 @@ const Header = () => {
                                 src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=300&fit=crop"
                                 alt="New Arrivals"
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                loading="lazy"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-4">
+                              <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-3">
                                 <span className="text-background font-display text-sm">New Arrivals</span>
                               </div>
                             </Link>
@@ -157,8 +163,14 @@ const Header = () => {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-2 md:gap-4">
-              <Button variant="ghost" size="icon" className="hidden md:flex" aria-label="Search">
+            <div className="flex items-center gap-1 md:gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="hidden md:flex"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search"
+              >
                 <Search className="w-5 h-5" />
               </Button>
               
@@ -166,7 +178,7 @@ const Header = () => {
                 <Button variant="ghost" size="icon" className="relative" aria-label="Wishlist">
                   <Heart className="w-5 h-5" />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-secondary text-secondary-foreground text-xs rounded-full flex items-center justify-center font-medium">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-secondary text-secondary-foreground text-[10px] md:text-xs rounded-full flex items-center justify-center font-medium">
                       {wishlistCount}
                     </span>
                   )}
@@ -177,7 +189,7 @@ const Header = () => {
                 <Button variant="ghost" size="icon" className="relative" aria-label="Cart">
                   <ShoppingBag className="w-5 h-5" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-primary text-primary-foreground text-[10px] md:text-xs rounded-full flex items-center justify-center font-medium">
                       {cartCount}
                     </span>
                   )}
@@ -189,33 +201,48 @@ const Header = () => {
                   <User className="w-5 h-5" />
                 </Button>
               </Link>
+
+              {/* Mobile Search */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search"
+              >
+                <Search className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-background border-t border-border animate-slide-in-bottom">
-            <nav className="container mx-auto px-4 py-6 space-y-4">
+          <div className="lg:hidden bg-background border-t border-border animate-fade-in">
+            <nav className="container mx-auto px-4 py-4 space-y-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="block font-body text-lg py-2 border-b border-border/50"
+                  className="block font-body text-base py-3 border-b border-border/50 hover:text-primary transition-colors"
                 >
                   {link.name}
                 </Link>
               ))}
-              <div className="flex gap-4 pt-4">
-                <Link to="/account" className="flex items-center gap-2 text-muted-foreground">
-                  <User className="w-5 h-5" />
-                  Account
-                </Link>
-              </div>
+              <Link 
+                to="/account" 
+                className="flex items-center gap-2 py-3 text-muted-foreground hover:text-primary transition-colors"
+              >
+                <User className="w-5 h-5" />
+                My Account
+              </Link>
             </nav>
           </div>
         )}
       </header>
+
+      {/* Search Modal */}
+      <SearchModal open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </>
   );
 };
