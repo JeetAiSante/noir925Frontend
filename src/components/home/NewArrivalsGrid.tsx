@@ -94,6 +94,8 @@ const NewArrivalsGrid = () => {
             <img
               src="https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&h=600&fit=crop"
               alt="New Collection"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
@@ -120,6 +122,8 @@ const NewArrivalsGrid = () => {
               <img
                 src="https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&h=300&fit=crop"
                 alt="Rings"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-foreground/40 group-hover:bg-foreground/30 transition-colors" />
@@ -135,6 +139,8 @@ const NewArrivalsGrid = () => {
               <img
                 src="https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=400&h=300&fit=crop"
                 alt="Earrings"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-foreground/40 group-hover:bg-foreground/30 transition-colors" />
@@ -150,6 +156,8 @@ const NewArrivalsGrid = () => {
               <img
                 src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=300&fit=crop"
                 alt="Necklaces"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-foreground/40 group-hover:bg-foreground/30 transition-colors" />

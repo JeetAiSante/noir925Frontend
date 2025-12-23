@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import LuxuryCursor from "@/components/LuxuryCursor";
+import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import Index from "./pages/Index";
 import Shop from "./pages/Shop";
 import ProductPage from "./pages/ProductPage";
@@ -25,6 +26,7 @@ const App = () => (
       <AuthProvider>
         <CartProvider>
           <LuxuryCursor />
+          <InstallPWAPrompt />
           <Toaster />
           <Sonner />
           <BrowserRouter>
