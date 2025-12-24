@@ -83,60 +83,60 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 gap-0 bg-background border-border overflow-hidden">
+      <DialogContent className="sm:max-w-2xl p-0 gap-0 bg-background border-border overflow-hidden z-[100] fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
         <DialogTitle className="sr-only">Search NOIR925</DialogTitle>
         
         {/* Search Input */}
         <div className="flex items-center border-b border-border px-4 bg-muted/30">
-          <Search className="w-5 h-5 text-primary" />
+          <Search className="w-5 h-5 text-primary flex-shrink-0" />
           <Input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search for silver jewellery..."
-            className="border-0 focus-visible:ring-0 text-base py-5 bg-transparent placeholder:text-muted-foreground/60"
+            className="border-0 focus-visible:ring-0 text-base py-5 bg-transparent placeholder:text-muted-foreground/60 flex-1"
           />
           {query && (
-            <Button variant="ghost" size="icon" onClick={() => setQuery('')} className="h-8 w-8">
+            <Button variant="ghost" size="icon" onClick={() => setQuery('')} className="h-8 w-8 flex-shrink-0">
               <X className="w-4 h-4" />
             </Button>
           )}
         </div>
 
-        <div className="max-h-[65vh] overflow-y-auto">
+        <div className="max-h-[60vh] overflow-y-auto overscroll-contain">
           {query.length <= 1 ? (
-            <div className="p-5 space-y-6">
+            <div className="p-4 space-y-5">
               {/* AI Suggestions Banner */}
-              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-xl border border-primary/20">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
+              <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 rounded-lg border border-primary/20">
+                <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4 text-primary" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-sm">AI-Powered Search</p>
-                  <p className="text-xs text-muted-foreground">Find exactly what you're looking for</p>
+                  <p className="text-xs text-muted-foreground truncate">Find exactly what you're looking for</p>
                 </div>
               </div>
 
               {/* Recent Searches */}
               {recentSearches.length > 0 && (
                 <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" /> Recent Searches
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-medium text-foreground flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-muted-foreground" /> Recent
                     </h4>
                     <button 
                       onClick={clearRecentSearches}
-                      className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                      className="text-[10px] text-muted-foreground hover:text-primary transition-colors"
                     >
-                      Clear all
+                      Clear
                     </button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5">
                     {recentSearches.map((search: string) => (
                       <Badge
                         key={search}
                         variant="secondary"
-                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all duration-200 px-3 py-1.5"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-all text-xs px-2.5 py-1"
                         onClick={() => {
                           setQuery(search);
                           handleSearch(search);
@@ -151,15 +151,15 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
 
               {/* Trending Searches */}
               <div>
-                <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" /> Trending Now
+                <h4 className="text-xs font-medium text-foreground mb-2 flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-primary" /> Trending
                 </h4>
-                <div className="flex flex-wrap gap-2">
-                  {trendingSearches.map((search, i) => (
+                <div className="flex flex-wrap gap-1.5">
+                  {trendingSearches.map((search) => (
                     <Badge
                       key={search}
                       variant="outline"
-                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all duration-200 px-3 py-1.5"
+                      className="cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all text-xs px-2.5 py-1"
                       onClick={() => setQuery(search)}
                     >
                       <Zap className="w-3 h-3 mr-1" />
@@ -169,26 +169,26 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 </div>
               </div>
 
-              {/* Featured Products */}
+              {/* Featured Products - 2 column grid */}
               <div>
-                <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-                  <Star className="w-4 h-4 text-amber-500" /> Popular Products
+                <h4 className="text-xs font-medium text-foreground mb-2 flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 text-amber-500" /> Popular
                 </h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   {featuredProducts.map((product) => (
                     <Link
                       key={product.id}
                       to={`/product/${product.id}`}
                       onClick={() => handleSearch(product.name)}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors group"
+                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors group"
                     >
                       <img 
                         src={product.images?.[0] || product.image} 
                         alt={product.name}
-                        className="w-12 h-12 object-cover rounded-lg"
+                        className="w-10 h-10 object-cover rounded-md flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                        <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">
                           {product.name}
                         </p>
                         <p className="text-xs text-primary font-semibold">
@@ -200,24 +200,24 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                 </div>
               </div>
 
-              {/* Popular Categories */}
+              {/* Popular Categories - 3 column grid */}
               <div>
-                <h4 className="text-sm font-medium text-foreground mb-3">Shop by Category</h4>
+                <h4 className="text-xs font-medium text-foreground mb-2">Categories</h4>
                 <div className="grid grid-cols-3 gap-2">
                   {categories.slice(0, 6).map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/shop?category=${cat.name.toLowerCase()}`}
                       onClick={() => onOpenChange(false)}
-                      className="group relative aspect-square rounded-xl overflow-hidden"
+                      className="group relative aspect-[4/3] rounded-lg overflow-hidden"
                     >
                       <img 
                         src={cat.image} 
                         alt={cat.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                      <span className="absolute bottom-2 left-2 right-2 text-white text-xs font-medium text-center">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      <span className="absolute bottom-1.5 left-1.5 right-1.5 text-white text-[10px] font-medium text-center truncate">
                         {cat.name}
                       </span>
                     </Link>
@@ -229,8 +229,8 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
             <div className="p-4 space-y-4">
               {/* Loading State */}
               {isTyping && (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <div className="flex items-center justify-center py-6">
+                  <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
               )}
 
@@ -239,15 +239,15 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                   {/* Categories */}
                   {categoryResults.length > 0 && (
                     <div>
-                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Categories</h4>
-                      <div className="flex flex-wrap gap-2">
+                      <h4 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Categories</h4>
+                      <div className="flex flex-wrap gap-1.5">
                         {categoryResults.map((cat) => (
                           <Link
                             key={cat.id}
                             to={`/shop?category=${cat.name.toLowerCase()}`}
                             onClick={() => handleSearch(cat.name)}
                           >
-                            <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
+                            <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs">
                               {cat.name}
                             </Badge>
                           </Link>
@@ -259,26 +259,26 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                   {/* Products */}
                   {results.length > 0 ? (
                     <div>
-                      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Products</h4>
+                      <h4 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Products</h4>
                       <div className="space-y-1">
                         {results.map((product) => (
                           <Link
                             key={product.id}
                             to={`/product/${product.id}`}
                             onClick={() => handleSearch(product.name)}
-                            className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors group"
+                            className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-colors group"
                           >
                             <img 
                               src={product.images?.[0] || product.image} 
                               alt={product.name}
-                              className="w-14 h-14 object-cover rounded-lg"
+                              className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                                 {product.name}
                               </p>
                               <p className="text-xs text-muted-foreground">{product.category}</p>
-                              <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-2 mt-0.5">
                                 <p className="text-sm font-semibold text-primary">
                                   {formatPrice(product.price)}
                                 </p>
@@ -289,17 +289,17 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                                 )}
                               </div>
                             </div>
-                            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                            <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0" />
                           </Link>
                         ))}
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                        <Search className="w-8 h-8 text-muted-foreground" />
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-muted flex items-center justify-center">
+                        <Search className="w-6 h-6 text-muted-foreground" />
                       </div>
-                      <p className="text-muted-foreground mb-2">No products found for "{query}"</p>
+                      <p className="text-muted-foreground text-sm mb-2">No products found for "{query}"</p>
                       <Link 
                         to={`/shop?search=${encodeURIComponent(query)}`}
                         onClick={() => handleSearch(query)}
@@ -314,7 +314,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                     <Link 
                       to={`/shop?search=${encodeURIComponent(query)}`}
                       onClick={() => handleSearch(query)}
-                      className="flex items-center justify-center gap-2 py-3 text-primary hover:underline text-sm"
+                      className="flex items-center justify-center gap-2 py-2.5 text-primary hover:underline text-sm"
                     >
                       View all results for "{query}" <ArrowRight className="w-4 h-4" />
                     </Link>
