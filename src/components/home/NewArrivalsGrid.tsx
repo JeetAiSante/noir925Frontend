@@ -39,7 +39,7 @@ const NewArrivalsGrid = () => {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-background relative overflow-hidden">
+    <section className="py-12 md:py-16 bg-background relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-muted/50 to-transparent pointer-events-none" />
       <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-accent/5 blur-3xl" />

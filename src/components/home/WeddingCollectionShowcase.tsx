@@ -27,7 +27,7 @@ const WeddingCollectionShowcase = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-secondary/5 via-background to-background overflow-hidden">
+    <section className="py-12 md:py-16 bg-gradient-to-b from-secondary/5 via-background to-background overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12">
