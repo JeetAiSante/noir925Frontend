@@ -30,6 +30,14 @@ import ShippingPolicy from "./pages/ShippingPolicy";
 import ReturnsPolicy from "./pages/ReturnsPolicy";
 import TrackOrder from "./pages/TrackOrder";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminSales from "./pages/admin/AdminSales";
+import AdminBanners from "./pages/admin/AdminBanners";
+import AdminTimers from "./pages/admin/AdminTimers";
+import AdminMessages from "./pages/admin/AdminMessages";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +76,16 @@ const App = () => (
               <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/returns-policy" element={<ReturnsPolicy />} />
               <Route path="/track-order" element={<TrackOrder />} />
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminDashboard />}>
+                <Route index element={<AdminOverview />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="orders" element={<AdminOrders />} />
+                <Route path="sales" element={<AdminSales />} />
+                <Route path="banners" element={<AdminBanners />} />
+                <Route path="timers" element={<AdminTimers />} />
+                <Route path="messages" element={<AdminMessages />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

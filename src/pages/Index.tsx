@@ -21,9 +21,7 @@ import NewsletterSection from '@/components/home/NewsletterSection';
 import RecentlyViewed from '@/components/home/RecentlyViewed';
 import FinalCTA from '@/components/home/FinalCTA';
 import WeddingCollectionShowcase from '@/components/home/WeddingCollectionShowcase';
-import MonsoonSaleBanner from '@/components/home/MonsoonSaleBanner';
 import LuxuryEditorialSection from '@/components/home/LuxuryEditorialSection';
-import TrustCertificationBadges from '@/components/home/TrustCertificationBadges';
 import SeasonalBanner from '@/components/home/SeasonalBanner';
 import BrandStorySection from '@/components/home/BrandStorySection';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
@@ -37,32 +35,77 @@ const Index = () => {
       
       <Header />
       
-      <main>
+      <main className="overflow-hidden">
+        {/* Hero Section with Video */}
         <VideoHeroSection />
+        
+        {/* Countdown Sale Banner */}
         <CountdownBanner />
+        
+        {/* Trust Strip - Single instance */}
         <TrustStrip />
+        
+        {/* Categories Carousel */}
         <CategoriesCarousel />
+        
+        {/* Bestsellers */}
         <BestsellersGrid />
+        
+        {/* Wedding Collection */}
         <WeddingCollectionShowcase />
+        
+        {/* Parallax Banner */}
         <ParallaxBanner />
+        
+        {/* New Arrivals */}
         <NewArrivalsGrid />
-        <MonsoonSaleBanner />
+        
+        {/* Trending Slider with Auto-scroll */}
         <TrendingSlider />
+        
+        {/* Art of Silver Editorial - with auto-shuffle */}
         <LuxuryEditorialSection />
+        
+        {/* Video Showcase */}
         <VideoShowcase />
+        
+        {/* Featured Categories */}
         <FeaturedCategories />
+        
+        {/* Seasonal Banners */}
         <SeasonalBanner />
+        
+        {/* Promo Banners */}
         <PromoBanners />
+        
+        {/* Brand Story */}
         <BrandStorySection />
+        
+        {/* Our Collections */}
         <CollectionsStory />
+        
+        {/* Shop by Occasion */}
         <ShopByOccasion />
-        <TrustCertificationBadges />
+        
+        {/* Silver Care Guide */}
         <SilverCareSection />
+        
+        {/* Brand Partners / As Featured In */}
         <BrandPartners />
+        
+        {/* Customer Reviews */}
         <PremiumReviewsSection />
+        
+        {/* Instagram Feed */}
         <InstagramFeed />
+        
+        {/* Newsletter */}
         <NewsletterSection />
+        
+        {/* Recently Viewed */}
         <RecentlyViewed />
+        
+        {/* Final CTA */}
         <FinalCTA />
       </main>
       
