@@ -136,37 +136,31 @@ const VideoHeroSection = () => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-4 pt-4">
+            <div className="flex flex-wrap items-center gap-4 pt-6">
               <Link to="/shop">
-                <Button variant="hero" size="xl" className="group">
-                  <span>Explore Collection</span>
-                  <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                <Button 
+                  variant="hero" 
+                  size="xl" 
+                  className="group relative overflow-hidden px-8 py-4 bg-accent text-accent-foreground hover:bg-accent/90 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <span className="relative z-10 font-display tracking-wide">Explore Collection</span>
+                  <span className="relative z-10 ml-3 group-hover:translate-x-1 transition-transform duration-300">→</span>
                 </Button>
               </Link>
-              <Link to="/collections">
-                <Button variant="hero-outline" size="lg" className="gap-2">
-                  <Play className="w-4 h-4" />
-                  Watch Story
+              <Link to="/about">
+                <Button 
+                  variant="hero-outline" 
+                  size="lg" 
+                  className="group gap-3 px-6 py-3 border-2 border-background/40 hover:border-background/80 bg-transparent hover:bg-background/10 transition-all duration-300"
+                >
+                  <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span className="font-display tracking-wide">Watch Story</span>
                 </Button>
               </Link>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="flex flex-wrap items-center gap-6 pt-6">
-              {[
-                { icon: '🛡️', text: 'BIS Hallmarked' },
-                { icon: '🚚', text: 'Free Shipping' },
-                { icon: '↩️', text: '30-Day Returns' },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-2 text-background/70">
-                  <span className="text-lg">{item.icon}</span>
-                  <span className="font-body text-sm">{item.text}</span>
-                </div>
-              ))}
             </div>
 
             {/* Text Indicators */}
-            <div className="flex gap-2 pt-4">
+            <div className="flex gap-2 pt-8">
               {heroTexts.map((_, i) => (
                 <button
                   key={i}
@@ -177,9 +171,12 @@ const VideoHeroSection = () => {
                       setIsTextVisible(true);
                     }, 300);
                   }}
-                  className={`h-1 rounded-full transition-all duration-500 ${
-                    i === currentTextIndex ? 'w-8 bg-accent' : 'w-2 bg-background/30 hover:bg-background/50'
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    i === currentTextIndex 
+                      ? 'w-10 bg-accent shadow-[0_0_10px_rgba(var(--accent),0.5)]' 
+                      : 'w-3 bg-background/30 hover:bg-background/50'
                   }`}
+                  aria-label={`Go to slide ${i + 1}`}
                 />
               ))}
             </div>
