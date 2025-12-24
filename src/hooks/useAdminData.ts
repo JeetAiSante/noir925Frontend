@@ -64,7 +64,72 @@ export interface DBProduct {
   rating: number | null;
   reviews_count: number | null;
   tags: string[];
+  meta_title: string | null;
+  meta_description: string | null;
 }
+
+// Product mutation hooks
+export const useCreateProduct = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: Partial<DBProduct>) => {
+      const { error } = await supabase
+        .from('products')
+        .insert(data as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['db-products'] });
+      toast.success('Product created successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to create product: ' + error.message);
+    },
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<DBProduct> }) => {
+      const { error } = await supabase
+        .from('products')
+        .update(data as any)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['db-products'] });
+      toast.success('Product updated successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to update product: ' + error.message);
+    },
+  });
+};
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['db-products'] });
+      toast.success('Product deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete product: ' + error.message);
+    },
+  });
+};
 
 export interface Collection {
   id: string;

@@ -41,6 +41,7 @@ import AdminMessages from "./pages/admin/AdminMessages";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,8 @@ const App = () => (
               <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/returns-policy" element={<ReturnsPolicy />} />
               <Route path="/track-order" element={<TrackOrder />} />
+              {/* Admin Login - Separate from user auth */}
+              <Route path="/admin-login" element={<AdminLogin />} />
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />}>
                 <Route index element={<AdminOverview />} />
