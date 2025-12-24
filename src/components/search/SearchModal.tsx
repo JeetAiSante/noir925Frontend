@@ -183,7 +183,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors group"
                     >
                       <img 
-                        src={product.images[0]} 
+                        src={product.images?.[0] || product.image} 
                         alt={product.name}
                         className="w-12 h-12 object-cover rounded-lg"
                       />
@@ -269,7 +269,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                             className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted transition-colors group"
                           >
                             <img 
-                              src={product.images[0]} 
+                              src={product.images?.[0] || product.image} 
                               alt={product.name}
                               className="w-14 h-14 object-cover rounded-lg"
                             />
