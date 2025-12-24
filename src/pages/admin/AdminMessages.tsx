@@ -7,7 +7,9 @@ import {
   Reply,
   Star,
   Clock,
-  User
+  User,
+  Loader2,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,125 +22,73 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useContactMessages, useUpdateContactMessage } from '@/hooks/useAdminData';
+import { format } from 'date-fns';
 
-interface Message {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-  date: string;
-  isRead: boolean;
-  isStarred: boolean;
-  type: 'contact' | 'inquiry' | 'complaint' | 'feedback';
-}
-
-const initialMessages: Message[] = [
-  {
-    id: '1',
-    name: 'Priya Sharma',
-    email: 'priya@example.com',
-    subject: 'Order Status Query',
-    message: 'Hi, I placed an order 3 days ago (Order #NOIR241224-1234) and wanted to check on the delivery status. The tracking hasn\'t updated since yesterday. Please help.',
-    date: '2024-12-24T10:30:00',
-    isRead: false,
-    isStarred: true,
-    type: 'inquiry',
-  },
-  {
-    id: '2',
-    name: 'Rahul Kumar',
-    email: 'rahul@example.com',
-    subject: 'Product Quality Feedback',
-    message: 'Just received my silver ring from your Celestial collection. Absolutely love the quality and finish! The packaging was also premium. Will definitely order again.',
-    date: '2024-12-23T15:45:00',
-    isRead: true,
-    isStarred: false,
-    type: 'feedback',
-  },
-  {
-    id: '3',
-    name: 'Anita Desai',
-    email: 'anita@example.com',
-    subject: 'Custom Order Request',
-    message: 'I\'m looking for a custom bridal set for my daughter\'s wedding. Can we discuss customization options? Budget is around 50,000-75,000 rupees.',
-    date: '2024-12-22T09:15:00',
-    isRead: true,
-    isStarred: true,
-    type: 'inquiry',
-  },
-];
-
-const typeConfig = {
-  contact: { label: 'Contact', color: 'bg-blue-500/10 text-blue-500' },
-  inquiry: { label: 'Inquiry', color: 'bg-purple-500/10 text-purple-500' },
-  complaint: { label: 'Complaint', color: 'bg-red-500/10 text-red-500' },
-  feedback: { label: 'Feedback', color: 'bg-green-500/10 text-green-500' },
+const statusConfig: Record<string, { label: string; color: string }> = {
+  new: { label: 'New', color: 'bg-blue-500/10 text-blue-500' },
+  read: { label: 'Read', color: 'bg-muted text-muted-foreground' },
+  replied: { label: 'Replied', color: 'bg-green-500/10 text-green-500' },
+  archived: { label: 'Archived', color: 'bg-muted text-muted-foreground' },
 };
 
 const AdminMessages = () => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const { data: messages, isLoading } = useContactMessages();
+  const updateMessage = useUpdateContactMessage();
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<any | null>(null);
   const [replyText, setReplyText] = useState('');
-  const [filter, setFilter] = useState<'all' | 'unread' | 'starred'>('all');
+  const [filter, setFilter] = useState<'all' | 'new' | 'replied'>('all');
 
   const markAsRead = (id: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === id ? { ...msg, isRead: true } : msg
-    ));
-  };
-
-  const toggleStar = (id: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === id ? { ...msg, isStarred: !msg.isStarred } : msg
-    ));
-  };
-
-  const deleteMessage = (id: string) => {
-    setMessages(prev => prev.filter(msg => msg.id !== id));
-    setSelectedMessage(null);
-    toast({ title: "Message deleted", description: "The message has been removed" });
+    updateMessage.mutate({ id, status: 'read' });
   };
 
   const sendReply = () => {
     if (!replyText.trim()) {
-      toast({
-        title: "Empty reply",
-        description: "Please write a reply before sending",
-        variant: "destructive",
-      });
+      toast.error("Please write a reply before sending");
       return;
     }
 
-    toast({
-      title: "Reply sent",
-      description: `Email sent to ${selectedMessage?.email}`,
-    });
+    // In a real app, you'd send the email here
+    if (selectedMessage) {
+      updateMessage.mutate({ id: selectedMessage.id, status: 'replied' });
+    }
+    
+    toast.success(`Reply sent to ${selectedMessage?.email}`);
     setReplyText('');
     setSelectedMessage(null);
   };
 
-  const openMessage = (message: Message) => {
+  const openMessage = (message: any) => {
     setSelectedMessage(message);
-    if (!message.isRead) {
+    if (message.status === 'new') {
       markAsRead(message.id);
     }
   };
 
-  const filteredMessages = messages.filter(msg => {
+  const filteredMessages = messages?.filter(msg => {
     const matchesSearch = 
       msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      (msg.subject?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
     
-    if (filter === 'unread') return matchesSearch && !msg.isRead;
-    if (filter === 'starred') return matchesSearch && msg.isStarred;
+    if (filter === 'new') return matchesSearch && msg.status === 'new';
+    if (filter === 'replied') return matchesSearch && msg.status === 'replied';
     return matchesSearch;
-  });
+  }) || [];
 
-  const unreadCount = messages.filter(m => !m.isRead).length;
+  const newCount = messages?.filter(m => m.status === 'new').length || 0;
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -147,7 +97,7 @@ const AdminMessages = () => {
         <div>
           <h1 className="font-display text-3xl lg:text-4xl mb-2">Messages</h1>
           <p className="text-muted-foreground">
-            {unreadCount > 0 ? `${unreadCount} unread messages` : 'All messages read'}
+            {newCount > 0 ? `${newCount} new messages` : 'All messages read'}
           </p>
         </div>
       </div>
@@ -172,18 +122,18 @@ const AdminMessages = () => {
             All
           </Button>
           <Button 
-            variant={filter === 'unread' ? 'default' : 'outline'}
+            variant={filter === 'new' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('unread')}
+            onClick={() => setFilter('new')}
           >
-            Unread
+            New ({newCount})
           </Button>
           <Button 
-            variant={filter === 'starred' ? 'default' : 'outline'}
+            variant={filter === 'replied' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilter('starred')}
+            onClick={() => setFilter('replied')}
           >
-            Starred
+            Replied
           </Button>
         </div>
       </div>
@@ -191,23 +141,25 @@ const AdminMessages = () => {
       {/* Messages List */}
       <div className="bg-background rounded-xl border border-border/50 overflow-hidden divide-y divide-border">
         {filteredMessages.map((message) => {
-          const config = typeConfig[message.type];
+          const config = statusConfig[message.status] || statusConfig.new;
           
           return (
             <div 
               key={message.id}
-              className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${!message.isRead && 'bg-primary/5'}`}
+              className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${message.status === 'new' && 'bg-primary/5'}`}
               onClick={() => openMessage(message)}
             >
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    message.isRead ? 'bg-muted' : 'bg-primary/10'
+                    message.status === 'new' ? 'bg-primary/10' : 'bg-muted'
                   }`}>
-                    {message.isRead ? (
-                      <MailOpen className="w-5 h-5 text-muted-foreground" />
-                    ) : (
+                    {message.status === 'new' ? (
                       <Mail className="w-5 h-5 text-primary" />
+                    ) : message.status === 'replied' ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <MailOpen className="w-5 h-5 text-muted-foreground" />
                     )}
                   </div>
                 </div>
@@ -215,26 +167,18 @@ const AdminMessages = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className={`font-medium ${!message.isRead && 'text-foreground'}`}>
+                        <span className={`font-medium ${message.status === 'new' && 'text-foreground'}`}>
                           {message.name}
                         </span>
                         <Badge className={config.color}>{config.label}</Badge>
                       </div>
-                      <p className={`text-sm ${!message.isRead ? 'font-medium' : 'text-muted-foreground'}`}>
-                        {message.subject}
+                      <p className={`text-sm ${message.status === 'new' ? 'font-medium' : 'text-muted-foreground'}`}>
+                        {message.subject || 'No subject'}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); toggleStar(message.id); }}
-                        className={message.isStarred ? 'text-yellow-500' : ''}
-                      >
-                        <Star className={`w-4 h-4 ${message.isStarred && 'fill-current'}`} />
-                      </button>
-                      <span className="text-xs hidden sm:inline">
-                        {new Date(message.date).toLocaleDateString()}
-                      </span>
-                    </div>
+                    <span className="text-xs text-muted-foreground hidden sm:inline">
+                      {format(new Date(message.created_at), 'MMM d, yyyy')}
+                    </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
                     {message.message}
@@ -258,7 +202,7 @@ const AdminMessages = () => {
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">
-              {selectedMessage?.subject}
+              {selectedMessage?.subject || 'Message'}
             </DialogTitle>
           </DialogHeader>
           
@@ -273,11 +217,14 @@ const AdminMessages = () => {
                   <div>
                     <p className="font-medium">{selectedMessage.name}</p>
                     <p className="text-sm text-muted-foreground">{selectedMessage.email}</p>
+                    {selectedMessage.phone && (
+                      <p className="text-sm text-muted-foreground">{selectedMessage.phone}</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="w-4 h-4" />
-                  {new Date(selectedMessage.date).toLocaleString()}
+                  {format(new Date(selectedMessage.created_at), 'PPpp')}
                 </div>
               </div>
 
@@ -300,14 +247,6 @@ const AdminMessages = () => {
           )}
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button 
-              variant="destructive" 
-              onClick={() => selectedMessage && deleteMessage(selectedMessage.id)}
-              className="w-full sm:w-auto"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete
-            </Button>
             <Button onClick={sendReply} className="w-full sm:w-auto">
               <Reply className="w-4 h-4 mr-2" />
               Send Reply
