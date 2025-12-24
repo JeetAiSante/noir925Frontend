@@ -6,7 +6,8 @@ import {
   Timer,
   Calendar,
   Clock,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,68 +21,34 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { useCountdownTimers, useCreateTimer, useUpdateTimer, useDeleteTimer, CountdownTimer } from '@/hooks/useAdminData';
 
-interface CountdownTimer {
-  id: string;
-  name: string;
-  title: string;
-  subtitle: string;
-  endDate: string;
-  endTime: string;
-  type: 'sale' | 'launch' | 'event';
-  isActive: boolean;
-  showOnHomepage: boolean;
-}
-
-const initialTimers: CountdownTimer[] = [
-  {
-    id: '1',
-    name: 'Festive Sale Countdown',
-    title: 'Festive Sale - Up to 50% Off',
-    subtitle: 'Limited Time Offer',
-    endDate: '2024-12-31',
-    endTime: '23:59',
-    type: 'sale',
-    isActive: true,
-    showOnHomepage: true,
-  },
-  {
-    id: '2',
-    name: 'Monsoon Collection Launch',
-    title: 'New Monsoon Collection',
-    subtitle: 'Coming Soon',
-    endDate: '2024-08-01',
-    endTime: '10:00',
-    type: 'launch',
-    isActive: true,
-    showOnHomepage: false,
-  },
-];
-
-const typeConfig = {
+const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
   sale: { label: 'Sale', icon: Zap, color: 'bg-red-500/10 text-red-500' },
-  launch: { label: 'Product Launch', icon: Timer, color: 'bg-blue-500/10 text-blue-500' },
+  banner: { label: 'Banner', icon: Timer, color: 'bg-blue-500/10 text-blue-500' },
   event: { label: 'Event', icon: Calendar, color: 'bg-purple-500/10 text-purple-500' },
 };
 
 const AdminTimers = () => {
-  const [timers, setTimers] = useState<CountdownTimer[]>(initialTimers);
+  const { data: timers, isLoading } = useCountdownTimers();
+  const createTimer = useCreateTimer();
+  const updateTimer = useUpdateTimer();
+  const deleteTimer = useDeleteTimer();
+  
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTimer, setEditingTimer] = useState<CountdownTimer | null>(null);
-  const [formData, setFormData] = useState<Partial<CountdownTimer>>({
-    name: '',
+  const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
-    endDate: '',
-    endTime: '',
-    type: 'sale',
-    isActive: true,
-    showOnHomepage: true,
+    end_time: '',
+    link: '',
+    position: 'banner',
+    is_active: true,
   });
 
-  const calculateTimeLeft = (endDate: string, endTime: string) => {
-    const end = new Date(`${endDate}T${endTime}`);
+  const calculateTimeLeft = (endTime: string) => {
+    const end = new Date(endTime);
     const now = new Date();
     const diff = end.getTime() - now.getTime();
     
@@ -95,27 +62,18 @@ const AdminTimers = () => {
   };
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.title || !formData.endDate) {
-      toast({
-        title: "Missing fields",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
+    if (!formData.title || !formData.end_time) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     if (editingTimer) {
-      setTimers(prev => prev.map(timer => 
-        timer.id === editingTimer.id ? { ...timer, ...formData } as CountdownTimer : timer
-      ));
-      toast({ title: "Timer updated", description: "The countdown timer has been updated" });
+      updateTimer.mutate({ 
+        id: editingTimer.id, 
+        data: formData 
+      });
     } else {
-      const newTimer: CountdownTimer = {
-        id: Date.now().toString(),
-        ...formData as CountdownTimer,
-      };
-      setTimers(prev => [...prev, newTimer]);
-      toast({ title: "Timer created", description: "New countdown timer has been created" });
+      createTimer.mutate(formData as any);
     }
 
     closeDialog();
@@ -125,33 +83,46 @@ const AdminTimers = () => {
     setIsDialogOpen(false);
     setEditingTimer(null);
     setFormData({
-      name: '',
       title: '',
       subtitle: '',
-      endDate: '',
-      endTime: '',
-      type: 'sale',
-      isActive: true,
-      showOnHomepage: true,
+      end_time: '',
+      link: '',
+      position: 'banner',
+      is_active: true,
     });
   };
 
   const handleEdit = (timer: CountdownTimer) => {
     setEditingTimer(timer);
-    setFormData(timer);
+    setFormData({
+      title: timer.title,
+      subtitle: timer.subtitle || '',
+      end_time: timer.end_time.slice(0, 16), // Format for datetime-local input
+      link: timer.link || '',
+      position: timer.position,
+      is_active: timer.is_active,
+    });
     setIsDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    setTimers(prev => prev.filter(timer => timer.id !== id));
-    toast({ title: "Timer deleted", description: "The countdown timer has been removed" });
+    deleteTimer.mutate(id);
   };
 
-  const toggleActive = (id: string) => {
-    setTimers(prev => prev.map(timer => 
-      timer.id === id ? { ...timer, isActive: !timer.isActive } : timer
-    ));
+  const toggleActive = (timer: CountdownTimer) => {
+    updateTimer.mutate({ 
+      id: timer.id, 
+      data: { is_active: !timer.is_active } 
+    });
   };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -169,12 +140,12 @@ const AdminTimers = () => {
 
       {/* Timers Grid */}
       <div className="grid gap-4 md:grid-cols-2">
-        {timers.map((timer) => {
-          const config = typeConfig[timer.type];
-          const timeLeft = calculateTimeLeft(timer.endDate, timer.endTime);
+        {timers?.map((timer) => {
+          const config = typeConfig[timer.position] || typeConfig.banner;
+          const timeLeft = calculateTimeLeft(timer.end_time);
           
           return (
-            <Card key={timer.id} className={`border-border/50 ${!timer.isActive && 'opacity-60'}`}>
+            <Card key={timer.id} className={`border-border/50 ${!timer.is_active && 'opacity-60'}`}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -182,33 +153,32 @@ const AdminTimers = () => {
                       <config.icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <CardTitle className="text-base">{timer.name}</CardTitle>
+                      <CardTitle className="text-base">{timer.title}</CardTitle>
                       <span className={`text-xs px-2 py-0.5 rounded ${config.color}`}>
                         {config.label}
                       </span>
                     </div>
                   </div>
                   <Switch 
-                    checked={timer.isActive}
-                    onCheckedChange={() => toggleActive(timer.id)}
+                    checked={timer.is_active}
+                    onCheckedChange={() => toggleActive(timer)}
                   />
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div>
-                    <p className="font-medium">{timer.title}</p>
                     <p className="text-sm text-muted-foreground">{timer.subtitle}</p>
                   </div>
                   
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Calendar className="w-4 h-4" />
-                      {timer.endDate}
+                      {new Date(timer.end_time).toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Clock className="w-4 h-4" />
-                      {timer.endTime}
+                      {new Date(timer.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   
@@ -218,10 +188,6 @@ const AdminTimers = () => {
                     <Timer className="w-4 h-4" />
                     <span className="text-sm font-medium">{timeLeft}</span>
                   </div>
-                  
-                  {timer.showOnHomepage && (
-                    <p className="text-xs text-green-500">✓ Displayed on homepage</p>
-                  )}
                 </div>
                 
                 <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border">
@@ -245,7 +211,7 @@ const AdminTimers = () => {
         })}
       </div>
 
-      {timers.length === 0 && (
+      {(!timers || timers.length === 0) && (
         <div className="text-center py-12">
           <Timer className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">No timers yet. Create your first countdown timer.</p>
@@ -263,19 +229,11 @@ const AdminTimers = () => {
           
           <div className="space-y-4">
             <div>
-              <Label>Timer Name (internal)</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Black Friday Countdown"
-              />
-            </div>
-            <div>
-              <Label>Display Title</Label>
+              <Label>Title</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g., Black Friday Sale - Up to 70% Off"
+                placeholder="e.g., Festive Sale - Up to 50% Off"
               />
             </div>
             <div>
@@ -290,53 +248,50 @@ const AdminTimers = () => {
               <Label>Timer Type</Label>
               <select 
                 className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as CountdownTimer['type'] })}
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
               >
                 {Object.entries(typeConfig).map(([key, config]) => (
                   <option key={key} value={key}>{config.label}</option>
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>End Date</Label>
-                <Input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label>End Time</Label>
-                <Input
-                  type="time"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                />
-              </div>
+            <div>
+              <Label>End Date & Time</Label>
+              <Input
+                type="datetime-local"
+                value={formData.end_time}
+                onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+              />
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Switch 
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-                />
-                <Label>Active</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch 
-                  checked={formData.showOnHomepage}
-                  onCheckedChange={(checked) => setFormData({ ...formData, showOnHomepage: checked })}
-                />
-                <Label>Show on Homepage</Label>
-              </div>
+            <div>
+              <Label>Link (optional)</Label>
+              <Input
+                value={formData.link}
+                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                placeholder="/shop?sale=festive"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch 
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label>Active</Label>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={closeDialog}>Cancel</Button>
-            <Button onClick={handleSubmit}>{editingTimer ? 'Update' : 'Create'}</Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={createTimer.isPending || updateTimer.isPending}
+            >
+              {(createTimer.isPending || updateTimer.isPending) && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              {editingTimer ? 'Update' : 'Create'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
