@@ -20,12 +20,17 @@ import InstagramFeed from '@/components/home/InstagramFeed';
 import NewsletterSection from '@/components/home/NewsletterSection';
 import RecentlyViewed from '@/components/home/RecentlyViewed';
 import FinalCTA from '@/components/home/FinalCTA';
+import WeddingCollectionShowcase from '@/components/home/WeddingCollectionShowcase';
+import MonsoonSaleBanner from '@/components/home/MonsoonSaleBanner';
+import LuxuryEditorialSection from '@/components/home/LuxuryEditorialSection';
+import TrustCertificationBadges from '@/components/home/TrustCertificationBadges';
+import SeasonalBanner from '@/components/home/SeasonalBanner';
+import BrandStorySection from '@/components/home/BrandStorySection';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
-      {/* SEO Structured Data */}
       <OrganizationSchema />
       <WebsiteSchema />
       <FAQSchema />
@@ -33,64 +38,31 @@ const Index = () => {
       <Header />
       
       <main>
-        {/* Hero Section - Full-screen with video background */}
         <VideoHeroSection />
-        
-        {/* Countdown Sale Banner */}
         <CountdownBanner />
-        
-        {/* Trust Strip - Immediately visible utility badges */}
         <TrustStrip />
-        
-        {/* Categories Carousel */}
         <CategoriesCarousel />
-        
-        {/* Bestseller Products Grid */}
         <BestsellersGrid />
-        
-        {/* Parallax Promotional Banners */}
+        <WeddingCollectionShowcase />
         <ParallaxBanner />
-        
-        {/* New Arrivals with Animations */}
         <NewArrivalsGrid />
-        
-        {/* Trending Now - 3D Slider */}
+        <MonsoonSaleBanner />
         <TrendingSlider />
-        
-        {/* Video Showcase - Craftsmanship */}
+        <LuxuryEditorialSection />
         <VideoShowcase />
-        
-        {/* Featured Categories Grid */}
         <FeaturedCategories />
-        
-        {/* Promo Banners Stack */}
+        <SeasonalBanner />
         <PromoBanners />
-        
-        {/* Collections Story Blocks */}
+        <BrandStorySection />
         <CollectionsStory />
-        
-        {/* Shop by Occasion */}
         <ShopByOccasion />
-        
-        {/* Silver Care & Education */}
+        <TrustCertificationBadges />
         <SilverCareSection />
-        
-        {/* Brand Partners / As Featured In */}
         <BrandPartners />
-        
-        {/* Customer Reviews Carousel */}
         <PremiumReviewsSection />
-        
-        {/* Instagram / Lookbook Feed */}
         <InstagramFeed />
-        
-        {/* Newsletter Signup */}
         <NewsletterSection />
-        
-        {/* Recently Viewed Products */}
         <RecentlyViewed />
-        
-        {/* Final Conversion CTA */}
         <FinalCTA />
       </main>
       
