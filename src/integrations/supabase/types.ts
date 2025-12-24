@@ -447,6 +447,62 @@ export type Database = {
         }
         Relationships: []
       }
+      product_reviews: {
+        Row: {
+          content: string
+          created_at: string
+          helpful_count: number | null
+          id: string
+          is_featured: boolean | null
+          is_verified_purchase: boolean | null
+          product_id: string | null
+          rating: number
+          reviewer_avatar: string | null
+          reviewer_name: string
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          helpful_count?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_verified_purchase?: boolean | null
+          product_id?: string | null
+          rating: number
+          reviewer_avatar?: string | null
+          reviewer_name: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          helpful_count?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_verified_purchase?: boolean | null
+          product_id?: string | null
+          rating?: number
+          reviewer_avatar?: string | null
+          reviewer_name?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           category_id: string | null
