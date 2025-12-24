@@ -7,6 +7,8 @@ const partners = [
   { name: 'Grazia', logo: 'G' },
   { name: 'Brides Today', logo: 'B' },
   { name: 'Harper\'s Bazaar', logo: 'H' },
+  { name: 'Cosmopolitan', logo: 'C' },
+  { name: 'Marie Claire', logo: 'M' },
 ];
 
 const BrandPartners = () => {
@@ -21,18 +23,18 @@ const BrandPartners = () => {
       if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
         scrollContainer.scrollLeft = 0;
       } else {
-        scrollContainer.scrollLeft += 1;
+        scrollContainer.scrollLeft += 0.5;
       }
     };
 
-    const interval = setInterval(animate, 30);
+    const interval = setInterval(animate, 20);
     return () => clearInterval(interval);
   }, [isHovered]);
 
   return (
-    <section className="py-12 md:py-16 bg-muted/30 border-y border-border">
-      <div className="container mx-auto px-4 mb-8">
-        <p className="font-accent text-sm text-center text-muted-foreground tracking-widest uppercase">
+    <section className="py-10 md:py-12 bg-muted/30 border-y border-border">
+      <div className="container mx-auto px-4 mb-6">
+        <p className="font-accent text-xs md:text-sm text-center text-muted-foreground tracking-widest uppercase">
           As Featured In
         </p>
       </div>
@@ -43,17 +45,17 @@ const BrandPartners = () => {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="flex animate-marquee">
+        <div className="flex">
           {[...partners, ...partners].map((partner, index) => (
             <div
               key={index}
-              className="flex-shrink-0 px-12 md:px-16 flex items-center justify-center group cursor-pointer"
+              className="flex-shrink-0 px-6 md:px-10 flex items-center justify-center group cursor-pointer"
             >
-              <div className="flex items-center gap-3 opacity-50 hover:opacity-100 transition-opacity duration-300">
-                <span className="w-12 h-12 rounded-full bg-foreground/5 flex items-center justify-center font-display text-2xl text-foreground/70 group-hover:text-primary transition-colors">
+              <div className="flex items-center gap-2 md:gap-3 opacity-40 hover:opacity-100 transition-opacity duration-300">
+                <span className="w-9 h-9 md:w-11 md:h-11 rounded-full bg-foreground/5 flex items-center justify-center font-display text-lg md:text-xl text-foreground/70 group-hover:text-primary group-hover:bg-primary/10 transition-all">
                   {partner.logo}
                 </span>
-                <span className="font-display text-lg text-foreground/70 group-hover:text-foreground transition-colors whitespace-nowrap">
+                <span className="font-display text-sm md:text-base text-foreground/70 group-hover:text-foreground transition-colors whitespace-nowrap">
                   {partner.name}
                 </span>
               </div>

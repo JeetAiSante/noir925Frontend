@@ -58,31 +58,31 @@ const FeaturedCategories = () => {
   }, []);
 
   return (
-    <section className="py-16 md:py-24 bg-foreground">
+    <section className="py-12 md:py-16 bg-foreground">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-12">
-          <p className="font-accent text-sm text-accent tracking-widest uppercase mb-2">
+        <div className="text-center mb-8 md:mb-10">
+          <p className="font-accent text-xs md:text-sm text-accent tracking-widest uppercase mb-2">
             Explore
           </p>
-          <h2 className="font-display text-3xl md:text-5xl text-background">
+          <h2 className="font-display text-2xl md:text-4xl text-background">
             Shop by Category
           </h2>
         </div>
 
         {/* Categories Grid */}
-        <div ref={sectionRef} className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div ref={sectionRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {categories.map((category, index) => (
             <Link
               key={category.id}
               to={`/shop?category=${category.id}`}
               data-index={index}
-              className={`group relative overflow-hidden rounded-2xl transition-all duration-700 ${
+              className={`group relative overflow-hidden rounded-xl transition-all duration-700 ${
                 visibleItems.has(index)
                   ? 'opacity-100 translate-y-0'
                   : 'opacity-0 translate-y-10'
               }`}
-              style={{ transitionDelay: `${index * 100}ms` }}
+              style={{ transitionDelay: `${index * 80}ms` }}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
@@ -92,7 +92,6 @@ const FeaturedCategories = () => {
                   src={category.image}
                   alt={category.name}
                   loading="lazy"
-                  decoding="async"
                   className={`w-full h-full object-cover transition-all duration-700 ${
                     hoveredIndex === index ? 'scale-110' : 'scale-100'
                   }`}
@@ -103,23 +102,20 @@ const FeaturedCategories = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
 
               {/* Content */}
-              <div className="absolute inset-0 p-4 md:p-6 flex flex-col justify-end">
+              <div className="absolute inset-0 p-3 md:p-4 flex flex-col justify-end">
                 <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
-                  <p className="font-body text-xs text-background/60 mb-1">
+                  <p className="font-body text-[10px] md:text-xs text-background/60 mb-0.5">
                     {category.count} Products
                   </p>
-                  <h3 className="font-display text-xl md:text-2xl text-background mb-2 flex items-center gap-2">
+                  <h3 className="font-display text-base md:text-xl text-background mb-1 flex items-center gap-1">
                     {category.name}
-                    <ArrowUpRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300" />
+                    <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all duration-300" />
                   </h3>
-                  <p className="font-body text-sm text-background/70 opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-500 hidden md:block">
+                  <p className="font-body text-xs text-background/70 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-500 hidden md:block">
                     {category.description}
                   </p>
                 </div>
               </div>
-
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none shimmer" />
             </Link>
           ))}
         </div>

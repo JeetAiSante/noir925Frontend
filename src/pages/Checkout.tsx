@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, Shield, ChevronLeft } from "lucide-react";
+import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles } from "lucide-react";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -121,9 +121,18 @@ const Checkout = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-display mb-4">Your cart is empty</h1>
-          <Button onClick={() => navigate("/shop")}>Continue Shopping</Button>
+        <main className="container mx-auto px-4 py-16 md:py-24 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+              <CreditCard className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-display mb-4">Your cart is empty</h1>
+            <p className="text-muted-foreground mb-6">Add some items to your cart before checkout.</p>
+            <Button onClick={() => navigate("/shop")} variant="luxury">
+              Continue Shopping
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </main>
         <Footer />
       </div>
@@ -133,39 +142,45 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-6 md:py-8">
         <button
           onClick={() => navigate("/cart")}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 text-sm transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Cart
         </button>
 
-        <h1 className="text-3xl font-display mb-8">Checkout</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles className="w-6 h-6 text-primary" />
+          <h1 className="text-2xl md:text-3xl font-display">Secure Checkout</h1>
+        </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Shipping & Payment */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             {/* Shipping Information */}
-            <div className="bg-card rounded-lg p-6 border">
-              <h2 className="text-xl font-display mb-6 flex items-center gap-2">
-                <Truck className="w-5 h-5" />
+            <div className="bg-card rounded-xl p-5 border border-border">
+              <h2 className="text-lg font-display mb-5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Truck className="w-4 h-4 text-primary" />
+                </div>
                 Shipping Information
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <Label htmlFor="fullName">Full Name *</Label>
+                  <Label htmlFor="fullName" className="text-sm">Full Name *</Label>
                   <Input
                     id="fullName"
                     name="fullName"
                     value={shippingInfo.fullName}
                     onChange={handleInputChange}
                     placeholder="Enter your full name"
+                    className="mt-1.5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm">Email</Label>
                   <Input
                     id="email"
                     name="email"
@@ -173,131 +188,173 @@ const Checkout = () => {
                     value={shippingInfo.email}
                     onChange={handleInputChange}
                     placeholder="your@email.com"
+                    className="mt-1.5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone *</Label>
+                  <Label htmlFor="phone" className="text-sm">Phone *</Label>
                   <Input
                     id="phone"
                     name="phone"
                     value={shippingInfo.phone}
                     onChange={handleInputChange}
                     placeholder="+91 98765 43210"
+                    className="mt-1.5"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="addressLine1">Address Line 1 *</Label>
+                  <Label htmlFor="addressLine1" className="text-sm">Address Line 1 *</Label>
                   <Input
                     id="addressLine1"
                     name="addressLine1"
                     value={shippingInfo.addressLine1}
                     onChange={handleInputChange}
                     placeholder="Street address"
+                    className="mt-1.5"
                   />
                 </div>
                 <div className="md:col-span-2">
-                  <Label htmlFor="addressLine2">Address Line 2</Label>
+                  <Label htmlFor="addressLine2" className="text-sm">Address Line 2</Label>
                   <Input
                     id="addressLine2"
                     name="addressLine2"
                     value={shippingInfo.addressLine2}
                     onChange={handleInputChange}
                     placeholder="Apartment, suite, etc."
+                    className="mt-1.5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="city">City *</Label>
+                  <Label htmlFor="city" className="text-sm">City *</Label>
                   <Input
                     id="city"
                     name="city"
                     value={shippingInfo.city}
                     onChange={handleInputChange}
                     placeholder="City"
+                    className="mt-1.5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="state">State *</Label>
+                  <Label htmlFor="state" className="text-sm">State *</Label>
                   <Input
                     id="state"
                     name="state"
                     value={shippingInfo.state}
                     onChange={handleInputChange}
                     placeholder="State"
+                    className="mt-1.5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="postalCode">Postal Code *</Label>
+                  <Label htmlFor="postalCode" className="text-sm">Postal Code *</Label>
                   <Input
                     id="postalCode"
                     name="postalCode"
                     value={shippingInfo.postalCode}
                     onChange={handleInputChange}
                     placeholder="110001"
+                    className="mt-1.5"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="country">Country</Label>
+                  <Label htmlFor="country" className="text-sm">Country</Label>
                   <Input
                     id="country"
                     name="country"
                     value={shippingInfo.country}
                     onChange={handleInputChange}
                     disabled
+                    className="mt-1.5 bg-muted"
                   />
                 </div>
               </div>
             </div>
 
             {/* Payment Method */}
-            <div className="bg-card rounded-lg p-6 border">
-              <h2 className="text-xl font-display mb-6 flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
+            <div className="bg-card rounded-xl p-5 border border-border">
+              <h2 className="text-lg font-display mb-5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <CreditCard className="w-4 h-4 text-primary" />
+                </div>
                 Payment Method
               </h2>
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                <div className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50">
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                <label 
+                  htmlFor="card"
+                  className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all ${
+                    paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                  }`}
+                >
                   <RadioGroupItem value="card" id="card" />
-                  <Label htmlFor="card" className="cursor-pointer flex-1">
-                    Credit / Debit Card
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <CreditCard className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Credit / Debit Card</p>
+                    <p className="text-xs text-muted-foreground">Visa, Mastercard, RuPay</p>
+                  </div>
+                  {paymentMethod === 'card' && <CheckCircle className="w-5 h-5 text-primary" />}
+                </label>
+                
+                <label 
+                  htmlFor="upi"
+                  className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all ${
+                    paymentMethod === 'upi' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                  }`}
+                >
                   <RadioGroupItem value="upi" id="upi" />
-                  <Label htmlFor="upi" className="cursor-pointer flex-1">
-                    UPI
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3 p-4 border rounded-lg cursor-pointer hover:bg-accent/50">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                    <Smartphone className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">UPI Payment</p>
+                    <p className="text-xs text-muted-foreground">GPay, PhonePe, Paytm</p>
+                  </div>
+                  {paymentMethod === 'upi' && <CheckCircle className="w-5 h-5 text-primary" />}
+                </label>
+                
+                <label 
+                  htmlFor="cod"
+                  className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all ${
+                    paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                  }`}
+                >
                   <RadioGroupItem value="cod" id="cod" />
-                  <Label htmlFor="cod" className="cursor-pointer flex-1">
-                    Cash on Delivery
-                  </Label>
-                </div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                    <Banknote className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">Cash on Delivery</p>
+                    <p className="text-xs text-muted-foreground">Pay when you receive</p>
+                  </div>
+                  {paymentMethod === 'cod' && <CheckCircle className="w-5 h-5 text-primary" />}
+                </label>
               </RadioGroup>
             </div>
           </div>
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-lg p-6 border sticky top-24">
-              <h2 className="text-xl font-display mb-6">Order Summary</h2>
+            <div className="bg-card rounded-xl p-5 border border-border sticky top-20">
+              <h2 className="text-lg font-display mb-5">Order Summary</h2>
               
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 mb-5 max-h-[300px] overflow-y-auto">
                 {cartItems.map((item) => (
-                  <div key={`${item.id}-${item.size}`} className="flex gap-4">
+                  <div key={`${item.id}-${item.size}`} className="flex gap-3">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
+                      className="w-14 h-14 object-cover rounded-lg"
                     />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{item.name}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{item.name}</p>
                       {item.size && (
                         <p className="text-xs text-muted-foreground">Size: {item.size}</p>
                       )}
                       <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
-                    <p className="font-medium">₹{(item.price * item.quantity).toLocaleString()}</p>
+                    <p className="font-medium text-sm">₹{(item.price * item.quantity).toLocaleString()}</p>
                   </div>
                 ))}
               </div>
@@ -311,7 +368,9 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>{shipping === 0 ? "Free" : `₹${shipping}`}</span>
+                  <span className={shipping === 0 ? 'text-primary font-medium' : ''}>
+                    {shipping === 0 ? "FREE" : `₹${shipping}`}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax (18% GST)</span>
@@ -321,23 +380,36 @@ const Checkout = () => {
 
               <Separator className="my-4" />
 
-              <div className="flex justify-between text-lg font-display mb-6">
+              <div className="flex justify-between text-lg font-display mb-5">
                 <span>Total</span>
-                <span>₹{total.toLocaleString()}</span>
+                <span className="text-primary">₹{total.toLocaleString()}</span>
               </div>
 
               <Button
                 className="w-full"
                 size="lg"
+                variant="luxury"
                 onClick={handlePlaceOrder}
                 disabled={isProcessing}
               >
-                {isProcessing ? "Processing..." : "Place Order"}
+                {isProcessing ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4 mr-2" />
+                    Place Order
+                  </>
+                )}
               </Button>
 
-              <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-                <Shield className="w-4 h-4" />
-                Secure checkout powered by SSL
+              <div className="flex items-center justify-center gap-2 mt-4 p-3 bg-muted/50 rounded-lg">
+                <Shield className="w-4 h-4 text-primary" />
+                <span className="text-xs text-muted-foreground">
+                  256-bit SSL Secure Checkout
+                </span>
               </div>
             </div>
           </div>
