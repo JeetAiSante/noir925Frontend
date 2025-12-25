@@ -19,7 +19,11 @@ import {
   FolderTree,
   Palette,
   Gift,
-  Ticket
+  Ticket,
+  Warehouse,
+  Star,
+  ToggleLeft,
+  CreditCard
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -30,12 +34,16 @@ const navItems = [
   { icon: Package, label: 'Products', path: '/admin/products' },
   { icon: FolderTree, label: 'Categories', path: '/admin/categories' },
   { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
+  { icon: Warehouse, label: 'Inventory', path: '/admin/inventory' },
   { icon: Tag, label: 'Sales & Offers', path: '/admin/sales' },
   { icon: Image, label: 'Banners', path: '/admin/banners' },
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
   { icon: Gift, label: 'Spin Wheel', path: '/admin/spin-wheel' },
   { icon: Ticket, label: 'Lucky Discounts', path: '/admin/lucky-discounts' },
+  { icon: Star, label: 'Loyalty Program', path: '/admin/loyalty' },
+  { icon: CreditCard, label: 'Gift Cards', path: '/admin/gift-cards' },
+  { icon: ToggleLeft, label: 'Feature Toggles', path: '/admin/feature-toggles' },
   { icon: Mail, label: 'Messages', path: '/admin/messages' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
