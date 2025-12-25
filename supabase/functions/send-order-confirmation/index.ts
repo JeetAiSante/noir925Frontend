@@ -1,11 +1,25 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const sendEmail = async (to: string, subject: string, html: string) => {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from: "NOIR925 <onboarding@resend.dev>",
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+  return response.json();
 };
 
 interface OrderItem {
@@ -37,17 +51,19 @@ interface OrderData {
   estimatedDelivery: string;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const orderData: OrderData = await req.json();
-    
-    const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
-    
-    const itemsHtml = orderData.items.map(item => `
+
+    const formatCurrency = (amount: number) => `₹${amount.toLocaleString("en-IN")}`;
+
+    const itemsHtml = orderData.items
+      .map(
+        (item) => `
       <tr>
         <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
           <div style="display: flex; align-items: center; gap: 15px;">
@@ -57,7 +73,9 @@ const handler = async (req: Request): Promise<Response> => {
         <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
         <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 500;">${formatCurrency(item.price * item.quantity)}</td>
       </tr>
-    `).join('');
+    `
+      )
+      .join("");
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -94,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <tr>
                   <td style="padding: 5px 0;">
                     <span style="color: #666;">Order Date:</span>
-                    <strong style="color: #1a1a1a; margin-left: 10px;">${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                    <strong style="color: #1a1a1a; margin-left: 10px;">${new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong>
                   </td>
                 </tr>
                 <tr>
@@ -134,14 +152,18 @@ const handler = async (req: Request): Promise<Response> => {
                   <td style="padding: 8px 0; color: #666;">Shipping</td>
                   <td style="padding: 8px 0; text-align: right;">${orderData.shipping === 0 ? '<span style="color: #10b981;">FREE</span>' : formatCurrency(orderData.shipping)}</td>
                 </tr>
-                ${orderData.discount > 0 ? `
+                ${
+                  orderData.discount > 0
+                    ? `
                 <tr>
                   <td style="padding: 8px 0; color: #10b981;">Discount</td>
                   <td style="padding: 8px 0; text-align: right; color: #10b981;">-${formatCurrency(orderData.discount)}</td>
                 </tr>
-                ` : ''}
+                `
+                    : ""
+                }
                 <tr>
-                  <td style="padding: 8px 0; color: #666;">Tax (GST 3%)</td>
+                  <td style="padding: 8px 0; color: #666;">Tax (GST)</td>
                   <td style="padding: 8px 0; text-align: right;">${formatCurrency(orderData.tax)}</td>
                 </tr>
                 <tr style="background: #f9fafb;">
@@ -157,7 +179,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p style="margin: 0; color: #374151; line-height: 1.6;">
                 ${orderData.customerName}<br>
                 ${orderData.shippingAddress.addressLine1}<br>
-                ${orderData.shippingAddress.addressLine2 ? orderData.shippingAddress.addressLine2 + '<br>' : ''}
+                ${orderData.shippingAddress.addressLine2 ? orderData.shippingAddress.addressLine2 + "<br>" : ""}
                 ${orderData.shippingAddress.city}, ${orderData.shippingAddress.state} ${orderData.shippingAddress.postalCode}<br>
                 ${orderData.shippingAddress.country}
               </p>
@@ -178,11 +200,6 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #888; margin: 0 0 15px; font-size: 13px;">
               Questions? Contact us at support@noir925.com
             </p>
-            <div style="margin-top: 20px;">
-              <a href="#" style="color: #888; text-decoration: none; margin: 0 10px; font-size: 12px;">Privacy Policy</a>
-              <a href="#" style="color: #888; text-decoration: none; margin: 0 10px; font-size: 12px;">Terms of Service</a>
-              <a href="#" style="color: #888; text-decoration: none; margin: 0 10px; font-size: 12px;">Contact Us</a>
-            </div>
             <p style="color: #555; margin: 20px 0 0; font-size: 11px;">
               © ${new Date().getFullYear()} NOIR925. All rights reserved.
             </p>
@@ -192,12 +209,12 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    const emailResponse = await resend.emails.send({
-      from: "NOIR925 <onboarding@resend.dev>",
-      to: [orderData.customerEmail],
-      subject: `Order Confirmed! 🎉 Your NOIR925 Order #${orderData.orderNumber}`,
-      html: emailHtml,
-    });
+    console.log(`Sending order confirmation to ${orderData.customerEmail}`);
+    const emailResponse = await sendEmail(
+      orderData.customerEmail,
+      `Order Confirmed! 🎉 Your NOIR925 Order #${orderData.orderNumber}`,
+      emailHtml
+    );
 
     console.log("Order confirmation email sent:", emailResponse);
 
@@ -207,11 +224,9 @@ const handler = async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending order confirmation:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
-};
-
-serve(handler);
+});
