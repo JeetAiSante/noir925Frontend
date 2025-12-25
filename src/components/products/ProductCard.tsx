@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Eye, Star, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
 import { Product, formatPrice } from '@/data/products';
@@ -207,10 +207,10 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               <Button 
                 variant="glass" 
                 size="icon" 
-                className="shrink-0 h-8 w-8"
-                onClick={handleQuickView}
+                className={`shrink-0 h-8 w-8 ${inWishlist ? 'bg-secondary text-secondary-foreground' : ''}`}
+                onClick={handleWishlistClick}
               >
-                <Eye className="w-3.5 h-3.5" />
+                <Heart className={`w-3.5 h-3.5 ${inWishlist ? 'fill-current' : ''}`} />
               </Button>
             </div>
 
