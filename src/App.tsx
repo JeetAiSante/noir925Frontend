@@ -30,6 +30,7 @@ import TermsConditions from "./pages/TermsConditions";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import ReturnsPolicy from "./pages/ReturnsPolicy";
 import TrackOrder from "./pages/TrackOrder";
+import Gifting from "./pages/Gifting";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOverview from "./pages/admin/AdminOverview";
@@ -47,6 +48,7 @@ import AdminFestivalThemes from "./pages/admin/AdminFestivalThemes";
 import AdminSpinWheel from "./pages/admin/AdminSpinWheel";
 import AdminLuckyDiscounts from "./pages/admin/AdminLuckyDiscounts";
 import AdminLogin from "./pages/AdminLogin";
+import LuckyDiscountPopup from "./components/popups/LuckyDiscountPopup";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +60,7 @@ const App = () => (
           <CartProvider>
             <LuxuryCursor />
           <InstallPWAPrompt />
+          <LuckyDiscountPopup />
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -86,6 +89,7 @@ const App = () => (
               <Route path="/shipping-policy" element={<ShippingPolicy />} />
               <Route path="/returns-policy" element={<ReturnsPolicy />} />
               <Route path="/track-order" element={<TrackOrder />} />
+              <Route path="/gifting" element={<Gifting />} />
               {/* Admin Login - Separate from user auth */}
               <Route path="/admin-login" element={<AdminLogin />} />
               {/* Admin Routes */}
