@@ -61,14 +61,13 @@ const Checkout = () => {
     
     setIsApplyingCoupon(true);
     
-    // Check for spin wheel generated coupons
     const validCoupons: Record<string, number> = {
       'SPIN5': 5,
       'SPIN10': 10,
       'SPIN15': 15,
       'SPIN20': 20,
       'SPIN25': 25,
-      'FREESHIP': 0, // Special case
+      'FREESHIP': 0,
       'WELCOME10': 10,
       'NOIR15': 15,
     };
@@ -154,23 +153,6 @@ const Checkout = () => {
         .single();
 
       if (orderError) throw orderError;
-
-      const orderItems = cartItems.map((item) => ({
-        order_id: order.id,
-        product_id: item.id,
-        product_name: item.name,
-        product_image: item.image,
-        quantity: item.quantity,
-        price: item.price,
-        size: item.size || null,
-        variant: item.variant || null,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from("order_items")
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
 
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
@@ -548,11 +530,6 @@ const Checkout = () => {
                     <span>-₹{couponDiscount.toLocaleString()}</span>
                   </div>
                 )}
-              </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax (18% GST)</span>
-                  <span>₹{tax.toLocaleString()}</span>
-                </div>
               </div>
 
               <Separator className="my-4" />
