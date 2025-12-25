@@ -115,6 +115,51 @@ const Shop = () => {
         </div>
 
         <div className="container mx-auto px-4">
+          {/* Quick Filters - Sticky Pills */}
+          <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md py-3 -mx-4 px-4 mb-4 border-b border-border/50">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+              <button
+                onClick={() => {
+                  setPriceRange([0, 999]);
+                  setSortBy('featured');
+                }}
+                className="shrink-0 px-4 py-2 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground text-sm font-medium transition-all border border-secondary/20 shadow-sm"
+              >
+                Under ₹999
+              </button>
+              <button
+                onClick={() => {
+                  setSortBy('rating');
+                  setSelectedCategory(null);
+                }}
+                className="shrink-0 px-4 py-2 rounded-full bg-accent/80 hover:bg-accent text-accent-foreground text-sm font-medium transition-all border border-accent/20 shadow-sm"
+              >
+                Best Sellers
+              </button>
+              <button
+                onClick={() => {
+                  setSortBy('newest');
+                  setSelectedCategory(null);
+                }}
+                className="shrink-0 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-all border border-primary/20"
+              >
+                New Arrivals
+              </button>
+              <button
+                onClick={() => {
+                  const discountProducts = products.filter(p => p.discount);
+                  if (discountProducts.length > 0) {
+                    setSelectedCategory(null);
+                    setSortBy('featured');
+                  }
+                }}
+                className="shrink-0 px-4 py-2 rounded-full bg-gradient-to-r from-rose-500/10 to-pink-500/10 hover:from-rose-500/20 hover:to-pink-500/20 text-foreground text-sm font-medium transition-all border border-rose-500/20"
+              >
+                On Sale
+              </button>
+            </div>
+          </div>
+
           {/* Category Pills - Quick Filter */}
           <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
             <button

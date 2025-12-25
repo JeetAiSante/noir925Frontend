@@ -6,6 +6,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { ArrowRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCollectionCounts } from '@/hooks/useProductCounts';
+import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 
 const collectionData = [
   {
@@ -140,6 +141,7 @@ const Collections = () => {
           </section>
         </main>
 
+        <FloatingSpinWheel />
         <Footer />
       </div>
     );
@@ -233,6 +235,7 @@ const Collections = () => {
         </section>
       </main>
 
+      <FloatingSpinWheel />
       <Footer />
     </div>
   );
