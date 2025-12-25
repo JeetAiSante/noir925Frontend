@@ -26,6 +26,7 @@ import SeasonalBanner from '@/components/home/SeasonalBanner';
 import BrandStorySection from '@/components/home/BrandStorySection';
 import RandomReviewsCarousel from '@/components/home/RandomReviewsCarousel';
 import DailywearSection from '@/components/home/DailywearSection';
+import FestivalBanner from '@/components/home/FestivalBanner';
 import FirstTimePopup from '@/components/popups/FirstTimePopup';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 
@@ -45,6 +46,9 @@ const Index = () => {
           
           {/* Countdown Sale Banner */}
           <CountdownBanner />
+          
+          {/* Festival Theme Banner - Dynamic */}
+          <FestivalBanner />
           
           {/* Trust Strip - Single instance */}
           <TrustStrip />
