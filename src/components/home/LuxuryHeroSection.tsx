@@ -145,22 +145,52 @@ const LuxuryHeroSection = () => {
   return (
     <section 
       ref={sectionRef} 
-      className="relative min-h-screen bg-gradient-to-br from-[#0D0D0D] via-[#1A1A1A] to-[#0D0D0D] overflow-hidden"
+      className="relative min-h-screen overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, 
+          hsl(220 20% 6%) 0%, 
+          hsl(220 18% 10%) 25%, 
+          hsl(200 15% 8%) 50%, 
+          hsl(220 20% 8%) 75%, 
+          hsl(220 22% 5%) 100%)`
+      }}
     >
-      {/* Luxury Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.03]">
+      {/* Ultra Premium Multi-Layer Background */}
+      <div className="absolute inset-0">
+        {/* Primary Gradient Overlay */}
         <div 
           className="absolute inset-0"
           style={{
-            backgroundImage: `radial-gradient(circle at 25% 25%, rgba(184,134,11,0.15) 0%, transparent 50%),
-                              radial-gradient(circle at 75% 75%, rgba(184,134,11,0.1) 0%, transparent 50%)`
+            background: `radial-gradient(ellipse 80% 50% at 20% 40%, hsla(40, 50%, 45%, 0.08) 0%, transparent 60%),
+                         radial-gradient(ellipse 60% 40% at 80% 60%, hsla(160, 35%, 30%, 0.06) 0%, transparent 50%),
+                         radial-gradient(ellipse 100% 80% at 50% 100%, hsla(40, 45%, 40%, 0.05) 0%, transparent 40%)`
           }}
         />
+        {/* Subtle Noise Texture */}
+        <div className="absolute inset-0 opacity-[0.015]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
+        }} />
+        {/* Vignette Effect */}
+        <div className="absolute inset-0" style={{
+          background: `radial-gradient(ellipse at center, transparent 0%, hsla(220, 20%, 4%, 0.4) 100%)`
+        }} />
       </div>
 
-      {/* Gold Accent Lines */}
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#B8860B]/30 to-transparent" />
-      <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#B8860B]/30 to-transparent" />
+      {/* Luxury Gold Accent Lines */}
+      <div className="absolute top-0 left-0 w-full h-px" style={{
+        background: `linear-gradient(90deg, transparent 0%, hsla(40, 50%, 50%, 0.4) 50%, transparent 100%)`
+      }} />
+      <div className="absolute bottom-0 left-0 w-full h-px" style={{
+        background: `linear-gradient(90deg, transparent 0%, hsla(40, 50%, 50%, 0.3) 50%, transparent 100%)`
+      }} />
+      
+      {/* Side Accent Glows */}
+      <div className="absolute top-1/4 -left-32 w-64 h-64 rounded-full opacity-20" style={{
+        background: `radial-gradient(circle, hsla(40, 50%, 45%, 0.3) 0%, transparent 70%)`
+      }} />
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 rounded-full opacity-15" style={{
+        background: `radial-gradient(circle, hsla(160, 40%, 40%, 0.25) 0%, transparent 70%)`
+      }} />
 
       {/* Main Content Grid */}
       <div className="relative min-h-screen container mx-auto px-4 lg:px-8 py-8 lg:py-0">
@@ -168,7 +198,7 @@ const LuxuryHeroSection = () => {
           
           {/* Left Side - Category Sidebar (Desktop) */}
           <div className="hidden lg:flex lg:col-span-2 flex-col gap-2 py-20">
-            <p className="text-[#B8860B] text-xs font-medium tracking-widest uppercase mb-4">Categories</p>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: 'hsl(40, 50%, 55%)' }}>Categories</p>
             {sidebarCategories.map((item, index) => (
               <motion.div
                 key={item.name}
@@ -178,15 +208,27 @@ const LuxuryHeroSection = () => {
               >
                 <Link 
                   to={item.link}
-                  className="group flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-all duration-300 border border-transparent hover:border-[#B8860B]/20"
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 border border-transparent"
+                  style={{ 
+                    ['--hover-bg' as string]: 'hsla(40, 40%, 50%, 0.08)',
+                    ['--hover-border' as string]: 'hsla(40, 50%, 55%, 0.2)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = 'hsla(40, 40%, 50%, 0.08)';
+                    e.currentTarget.style.borderColor = 'hsla(40, 50%, 55%, 0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.borderColor = 'transparent';
+                  }}
                 >
-                  <span className="w-8 h-8 rounded-full bg-[#B8860B]/10 flex items-center justify-center text-sm">
+                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ backgroundColor: 'hsla(40, 50%, 50%, 0.12)' }}>
                     {item.icon}
                   </span>
-                  <span className="font-body text-sm text-white/70 group-hover:text-[#B8860B] transition-colors">
+                  <span className="font-body text-sm transition-colors" style={{ color: 'hsla(40, 20%, 85%, 0.7)' }}>
                     {item.name}
                   </span>
-                  <ChevronRight className="w-3 h-3 text-white/30 group-hover:text-[#B8860B] ml-auto opacity-0 group-hover:opacity-100 transition-all" />
+                  <ChevronRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-all" style={{ color: 'hsla(40, 50%, 55%, 0.5)' }} />
                 </Link>
               </motion.div>
             ))}
@@ -202,16 +244,20 @@ const LuxuryHeroSection = () => {
             >
               {/* Decorative Ring */}
               <div className="absolute inset-0 -m-6 sm:-m-10 lg:-m-16">
-                <div className="w-full h-full rounded-full border border-[#B8860B]/20" />
+                <div className="w-full h-full rounded-full" style={{ border: '1px solid hsla(40, 50%, 50%, 0.25)' }} />
                 <motion.div 
-                  className="absolute inset-2 rounded-full border border-[#B8860B]/10"
+                  className="absolute inset-2 rounded-full"
+                  style={{ border: '1px solid hsla(40, 50%, 50%, 0.12)' }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
                 />
               </div>
 
               {/* Video/Image Container */}
-              <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-[380px] lg:h-[380px] rounded-full overflow-hidden bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] shadow-[0_0_60px_rgba(184,134,11,0.15)]">
+              <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-[380px] lg:h-[380px] rounded-full overflow-hidden" style={{
+                background: 'linear-gradient(135deg, hsl(220, 18%, 12%) 0%, hsl(220, 20%, 6%) 100%)',
+                boxShadow: '0 0 80px hsla(40, 50%, 45%, 0.15), 0 0 120px hsla(40, 50%, 45%, 0.08), inset 0 0 60px hsla(220, 20%, 4%, 0.5)'
+              }}>
                 {hasVideo ? (
                   <video
                     ref={videoRef}
@@ -249,12 +295,12 @@ const LuxuryHeroSection = () => {
 
                 {/* Loading State */}
                 {hasVideo && !isVideoLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-[#0D0D0D]">
+                  <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'hsl(220, 20%, 6%)' }}>
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                     >
-                      <Sparkles className="w-8 h-8 text-[#B8860B]/40" />
+                      <Sparkles className="w-8 h-8" style={{ color: 'hsla(40, 50%, 50%, 0.4)' }} />
                     </motion.div>
                   </div>
                 )}
@@ -273,7 +319,7 @@ const LuxuryHeroSection = () => {
                 animate={{ y: [-5, 5, -5], rotate: [0, 10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-[#B8860B]" />
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: 'hsl(40, 55%, 55%)' }} />
               </motion.div>
               
               <motion.div
@@ -289,9 +335,13 @@ const LuxuryHeroSection = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-[#0D0D0D]/90 backdrop-blur-md px-4 py-2 rounded-full border border-[#B8860B]/20"
+                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 backdrop-blur-md px-4 py-2 rounded-full"
+                  style={{ 
+                    backgroundColor: 'hsla(220, 20%, 6%, 0.9)', 
+                    border: '1px solid hsla(40, 50%, 50%, 0.2)' 
+                  }}
                 >
-                  <p className="text-white/90 text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-[200px]">
+                  <p className="text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-[200px]" style={{ color: 'hsla(40, 20%, 92%, 0.9)' }}>
                     {currentProduct.name}
                   </p>
                 </motion.div>
@@ -313,10 +363,11 @@ const LuxuryHeroSection = () => {
                     exit={{ opacity: 0, y: -30 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-white leading-[1.1] tracking-tight">
-                      <span className="block font-light italic text-white/70">{currentText.title}</span>
+                    <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight" style={{ color: 'hsl(40, 20%, 95%)' }}>
+                      <span className="block font-light italic" style={{ color: 'hsla(40, 20%, 90%, 0.7)' }}>{currentText.title}</span>
                       <motion.span 
-                        className="block mt-1 font-semibold bg-gradient-to-r from-[#B8860B] via-[#D4A84B] to-[#B8860B] bg-clip-text text-transparent"
+                        className="block mt-1 font-semibold bg-clip-text text-transparent"
+                        style={{ backgroundImage: 'linear-gradient(135deg, hsl(40, 55%, 55%) 0%, hsl(40, 60%, 68%) 50%, hsl(40, 55%, 55%) 100%)' }}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
@@ -337,7 +388,8 @@ const LuxuryHeroSection = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
-                    className="font-body text-sm sm:text-base md:text-lg text-white/50 leading-relaxed"
+                    className="font-body text-sm sm:text-base md:text-lg leading-relaxed"
+                    style={{ color: 'hsla(40, 15%, 75%, 0.55)' }}
                   >
                     {currentText.subtitle}
                   </motion.p>
@@ -354,9 +406,14 @@ const LuxuryHeroSection = () => {
                 <Link to="/shop">
                   <Button 
                     size="lg" 
-                    className="group relative overflow-hidden px-6 sm:px-8 py-5 sm:py-6 bg-gradient-to-r from-[#B8860B] to-[#9A7209] hover:from-[#D4A84B] hover:to-[#B8860B] text-white border-0 shadow-lg shadow-[#B8860B]/20 hover:shadow-xl hover:shadow-[#B8860B]/30 transition-all duration-500 rounded-full font-display tracking-wide text-sm sm:text-base"
+                    className="group relative overflow-hidden px-6 sm:px-8 py-5 sm:py-6 border-0 transition-all duration-500 rounded-full font-display tracking-wide text-sm sm:text-base"
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(40, 50%, 45%) 0%, hsl(40, 45%, 38%) 100%)',
+                      color: 'hsl(220, 20%, 8%)',
+                      boxShadow: '0 8px 32px hsla(40, 50%, 45%, 0.25), 0 0 0 1px hsla(40, 60%, 60%, 0.1) inset'
+                    }}
                   >
-                    <span className="relative z-10 flex items-center gap-2">
+                    <span className="relative z-10 flex items-center gap-2 font-semibold">
                       Explore Collection
                       <motion.span animate={{ x: [0, 4, 0] }} transition={{ duration: 1.5, repeat: Infinity }}>
                         →
@@ -365,8 +422,8 @@ const LuxuryHeroSection = () => {
                   </Button>
                 </Link>
 
-                <Link to="/collections" className="group flex items-center gap-2 text-white/50 hover:text-white transition-colors">
-                  <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-white/20 flex items-center justify-center group-hover:border-[#B8860B] transition-colors">
+                <Link to="/collections" className="group flex items-center gap-2 transition-colors" style={{ color: 'hsla(40, 15%, 75%, 0.5)' }}>
+                  <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors" style={{ border: '1px solid hsla(40, 30%, 60%, 0.2)' }}>
                     <span className="text-xs">▶</span>
                   </span>
                   <span className="font-body text-xs sm:text-sm">View Story</span>
@@ -378,14 +435,15 @@ const LuxuryHeroSection = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="flex items-center gap-3 pt-4 sm:pt-6 border-t border-white/10"
+                className="flex items-center gap-3 pt-4 sm:pt-6"
+                style={{ borderTop: '1px solid hsla(40, 30%, 50%, 0.12)' }}
               >
                 <div className="flex items-center gap-1">
-                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#B8860B]" />
-                  <span className="text-[10px] sm:text-xs font-medium text-white/60">925 Certified</span>
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'hsl(40, 55%, 55%)' }} />
+                  <span className="text-[10px] sm:text-xs font-medium" style={{ color: 'hsla(40, 20%, 85%, 0.6)' }}>925 Certified</span>
                 </div>
-                <span className="text-white/20">|</span>
-                <p className="text-[10px] sm:text-xs text-white/40">
+                <span style={{ color: 'hsla(40, 30%, 50%, 0.2)' }}>|</span>
+                <p className="text-[10px] sm:text-xs" style={{ color: 'hsla(40, 15%, 75%, 0.4)' }}>
                   Authenticity & purity guaranteed
                 </p>
               </motion.div>
@@ -405,10 +463,11 @@ const LuxuryHeroSection = () => {
                     style={{ width: i === currentTextIndex ? '40px' : '10px' }}
                     aria-label={`Go to slide ${i + 1}`}
                   >
-                    <span className="absolute inset-0 bg-white/20" />
+                    <span className="absolute inset-0" style={{ backgroundColor: 'hsla(40, 30%, 50%, 0.2)' }} />
                     {i === currentTextIndex && (
                       <motion.span
-                        className="absolute inset-0 bg-[#B8860B] origin-left"
+                        className="absolute inset-0 origin-left"
+                        style={{ backgroundColor: 'hsl(40, 55%, 55%)' }}
                         initial={{ scaleX: 0 }}
                         animate={{ scaleX: 1 }}
                         transition={{ duration: 5, ease: 'linear' }}
