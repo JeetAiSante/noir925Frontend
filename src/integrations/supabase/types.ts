@@ -661,6 +661,42 @@ export type Database = {
         }
         Relationships: []
       }
+      spin_wheel_history: {
+        Row: {
+          coupon_code: string | null
+          created_at: string
+          id: string
+          is_redeemed: boolean | null
+          prize_type: string
+          prize_value: string
+          redeemed_at: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          coupon_code?: string | null
+          created_at?: string
+          id?: string
+          is_redeemed?: boolean | null
+          prize_type: string
+          prize_value: string
+          redeemed_at?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          coupon_code?: string | null
+          created_at?: string
+          id?: string
+          is_redeemed?: boolean | null
+          prize_type?: string
+          prize_value?: string
+          redeemed_at?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
