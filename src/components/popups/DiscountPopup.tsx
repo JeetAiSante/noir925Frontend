@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { X, Gift, Sparkles, Mail, ArrowRight } from 'lucide-react';
+import { X, Gift, Mail, ArrowRight, Sparkles } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
 interface DiscountPopupProps {
@@ -19,105 +19,83 @@ const DiscountPopup = ({ open, onOpenChange }: DiscountPopupProps) => {
     if (!email) return;
 
     setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast.success('Welcome! Your 15% discount code: NOIR15', {
-      description: 'Use it at checkout for your first order.',
-      duration: 10000,
-    });
-    
-    localStorage.setItem('noir925_subscribed', 'true');
-    setIsSubmitting(false);
-    onOpenChange(false);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      toast.success('Welcome! Use code NOIR15 for 15% off!');
+      localStorage.setItem('noir925_subscribed', 'true');
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+      <DialogContent className="max-w-xs sm:max-w-sm p-0 gap-0 overflow-hidden bg-card border-primary/10 shadow-luxury">
         {/* Close Button */}
         <button
           onClick={() => onOpenChange(false)}
-          className="absolute right-4 top-4 z-10 p-2 rounded-full bg-background/80 hover:bg-background transition-colors"
+          className="absolute right-3 top-3 z-10 w-7 h-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-muted transition-colors"
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
 
-        <div className="grid md:grid-cols-2">
-          {/* Image Side */}
-          <div className="hidden md:block relative h-full min-h-[300px]">
-            <img
-              src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&h=400&fit=crop"
-              alt="Silver Jewelry"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 to-transparent" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-background">
-                <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center mx-auto mb-4">
-                  <Gift className="w-8 h-8" />
-                </div>
-                <p className="font-display text-5xl font-bold">15%</p>
-                <p className="text-lg mt-2">OFF</p>
-              </div>
+        {/* Decorative Header */}
+        <div className="relative bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-5 text-center text-primary-foreground overflow-hidden">
+          <Sparkles className="absolute top-3 left-3 w-4 h-4 opacity-40 animate-pulse" />
+          <Sparkles className="absolute bottom-3 right-3 w-3 h-3 opacity-30 animate-pulse delay-300" />
+          
+          <div className="relative">
+            <div className="w-14 h-14 mx-auto rounded-full bg-white/10 backdrop-blur flex items-center justify-center mb-3 ring-2 ring-white/20">
+              <Gift className="w-7 h-7" />
             </div>
+            <div className="text-3xl font-display font-bold mb-0.5">15% OFF</div>
+            <p className="text-xs opacity-90">Your First Order</p>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-3">
+          <div className="text-center">
+            <h3 className="font-display text-base mb-0.5">Join NOIR925 Family</h3>
+            <p className="text-xs text-muted-foreground">
+              Get exclusive deals & style tips
+            </p>
           </div>
 
-          {/* Content Side */}
-          <div className="p-8">
-            <div className="text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm mb-4">
-                <Sparkles className="w-4 h-4" />
-                Exclusive Offer
-              </div>
-              
-              <h2 className="font-display text-2xl md:text-3xl mb-3">
-                Get 15% Off Your First Order
-              </h2>
-              
-              <p className="text-muted-foreground mb-6">
-                Join our exclusive community and receive a special discount on your first purchase of handcrafted 925 silver jewelry.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    className="pl-11 h-12"
-                    required
-                  />
-                </div>
-                
-                <Button 
-                  type="submit" 
-                  variant="luxury" 
-                  className="w-full h-12"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Subscribing...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      Claim My 15% Off
-                      <ArrowRight className="w-4 h-4" />
-                    </span>
-                  )}
-                </Button>
-              </form>
-
-              <p className="text-xs text-muted-foreground mt-4 text-center md:text-left">
-                By subscribing, you agree to receive marketing emails. Unsubscribe anytime.
-              </p>
+          <form onSubmit={handleSubmit} className="space-y-2.5">
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 h-10 bg-muted/50 border-0 text-sm"
+                required
+              />
             </div>
-          </div>
+
+            <Button
+              type="submit"
+              size="sm"
+              className="w-full h-10 gap-2 font-medium"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+              ) : (
+                <>
+                  Claim 15% Off
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          <p className="text-[10px] text-center text-muted-foreground">
+            By subscribing, you agree to receive marketing emails
+          </p>
         </div>
       </DialogContent>
     </Dialog>

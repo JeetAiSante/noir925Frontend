@@ -7,11 +7,14 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   IndianRupee,
-  Clock
+  Clock,
+  Bell
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/data/products';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { toast } from 'sonner';
 
 const AdminOverview = () => {
   const [stats, setStats] = useState({
@@ -21,6 +24,7 @@ const AdminOverview = () => {
     pendingOrders: 0,
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [salesData, setSalesData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -49,6 +53,24 @@ const AdminOverview = () => {
           });
           
           setRecentOrders(orders.slice(0, 5));
+
+          // Generate sales chart data from orders
+          const last7Days = Array.from({ length: 7 }, (_, i) => {
+            const date = new Date();
+            date.setDate(date.getDate() - (6 - i));
+            return date.toISOString().split('T')[0];
+          });
+
+          const chartData = last7Days.map(date => {
+            const dayOrders = orders.filter(o => o.created_at?.startsWith(date));
+            return {
+              date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+              sales: dayOrders.reduce((sum, o) => sum + (o.total || 0), 0),
+              orders: dayOrders.length,
+            };
+          });
+
+          setSalesData(chartData);
         }
       } catch (error) {
         console.error('Error fetching admin data:', error);
@@ -58,6 +80,41 @@ const AdminOverview = () => {
     };
 
     fetchData();
+
+    // Real-time order notifications
+    const channel = supabase
+      .channel('orders-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          const newOrder = payload.new as any;
+          toast.success(`New Order: ${newOrder.order_number}`, {
+            description: `Amount: ${formatPrice(newOrder.total)}`,
+            duration: 10000,
+          });
+          
+          // Update stats
+          setStats(prev => ({
+            ...prev,
+            totalOrders: prev.totalOrders + 1,
+            totalRevenue: prev.totalRevenue + (newOrder.total || 0),
+            pendingOrders: prev.pendingOrders + 1,
+          }));
+          
+          // Add to recent orders
+          setRecentOrders(prev => [newOrder, ...prev.slice(0, 4)]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const statCards = [
@@ -86,8 +143,8 @@ const AdminOverview = () => {
       title: 'Pending Orders',
       value: stats.pendingOrders.toString(),
       icon: Clock,
-      change: '-5.1%',
-      trend: 'down',
+      change: stats.pendingOrders > 0 ? 'Action needed' : 'All clear',
+      trend: stats.pendingOrders > 0 ? 'down' : 'up',
     },
   ];
 
@@ -102,9 +159,15 @@ const AdminOverview = () => {
   return (
     <div className="p-6 lg:p-8 space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="font-display text-3xl lg:text-4xl mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back! Here's your store overview.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-3xl lg:text-4xl mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back! Here's your store overview.</p>
+        </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-500 text-sm">
+          <Bell className="w-4 h-4" />
+          <span>Live Updates</span>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -136,6 +199,80 @@ const AdminOverview = () => {
         ))}
       </div>
 
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Sales Chart */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="font-display text-xl">Sales Overview (Last 7 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={salesData}>
+                  <defs>
+                    <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(v) => `₹${v/1000}k`} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                    formatter={(value: number) => [formatPrice(value), 'Sales']}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="sales" 
+                    stroke="hsl(var(--primary))" 
+                    fill="url(#salesGradient)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Orders Chart */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle className="font-display text-xl">Orders (Last 7 Days)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))', 
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="orders" 
+                    stroke="hsl(var(--secondary))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--secondary))' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Recent Orders */}
       <Card className="border-border/50">
         <CardHeader>
@@ -163,6 +300,7 @@ const AdminOverview = () => {
                       order.status === 'delivered' ? 'bg-green-500/10 text-green-500' :
                       order.status === 'processing' ? 'bg-blue-500/10 text-blue-500' :
                       order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500' :
+                      order.status === 'cancelled' ? 'bg-red-500/10 text-red-500' :
                       'bg-muted text-muted-foreground'
                     }`}>
                       {order.status}
