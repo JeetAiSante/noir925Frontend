@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, ImgHTMLAttributes } from 'react';
+import { useState, useRef, useEffect, ImgHTMLAttributes, memo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
@@ -9,7 +9,7 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
   priority?: boolean;
 }
 
-const OptimizedImage = ({
+const OptimizedImage = memo(({
   src,
   alt,
   fallback = '/placeholder.svg',
@@ -21,13 +21,16 @@ const OptimizedImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);
   const [hasError, setHasError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const imgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (priority) {
       setIsInView(true);
       return;
     }
+
+    const element = imgRef.current;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -37,15 +40,12 @@ const OptimizedImage = ({
         }
       },
       {
-        rootMargin: '100px',
+        rootMargin: '200px', // Increased for earlier loading
         threshold: 0.01,
       }
     );
 
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
-
+    observer.observe(element);
     return () => observer.disconnect();
   }, [priority]);
 
@@ -67,7 +67,7 @@ const OptimizedImage = ({
     >
       {/* Skeleton placeholder */}
       {!isLoaded && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
+        <div className="absolute inset-0 shimmer-skeleton" />
       )}
 
       {/* Actual image */}
@@ -76,7 +76,7 @@ const OptimizedImage = ({
           src={hasError ? fallback : src}
           alt={alt}
           loading={priority ? 'eager' : 'lazy'}
-          decoding={priority ? 'sync' : 'async'}
+          decoding="async"
           fetchPriority={priority ? 'high' : 'auto'}
           onLoad={() => setIsLoaded(true)}
           onError={() => {
@@ -84,7 +84,7 @@ const OptimizedImage = ({
             setIsLoaded(true);
           }}
           className={cn(
-            'w-full h-full object-cover transition-opacity duration-500',
+            'w-full h-full object-cover transition-opacity duration-300',
             isLoaded ? 'opacity-100' : 'opacity-0'
           )}
           {...props}
@@ -92,6 +92,8 @@ const OptimizedImage = ({
       )}
     </div>
   );
-};
+});
+
+OptimizedImage.displayName = 'OptimizedImage';
 
 export default OptimizedImage;

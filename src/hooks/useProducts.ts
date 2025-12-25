@@ -54,9 +54,10 @@ export const useProducts = (options?: {
   return useQuery({
     queryKey: ['products', options],
     queryFn: async () => {
+      // Select only needed columns for performance
       let query = supabase
         .from('products')
-        .select('*')
+        .select('id, name, slug, price, original_price, discount_percent, images, is_new, is_trending, is_bestseller, rating, reviews_count, description, material, weight')
         .eq('is_active', true);
 
       if (options?.featured) {
@@ -81,7 +82,8 @@ export const useProducts = (options?: {
 
       return (data as DbProduct[]).map(mapDbProductToProduct);
     },
-    staleTime: 60000,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
   });
 };
 
@@ -91,7 +93,7 @@ export const useBanners = (position?: string) => {
     queryFn: async () => {
       let query = supabase
         .from('banners')
-        .select('*')
+        .select('id, title, subtitle, description, image_url, video_url, is_video, link, button_text, position')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
@@ -103,7 +105,8 @@ export const useBanners = (position?: string) => {
       if (error) throw error;
       return data;
     },
-    staleTime: 60000,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
@@ -113,14 +116,15 @@ export const useCategories = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
-        .select('*')
+        .select('id, name, slug, description, image_url, icon, is_featured')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
       return data;
     },
-    staleTime: 60000,
+    staleTime: 1000 * 60 * 10, // 10 minutes for categories
+    gcTime: 1000 * 60 * 60, // 1 hour cache
   });
 };
 
@@ -130,13 +134,14 @@ export const useCollections = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('collections')
-        .select('*')
+        .select('id, name, slug, description, image_url, is_featured')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
       return data;
     },
-    staleTime: 60000,
+    staleTime: 1000 * 60 * 10,
+    gcTime: 1000 * 60 * 60,
   });
 };
