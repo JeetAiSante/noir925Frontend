@@ -24,93 +24,100 @@ import WeddingCollectionShowcase from '@/components/home/WeddingCollectionShowca
 import LuxuryEditorialSection from '@/components/home/LuxuryEditorialSection';
 import SeasonalBanner from '@/components/home/SeasonalBanner';
 import BrandStorySection from '@/components/home/BrandStorySection';
+import RandomReviewsCarousel from '@/components/home/RandomReviewsCarousel';
+import FirstTimePopup from '@/components/popups/FirstTimePopup';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <OrganizationSchema />
-      <WebsiteSchema />
-      <FAQSchema />
-      
-      <Header />
-      
-      <main className="overflow-hidden">
-        {/* Hero Section with Video */}
-        <VideoHeroSection />
+    <FirstTimePopup>
+      <div className="min-h-screen bg-background">
+        <OrganizationSchema />
+        <WebsiteSchema />
+        <FAQSchema />
         
-        {/* Countdown Sale Banner */}
-        <CountdownBanner />
+        <Header />
         
-        {/* Trust Strip - Single instance */}
-        <TrustStrip />
+        <main className="overflow-hidden">
+          {/* Hero Section with Video */}
+          <VideoHeroSection />
+          
+          {/* Countdown Sale Banner */}
+          <CountdownBanner />
+          
+          {/* Trust Strip - Single instance */}
+          <TrustStrip />
+          
+          {/* Categories Carousel */}
+          <CategoriesCarousel />
+          
+          {/* Bestsellers */}
+          <BestsellersGrid />
+          
+          {/* Wedding Collection */}
+          <WeddingCollectionShowcase />
+          
+          {/* Parallax Banner */}
+          <ParallaxBanner />
+          
+          {/* New Arrivals */}
+          <NewArrivalsGrid />
+          
+          {/* Trending Slider with Auto-scroll */}
+          <TrendingSlider />
+          
+          {/* Random Reviews Carousel */}
+          <RandomReviewsCarousel />
+          
+          {/* Art of Silver Editorial - with auto-shuffle */}
+          <LuxuryEditorialSection />
+          
+          {/* Video Showcase */}
+          <VideoShowcase />
+          
+          {/* Featured Categories */}
+          <FeaturedCategories />
+          
+          {/* Seasonal Banners */}
+          <SeasonalBanner />
+          
+          {/* Promo Banners */}
+          <PromoBanners />
+          
+          {/* Brand Story */}
+          <BrandStorySection />
+          
+          {/* Our Collections */}
+          <CollectionsStory />
+          
+          {/* Shop by Occasion */}
+          <ShopByOccasion />
+          
+          {/* Silver Care Guide */}
+          <SilverCareSection />
+          
+          {/* Brand Partners / As Featured In */}
+          <BrandPartners />
+          
+          {/* Customer Reviews */}
+          <PremiumReviewsSection />
+          
+          {/* Instagram Feed */}
+          <InstagramFeed />
+          
+          {/* Newsletter */}
+          <NewsletterSection />
+          
+          {/* Recently Viewed */}
+          <RecentlyViewed />
+          
+          {/* Final CTA */}
+          <FinalCTA />
+        </main>
         
-        {/* Categories Carousel */}
-        <CategoriesCarousel />
-        
-        {/* Bestsellers */}
-        <BestsellersGrid />
-        
-        {/* Wedding Collection */}
-        <WeddingCollectionShowcase />
-        
-        {/* Parallax Banner */}
-        <ParallaxBanner />
-        
-        {/* New Arrivals */}
-        <NewArrivalsGrid />
-        
-        {/* Trending Slider with Auto-scroll */}
-        <TrendingSlider />
-        
-        {/* Art of Silver Editorial - with auto-shuffle */}
-        <LuxuryEditorialSection />
-        
-        {/* Video Showcase */}
-        <VideoShowcase />
-        
-        {/* Featured Categories */}
-        <FeaturedCategories />
-        
-        {/* Seasonal Banners */}
-        <SeasonalBanner />
-        
-        {/* Promo Banners */}
-        <PromoBanners />
-        
-        {/* Brand Story */}
-        <BrandStorySection />
-        
-        {/* Our Collections */}
-        <CollectionsStory />
-        
-        {/* Shop by Occasion */}
-        <ShopByOccasion />
-        
-        {/* Silver Care Guide */}
-        <SilverCareSection />
-        
-        {/* Brand Partners / As Featured In */}
-        <BrandPartners />
-        
-        {/* Customer Reviews */}
-        <PremiumReviewsSection />
-        
-        {/* Instagram Feed */}
-        <InstagramFeed />
-        
-        {/* Newsletter */}
-        <NewsletterSection />
-        
-        {/* Recently Viewed */}
-        <RecentlyViewed />
-        
-        {/* Final CTA */}
-        <FinalCTA />
-      </main>
-      
-      <Footer />
-    </div>
+        <Footer />
+      </div>
+    </FirstTimePopup>
   );
 };
 
