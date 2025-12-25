@@ -230,7 +230,7 @@ const LuxuryHeroSection = () => {
                   <AnimatePresence mode="wait">
                     <motion.img 
                       key={currentProduct.id}
-                      src={currentProduct.images[0] || currentBanner?.image_url || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop"}
+                      src={currentProduct.image || currentBanner?.image_url || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop"}
                       alt={currentProduct.name}
                       className="absolute inset-0 w-full h-full object-cover scale-110"
                       initial={{ opacity: 0, scale: 1.1 }}
