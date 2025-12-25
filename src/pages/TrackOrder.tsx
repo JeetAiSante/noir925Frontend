@@ -1,54 +1,127 @@
-import { useState } from 'react';
-import { Search, Package, Truck, CheckCircle, MapPin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Package, Truck, CheckCircle, MapPin, Clock, Box, Home } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+
+interface OrderItem {
+  id: string;
+  product_name: string;
+  product_image: string | null;
+  quantity: number;
+  price: number;
+}
+
+interface Order {
+  id: string;
+  order_number: string;
+  status: string;
+  created_at: string;
+  total: number;
+  shipping_address: any;
+  items: OrderItem[];
+}
 
 const TrackOrder = () => {
-  const [orderNumber, setOrderNumber] = useState('');
+  const [searchParams] = useSearchParams();
+  const [orderNumber, setOrderNumber] = useState(searchParams.get('order') || '');
   const [isLoading, setIsLoading] = useState(false);
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<Order | null>(null);
   const [error, setError] = useState('');
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const orderFromUrl = searchParams.get('order');
+    if (orderFromUrl) {
+      setOrderNumber(orderFromUrl);
+      handleTrackOrder(orderFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTrackOrder = async (orderNum: string) => {
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_number', orderNum.toUpperCase())
+        .maybeSingle();
+
+      if (orderError) throw orderError;
+
+      if (!order) {
+        setError('Order not found. Please check your order number and try again.');
+        setOrderDetails(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // Fetch order items
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id);
+
+      setOrderDetails({
+        ...order,
+        items: items || []
+      });
+    } catch (err) {
+      console.error('Error tracking order:', err);
+      setError('Unable to track order. Please try again.');
+      setOrderDetails(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
     if (!orderNumber.trim()) {
       setError('Please enter your order number');
       return;
     }
+    await handleTrackOrder(orderNumber);
+  };
 
-    setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      // Mock order data for demo
-      if (orderNumber.startsWith('NOIR')) {
-        setOrderDetails({
-          orderNumber,
-          status: 'In Transit',
-          estimatedDelivery: 'Dec 28, 2024',
-          items: [
-            { name: 'Silver Infinity Ring', quantity: 1, image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100' }
-          ],
-          timeline: [
-            { status: 'Order Placed', date: 'Dec 20, 2024', completed: true },
-            { status: 'Confirmed', date: 'Dec 20, 2024', completed: true },
-            { status: 'Shipped', date: 'Dec 22, 2024', completed: true },
-            { status: 'In Transit', date: 'Dec 24, 2024', completed: true, current: true },
-            { status: 'Delivered', date: 'Expected Dec 28', completed: false },
-          ]
-        });
-      } else {
-        setError('Order not found. Please check your order number and try again.');
-        setOrderDetails(null);
-      }
-      setIsLoading(false);
-    }, 1000);
+  const getStatusTimeline = (status: string, createdAt: string) => {
+    const orderDate = new Date(createdAt);
+    const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'in_transit', 'delivered'];
+    const currentIndex = statuses.indexOf(status.toLowerCase());
+
+    const addDays = (date: Date, days: number) => {
+      const result = new Date(date);
+      result.setDate(result.getDate() + days);
+      return result;
+    };
+
+    return [
+      { status: 'Order Placed', date: orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), completed: currentIndex >= 0, current: currentIndex === 0, icon: Package },
+      { status: 'Confirmed', date: addDays(orderDate, 0).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), completed: currentIndex >= 1, current: currentIndex === 1, icon: CheckCircle },
+      { status: 'Processing', date: addDays(orderDate, 1).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), completed: currentIndex >= 2, current: currentIndex === 2, icon: Box },
+      { status: 'Shipped', date: currentIndex >= 3 ? addDays(orderDate, 2).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Expected', completed: currentIndex >= 3, current: currentIndex === 3, icon: Truck },
+      { status: 'In Transit', date: currentIndex >= 4 ? addDays(orderDate, 4).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Expected', completed: currentIndex >= 4, current: currentIndex === 4, icon: MapPin },
+      { status: 'Delivered', date: currentIndex >= 5 ? addDays(orderDate, 7).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : `Expected ${addDays(orderDate, 7).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`, completed: currentIndex >= 5, current: currentIndex === 5, icon: Home },
+    ];
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'delivered': return 'bg-green-500/10 text-green-600';
+      case 'shipped':
+      case 'in_transit': return 'bg-blue-500/10 text-blue-600';
+      case 'processing': return 'bg-yellow-500/10 text-yellow-600';
+      case 'cancelled': return 'bg-red-500/10 text-red-600';
+      default: return 'bg-primary/10 text-primary';
+    }
   };
 
   return (
@@ -112,66 +185,90 @@ const TrackOrder = () => {
               <CardHeader>
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   <div>
-                    <CardTitle className="text-lg">Order #{orderDetails.orderNumber}</CardTitle>
+                    <CardTitle className="text-lg">Order #{orderDetails.order_number}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Estimated Delivery: {orderDetails.estimatedDelivery}
+                      Placed on {new Date(orderDetails.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </p>
                   </div>
-                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium w-fit">
+                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium w-fit ${getStatusColor(orderDetails.status)}`}>
                     <Truck className="w-4 h-4" />
-                    {orderDetails.status}
+                    {orderDetails.status.charAt(0).toUpperCase() + orderDetails.status.slice(1).replace('_', ' ')}
                   </span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Items */}
-                <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                  <img 
-                    src={orderDetails.items[0].image} 
-                    alt={orderDetails.items[0].name}
-                    className="w-16 h-16 rounded-lg object-cover"
-                  />
-                  <div>
-                    <p className="font-medium text-foreground">{orderDetails.items[0].name}</p>
-                    <p className="text-sm text-muted-foreground">Qty: {orderDetails.items[0].quantity}</p>
+                {orderDetails.items.map((item) => (
+                  <div key={item.id} className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                    <img 
+                      src={item.product_image || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100'} 
+                      alt={item.product_name}
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-foreground">{item.product_name}</p>
+                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                    </div>
+                    <p className="font-semibold">₹{item.price.toLocaleString('en-IN')}</p>
                   </div>
-                </div>
+                ))}
 
                 {/* Timeline */}
                 <div className="relative">
                   <h3 className="font-display text-lg mb-4">Shipment Progress</h3>
                   <div className="space-y-4">
-                    {orderDetails.timeline.map((step: any, index: number) => (
-                      <div key={index} className="flex gap-4">
-                        <div className="flex flex-col items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            step.completed 
-                              ? step.current 
-                                ? 'bg-primary text-primary-foreground' 
-                                : 'bg-primary/20 text-primary' 
-                              : 'bg-muted text-muted-foreground'
-                          }`}>
-                            {step.completed ? (
-                              <CheckCircle className="w-4 h-4" />
-                            ) : (
-                              <div className="w-2 h-2 rounded-full bg-current" />
+                    {getStatusTimeline(orderDetails.status, orderDetails.created_at).map((step, index, arr) => {
+                      const StepIcon = step.icon;
+                      return (
+                        <div key={index} className="flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              step.completed 
+                                ? step.current 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : 'bg-primary/20 text-primary' 
+                                : 'bg-muted text-muted-foreground'
+                            }`}>
+                              <StepIcon className="w-5 h-5" />
+                            </div>
+                            {index < arr.length - 1 && (
+                              <div className={`w-0.5 h-8 ${
+                                step.completed ? 'bg-primary/30' : 'bg-muted'
+                              }`} />
                             )}
                           </div>
-                          {index < orderDetails.timeline.length - 1 && (
-                            <div className={`w-0.5 h-8 ${
-                              step.completed ? 'bg-primary/30' : 'bg-muted'
-                            }`} />
-                          )}
+                          <div className="flex-1 pb-4">
+                            <p className={`font-medium ${step.current ? 'text-primary' : 'text-foreground'}`}>
+                              {step.status}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{step.date}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 pb-4">
-                          <p className={`font-medium ${step.current ? 'text-primary' : 'text-foreground'}`}>
-                            {step.status}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{step.date}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
+                </div>
+
+                {/* Shipping Address */}
+                {orderDetails.shipping_address && (
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      Delivery Address
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {orderDetails.shipping_address.full_name}<br />
+                      {orderDetails.shipping_address.address_line1}<br />
+                      {orderDetails.shipping_address.address_line2 && <>{orderDetails.shipping_address.address_line2}<br /></>}
+                      {orderDetails.shipping_address.city}, {orderDetails.shipping_address.state} {orderDetails.shipping_address.postal_code}
+                    </p>
+                  </div>
+                )}
+
+                {/* Order Total */}
+                <div className="flex justify-between items-center pt-4 border-t">
+                  <span className="font-medium">Order Total</span>
+                  <span className="text-xl font-bold text-primary">₹{orderDetails.total.toLocaleString('en-IN')}</span>
                 </div>
               </CardContent>
             </Card>

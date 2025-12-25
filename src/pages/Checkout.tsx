@@ -381,26 +381,48 @@ const Checkout = () => {
         }
       }
 
-      // Send order confirmation email
+      // Send order confirmation email with invoice
       try {
-        await supabase.functions.invoke('send-email', {
+        const estimatedDelivery = new Date();
+        estimatedDelivery.setDate(estimatedDelivery.getDate() + 7);
+        
+        await supabase.functions.invoke('send-order-confirmation', {
           body: {
-            type: 'order_confirmation',
-            data: {
-              orderNumber: order.order_number,
-              customerName: shippingInfo.fullName,
-              customerEmail: shippingInfo.email || user?.email,
-              total,
-              items: cartItems.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-              }))
-            }
+            orderNumber: order.order_number,
+            customerName: shippingInfo.fullName,
+            customerEmail: shippingInfo.email || user?.email,
+            items: cartItems.map(item => ({
+              name: item.name,
+              quantity: item.quantity,
+              price: item.price,
+              image: item.image
+            })),
+            subtotal: cartTotal,
+            shipping: shipping,
+            tax: tax,
+            discount: (appliedCoupon?.discount || 0) + loyaltyDiscount,
+            total: total,
+            shippingAddress: {
+              addressLine1: shippingInfo.addressLine1,
+              addressLine2: shippingInfo.addressLine2,
+              city: shippingInfo.city,
+              state: shippingInfo.state,
+              postalCode: shippingInfo.postalCode,
+              country: shippingInfo.country
+            },
+            paymentMethod: paymentMethod === 'card' ? 'Credit/Debit Card' : paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'wallet' ? 'Digital Wallet' : 'Cash on Delivery',
+            estimatedDelivery: estimatedDelivery.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
           }
         });
       } catch (emailError) {
         console.error('Email error:', emailError);
+      }
+
+      // Check for low stock and send alerts
+      try {
+        await supabase.functions.invoke('low-stock-alert', {});
+      } catch (stockAlertError) {
+        console.error('Stock alert error:', stockAlertError);
       }
 
       clearCart();
