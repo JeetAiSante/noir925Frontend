@@ -35,12 +35,16 @@ const Header = () => {
     { name: 'Contact', href: '/contact' },
   ];
 
+  const isHomePage = location.pathname === '/';
+
   return (
     <>
-      {/* Announcement Bar */}
-      <div className="bg-primary text-primary-foreground py-2 text-center text-sm font-body tracking-wide">
-        <p>Free Shipping on Orders Above ₹2,999 | Hallmarked 925 Silver</p>
-      </div>
+      {/* Announcement Bar - Only on Home */}
+      {isHomePage && (
+        <div className="bg-primary text-primary-foreground py-2 text-center text-sm font-body tracking-wide">
+          <p>Free Shipping on Orders Above ₹2,999 | Hallmarked 925 Silver</p>
+        </div>
+      )}
 
       {/* Main Header */}
       <header

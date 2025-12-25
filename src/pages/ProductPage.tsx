@@ -1,24 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight } from 'lucide-react';
+import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles, Play, Eye, ChevronLeft, ZoomIn } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import MobileFooter from '@/components/layout/MobileFooter';
 import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
 import { products, formatPrice } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
+import Product360View from '@/components/products/Product360View';
+import ProductImageZoom from '@/components/products/ProductImageZoom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 const ProductPage = () => {
   const { id } = useParams();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [show360View, setShow360View] = useState(false);
+  const [showZoom, setShowZoom] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
 
   const product = products.find((p) => p.id === id);
 
   useEffect(() => {
-    // Add to recently viewed
     if (product) {
       const stored = localStorage.getItem('noir925_recently_viewed');
       const viewed: string[] = stored ? JSON.parse(stored) : [];
@@ -48,6 +54,10 @@ const ProductPage = () => {
     .slice(0, 4);
 
   const handleAddToCart = () => {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
     addToCart(
       {
         id: product.id,
@@ -59,6 +69,7 @@ const ProductPage = () => {
       },
       quantity
     );
+    toast.success(`${product.name} added to cart!`);
   };
 
   const handleWishlistClick = () => {
@@ -73,54 +84,117 @@ const ProductPage = () => {
 
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
+      toast.success('Removed from wishlist');
     } else {
       addToWishlist(wishlistItem);
+      toast.success('Added to wishlist');
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: product.name,
+        text: product.description,
+        url: window.location.href,
+      });
+    } catch {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success('Link copied to clipboard');
     }
   };
 
   const inWishlist = isInWishlist(product.id);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+        <nav className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-4 md:mb-8 overflow-x-auto whitespace-nowrap">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
           <Link to="/shop" className="hover:text-foreground transition-colors">Shop</Link>
-          <ChevronRight className="w-4 h-4" />
-          <Link to={`/shop?category=${product.category.toLowerCase()}`} className="hover:text-foreground transition-colors">
-            {product.category}
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-foreground">{product.name}</span>
+          <ChevronRight className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
+          <span className="text-foreground truncate">{product.name}</span>
         </nav>
 
         {/* Product Section */}
-        <div className="grid lg:grid-cols-2 gap-12 mb-24">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 mb-12 md:mb-24">
           {/* Images */}
-          <div className="space-y-4">
-            <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted">
-              <img
-                src={images[activeImage]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+          <div className="space-y-3 md:space-y-4">
+            {/* Main Image */}
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted group">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeImage}
+                  src={images[activeImage]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+              </AnimatePresence>
+              
+              {/* Overlay Actions */}
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6 gap-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShowZoom(true)}
+                >
+                  <ZoomIn className="w-4 h-4" />
+                  Zoom
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShow360View(true)}
+                >
+                  <Eye className="w-4 h-4" />
+                  360° View
+                </Button>
+              </div>
+
+              {/* Discount Badge */}
               {product.discount && (
-                <span className="absolute top-4 left-4 px-4 py-2 bg-secondary text-secondary-foreground font-body rounded-full">
+                <span className="absolute top-3 left-3 md:top-4 md:left-4 px-3 py-1.5 md:px-4 md:py-2 bg-secondary text-secondary-foreground text-xs md:text-sm font-medium rounded-full">
                   -{product.discount}% OFF
                 </span>
               )}
+
+              {/* Navigation Arrows */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setActiveImage((prev) => (prev - 1 + images.length) % images.length)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                  <button
+                    onClick={() => setActiveImage((prev) => (prev + 1) % images.length)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
+                  </button>
+                </>
+              )}
             </div>
-            <div className="flex gap-3">
+
+            {/* Thumbnails */}
+            <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
               {images.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveImage(index)}
-                  className={`w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
-                    activeImage === index ? 'border-primary' : 'border-transparent'
+                  className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all ${
+                    activeImage === index ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-primary/50'
                   }`}
                 >
                   <img src={img} alt="" className="w-full h-full object-cover" />
@@ -130,82 +204,105 @@ const ProductPage = () => {
           </div>
 
           {/* Details */}
-          <div className="space-y-6">
-            <div>
-              <p className="font-body text-sm text-primary uppercase tracking-widest mb-2">
+          <div className="space-y-4 md:space-y-6">
+            {/* Category & Actions */}
+            <div className="flex items-center justify-between">
+              <span className="text-xs md:text-sm text-primary uppercase tracking-widest font-medium">
                 {product.category}
-              </p>
-              <h1 className="font-display text-3xl md:text-4xl text-foreground mb-4">
-                {product.name}
-              </h1>
-              
-              {/* Rating */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${
-                        i < Math.floor(product.rating)
-                          ? 'fill-accent text-accent'
-                          : 'text-border'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="font-body text-muted-foreground">
-                  {product.rating} ({product.reviews} reviews)
-                </span>
+              </span>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon" onClick={handleShare} className="rounded-full">
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={inWishlist ? 'secondary' : 'ghost'}
+                  size="icon"
+                  onClick={handleWishlistClick}
+                  className="rounded-full"
+                >
+                  <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
+                </Button>
               </div>
-
-              {/* Price */}
-              <div className="flex items-baseline gap-3 mb-6">
-                <span className="font-display text-3xl font-semibold text-foreground">
-                  {formatPrice(product.price)}
-                </span>
-                {product.originalPrice && (
-                  <span className="font-body text-xl text-muted-foreground line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                )}
-              </div>
-
-              <p className="font-body text-muted-foreground">
-                {product.description}
-              </p>
             </div>
 
+            {/* Title */}
+            <h1 className="font-display text-2xl md:text-3xl lg:text-4xl text-foreground">
+              {product.name}
+            </h1>
+            
+            {/* Rating */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-4 h-4 md:w-5 md:h-5 ${
+                      i < Math.floor(product.rating)
+                        ? 'fill-accent text-accent'
+                        : 'text-border'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {product.rating} ({product.reviews} reviews)
+              </span>
+            </div>
+
+            {/* Price */}
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-2xl md:text-3xl font-semibold text-foreground">
+                {formatPrice(product.price)}
+              </span>
+              {product.originalPrice && (
+                <>
+                  <span className="text-lg md:text-xl text-muted-foreground line-through">
+                    {formatPrice(product.originalPrice)}
+                  </span>
+                  <span className="text-sm md:text-base text-secondary font-medium">
+                    Save {formatPrice(product.originalPrice - product.price)}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Description */}
+            <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+              {product.description}
+            </p>
+
             {/* Specifications */}
-            <div className="grid grid-cols-3 gap-4 py-6 border-y border-border">
-              <div>
-                <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">Material</p>
-                <p className="font-display text-foreground">{product.material}</p>
+            <div className="grid grid-cols-3 gap-3 md:gap-4 py-4 md:py-6 border-y border-border">
+              <div className="text-center p-3 rounded-xl bg-muted/50">
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-1">Material</p>
+                <p className="font-medium text-sm md:text-base">{product.material}</p>
               </div>
-              <div>
-                <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">Weight</p>
-                <p className="font-display text-foreground">{product.weight}</p>
+              <div className="text-center p-3 rounded-xl bg-muted/50">
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-1">Weight</p>
+                <p className="font-medium text-sm md:text-base">{product.weight}</p>
               </div>
-              <div>
-                <p className="font-body text-xs text-muted-foreground uppercase tracking-wider mb-1">Purity</p>
-                <p className="font-display text-foreground">{product.purity}</p>
+              <div className="text-center p-3 rounded-xl bg-muted/50">
+                <p className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-1">Purity</p>
+                <p className="font-medium text-sm md:text-base">{product.purity}</p>
               </div>
             </div>
 
             {/* Size Selection */}
             {product.sizes && product.sizes.length > 0 && (
               <div>
-                <p className="font-display text-sm mb-3">
-                  Select Size
-                  <Link to="/size-guide" className="ml-2 text-primary text-xs hover:underline">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="font-medium text-sm md:text-base">Select Size</p>
+                  <button className="text-primary text-xs md:text-sm flex items-center gap-1 hover:underline">
+                    <Ruler className="w-4 h-4" />
                     Size Guide
-                  </Link>
-                </p>
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`min-w-[48px] h-12 px-4 rounded-lg border font-body transition-all ${
+                      className={`min-w-[44px] h-10 md:min-w-[48px] md:h-12 px-3 md:px-4 rounded-xl border text-sm md:text-base font-medium transition-all ${
                         selectedSize === size
                           ? 'border-primary bg-primary text-primary-foreground'
                           : 'border-border hover:border-primary'
@@ -220,59 +317,61 @@ const ProductPage = () => {
 
             {/* Quantity */}
             <div>
-              <p className="font-display text-sm mb-3">Quantity</p>
+              <p className="font-medium text-sm md:text-base mb-3">Quantity</p>
               <div className="flex items-center gap-4">
-                <div className="flex items-center border border-border rounded-lg">
+                <div className="flex items-center border border-border rounded-xl overflow-hidden">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="p-3 hover:bg-muted transition-colors"
+                    className="p-2.5 md:p-3 hover:bg-muted transition-colors"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="w-12 text-center font-body">{quantity}</span>
+                  <span className="w-10 md:w-12 text-center font-medium">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="p-3 hover:bg-muted transition-colors"
+                    className="p-2.5 md:p-3 hover:bg-muted transition-colors"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
+                <span className="text-sm text-muted-foreground">In Stock</span>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="luxury"
-                size="xl"
-                className="flex-1"
+                size="lg"
+                className="flex-1 h-12 md:h-14 text-base"
                 onClick={handleAddToCart}
               >
                 <ShoppingBag className="w-5 h-5 mr-2" />
                 Add to Cart
               </Button>
               <Button
-                variant={inWishlist ? 'secondary' : 'outline'}
-                size="xl"
+                variant="outline"
+                size="lg"
+                className="h-12 md:h-14 px-6"
                 onClick={handleWishlistClick}
               >
-                <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current' : ''}`} />
+                <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current text-secondary' : ''}`} />
               </Button>
             </div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Truck className="w-5 h-5" />
-                <span className="font-body text-xs">Free Shipping</span>
+            <div className="grid grid-cols-3 gap-2 md:gap-4 pt-4 md:pt-6 border-t border-border">
+              <div className="flex flex-col items-center text-center p-2 md:p-3 rounded-xl bg-muted/30">
+                <Truck className="w-5 h-5 md:w-6 md:h-6 text-primary mb-1" />
+                <span className="text-[10px] md:text-xs text-muted-foreground">Free Shipping</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Shield className="w-5 h-5" />
-                <span className="font-body text-xs">BIS Hallmarked</span>
+              <div className="flex flex-col items-center text-center p-2 md:p-3 rounded-xl bg-muted/30">
+                <Shield className="w-5 h-5 md:w-6 md:h-6 text-primary mb-1" />
+                <span className="text-[10px] md:text-xs text-muted-foreground">BIS Hallmarked</span>
               </div>
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <RotateCcw className="w-5 h-5" />
-                <span className="font-body text-xs">7-Day Returns</span>
+              <div className="flex flex-col items-center text-center p-2 md:p-3 rounded-xl bg-muted/30">
+                <RotateCcw className="w-5 h-5 md:w-6 md:h-6 text-primary mb-1" />
+                <span className="text-[10px] md:text-xs text-muted-foreground">7-Day Returns</span>
               </div>
             </div>
           </div>
@@ -280,11 +379,12 @@ const ProductPage = () => {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section>
-            <h2 className="font-display text-2xl text-foreground mb-8">
-              You May Also Like
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-6 md:mb-8">
+              <h2 className="font-display text-xl md:text-2xl">You May Also Like</h2>
+              <Link to="/shop" className="text-primary text-sm hover:underline">View All</Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
@@ -294,6 +394,22 @@ const ProductPage = () => {
       </main>
 
       <Footer />
+      <MobileFooter />
+
+      {/* 360 View Modal */}
+      <Product360View
+        images={images}
+        open={show360View}
+        onOpenChange={setShow360View}
+      />
+
+      {/* Zoom Modal */}
+      <ProductImageZoom
+        images={images}
+        currentIndex={activeImage}
+        open={showZoom}
+        onOpenChange={setShowZoom}
+      />
     </div>
   );
 };
