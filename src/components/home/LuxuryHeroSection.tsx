@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Sparkles, Award, Star, ChevronRight } from 'lucide-react';
@@ -18,21 +18,27 @@ interface Banner {
   button_text: string | null;
 }
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  images: string[];
-  slug: string;
-}
-
 const defaultTexts = [
   { title: 'Your Elegant', highlight: 'Statement', subtitle: 'Get the best designed jewelry from the certified best craftsmen from around the world.' },
   { title: 'Timeless', highlight: 'Elegance', subtitle: 'Discover handcrafted masterpieces that define luxury and sophistication.' },
   { title: 'Pure Silver', highlight: 'Artistry', subtitle: 'Experience the brilliance of 925 sterling silver in every piece.' },
 ];
 
-const LuxuryHeroSection = () => {
+const getCategoryIcon = (slug: string): string => {
+  const icons: Record<string, string> = {
+    rings: '💍',
+    necklaces: '📿',
+    bracelets: '⭕',
+    earrings: '✧',
+    anklets: '○',
+    pendants: '◇',
+    chains: '⛓',
+    wedding: '💎',
+  };
+  return icons[slug] || '✦';
+};
+
+const LuxuryHeroSection = memo(() => {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [currentProductIndex, setCurrentProductIndex] = useState(0);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -40,10 +46,7 @@ const LuxuryHeroSection = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
-  // Fetch categories from database
   const { data: categories = [] } = useCategories();
-  
-  // Fetch bestseller products for rotation
   const { data: bestsellers = [] } = useProducts({ bestseller: true, limit: 6 });
 
   // Fetch banners from database
@@ -51,13 +54,13 @@ const LuxuryHeroSection = () => {
     const fetchBanners = async () => {
       const { data, error } = await supabase
         .from('banners')
-        .select('*')
+        .select('id, title, subtitle, description, image_url, video_url, is_video, link, button_text')
         .eq('position', 'hero')
         .eq('is_active', true)
         .order('sort_order', { ascending: true })
         .limit(1);
 
-      if (!error && data && data.length > 0) {
+      if (!error && data?.length) {
         setBanners(data);
       }
     };
@@ -69,9 +72,7 @@ const LuxuryHeroSection = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, fetchBanners)
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   // Text animation cycle
@@ -84,7 +85,7 @@ const LuxuryHeroSection = () => {
 
   // Product rotation cycle
   useEffect(() => {
-    if (bestsellers.length === 0) return;
+    if (!bestsellers.length) return;
     const interval = setInterval(() => {
       setCurrentProductIndex((prev) => (prev + 1) % bestsellers.length);
     }, 4000);
@@ -93,6 +94,9 @@ const LuxuryHeroSection = () => {
 
   // Video autoplay with Intersection Observer
   useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && videoRef.current) {
@@ -104,23 +108,19 @@ const LuxuryHeroSection = () => {
       { threshold: 0.3 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    observer.observe(section);
     return () => observer.disconnect();
   }, []);
 
-  const scrollToContent = () => {
+  const scrollToContent = useCallback(() => {
     window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-  };
+  }, []);
 
   const currentBanner = banners[0];
   const hasVideo = currentBanner?.is_video && currentBanner?.video_url;
   const currentText = defaultTexts[currentTextIndex];
   const currentProduct = bestsellers[currentProductIndex];
 
-  // Get top 6 categories for sidebar
   const sidebarCategories = categories.slice(0, 6).map((cat) => ({
     name: cat.name,
     icon: getCategoryIcon(cat.slug),
@@ -128,68 +128,54 @@ const LuxuryHeroSection = () => {
     image: cat.image_url,
   }));
 
-  function getCategoryIcon(slug: string): string {
-    const icons: Record<string, string> = {
-      rings: '💍',
-      necklaces: '📿',
-      bracelets: '⭕',
-      earrings: '✧',
-      anklets: '○',
-      pendants: '◇',
-      chains: '⛓',
-      wedding: '💎',
-    };
-    return icons[slug] || '✦';
-  }
-
   return (
     <section 
       ref={sectionRef} 
-      className="relative min-h-screen overflow-hidden"
-      style={{
-        background: `linear-gradient(135deg, 
-          hsl(220 20% 6%) 0%, 
-          hsl(220 18% 10%) 25%, 
-          hsl(200 15% 8%) 50%, 
-          hsl(220 20% 8%) 75%, 
-          hsl(220 22% 5%) 100%)`
-      }}
+      className="relative min-h-screen overflow-hidden bg-background"
     >
-      {/* Ultra Premium Multi-Layer Background */}
+      {/* Light Luxury Multi-Layer Background */}
       <div className="absolute inset-0">
-        {/* Primary Gradient Overlay */}
+        {/* Primary Ivory/Champagne Gradient */}
         <div 
           className="absolute inset-0"
           style={{
-            background: `radial-gradient(ellipse 80% 50% at 20% 40%, hsla(40, 50%, 45%, 0.08) 0%, transparent 60%),
-                         radial-gradient(ellipse 60% 40% at 80% 60%, hsla(160, 35%, 30%, 0.06) 0%, transparent 50%),
-                         radial-gradient(ellipse 100% 80% at 50% 100%, hsla(40, 45%, 40%, 0.05) 0%, transparent 40%)`
+            background: `linear-gradient(135deg, 
+              hsl(40, 30%, 97%) 0%, 
+              hsl(40, 25%, 95%) 25%, 
+              hsl(40, 28%, 96%) 50%, 
+              hsl(40, 22%, 94%) 75%, 
+              hsl(40, 30%, 97%) 100%)`
           }}
         />
-        {/* Subtle Noise Texture */}
-        <div className="absolute inset-0 opacity-[0.015]" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
-        }} />
-        {/* Vignette Effect */}
-        <div className="absolute inset-0" style={{
-          background: `radial-gradient(ellipse at center, transparent 0%, hsla(220, 20%, 4%, 0.4) 100%)`
+        {/* Subtle Gold/Emerald Radial Accents */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse 80% 50% at 20% 40%, hsla(40, 45%, 75%, 0.12) 0%, transparent 60%),
+                         radial-gradient(ellipse 60% 40% at 80% 60%, hsla(160, 35%, 45%, 0.06) 0%, transparent 50%),
+                         radial-gradient(ellipse 100% 80% at 50% 100%, hsla(40, 40%, 70%, 0.08) 0%, transparent 40%)`
+          }}
+        />
+        {/* Subtle Pattern Texture */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
         }} />
       </div>
 
-      {/* Luxury Gold Accent Lines */}
+      {/* Luxury Accent Lines */}
       <div className="absolute top-0 left-0 w-full h-px" style={{
-        background: `linear-gradient(90deg, transparent 0%, hsla(40, 50%, 50%, 0.4) 50%, transparent 100%)`
+        background: `linear-gradient(90deg, transparent 0%, hsla(40, 45%, 55%, 0.3) 50%, transparent 100%)`
       }} />
       <div className="absolute bottom-0 left-0 w-full h-px" style={{
-        background: `linear-gradient(90deg, transparent 0%, hsla(40, 50%, 50%, 0.3) 50%, transparent 100%)`
+        background: `linear-gradient(90deg, transparent 0%, hsla(40, 45%, 55%, 0.2) 50%, transparent 100%)`
       }} />
       
       {/* Side Accent Glows */}
-      <div className="absolute top-1/4 -left-32 w-64 h-64 rounded-full opacity-20" style={{
-        background: `radial-gradient(circle, hsla(40, 50%, 45%, 0.3) 0%, transparent 70%)`
+      <div className="absolute top-1/4 -left-32 w-64 h-64 rounded-full opacity-30" style={{
+        background: `radial-gradient(circle, hsla(40, 50%, 80%, 0.4) 0%, transparent 70%)`
       }} />
-      <div className="absolute bottom-1/4 -right-32 w-64 h-64 rounded-full opacity-15" style={{
-        background: `radial-gradient(circle, hsla(160, 40%, 40%, 0.25) 0%, transparent 70%)`
+      <div className="absolute bottom-1/4 -right-32 w-64 h-64 rounded-full opacity-20" style={{
+        background: `radial-gradient(circle, hsla(160, 35%, 60%, 0.3) 0%, transparent 70%)`
       }} />
 
       {/* Main Content Grid */}
@@ -198,7 +184,7 @@ const LuxuryHeroSection = () => {
           
           {/* Left Side - Category Sidebar (Desktop) */}
           <div className="hidden lg:flex lg:col-span-2 flex-col gap-2 py-20">
-            <p className="text-xs font-medium tracking-widest uppercase mb-4" style={{ color: 'hsl(40, 50%, 55%)' }}>Categories</p>
+            <p className="text-xs font-medium tracking-widest uppercase mb-4 text-primary">Categories</p>
             {sidebarCategories.map((item, index) => (
               <motion.div
                 key={item.name}
@@ -208,27 +194,15 @@ const LuxuryHeroSection = () => {
               >
                 <Link 
                   to={item.link}
-                  className="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 border border-transparent"
-                  style={{ 
-                    ['--hover-bg' as string]: 'hsla(40, 40%, 50%, 0.08)',
-                    ['--hover-border' as string]: 'hsla(40, 50%, 55%, 0.2)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'hsla(40, 40%, 50%, 0.08)';
-                    e.currentTarget.style.borderColor = 'hsla(40, 50%, 55%, 0.2)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.borderColor = 'transparent';
-                  }}
+                  className="group flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 border border-transparent hover:bg-accent/30 hover:border-accent/50"
                 >
-                  <span className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ backgroundColor: 'hsla(40, 50%, 50%, 0.12)' }}>
+                  <span className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-sm">
                     {item.icon}
                   </span>
-                  <span className="font-body text-sm transition-colors" style={{ color: 'hsla(40, 20%, 85%, 0.7)' }}>
+                  <span className="font-body text-sm text-muted-foreground group-hover:text-primary transition-colors">
                     {item.name}
                   </span>
-                  <ChevronRight className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 transition-all" style={{ color: 'hsla(40, 50%, 55%, 0.5)' }} />
+                  <ChevronRight className="w-3 h-3 ml-auto text-muted-foreground/50 opacity-0 group-hover:opacity-100 transition-all" />
                 </Link>
               </motion.div>
             ))}
@@ -244,20 +218,22 @@ const LuxuryHeroSection = () => {
             >
               {/* Decorative Ring */}
               <div className="absolute inset-0 -m-6 sm:-m-10 lg:-m-16">
-                <div className="w-full h-full rounded-full" style={{ border: '1px solid hsla(40, 50%, 50%, 0.25)' }} />
+                <div className="w-full h-full rounded-full border border-accent/30" />
                 <motion.div 
-                  className="absolute inset-2 rounded-full"
-                  style={{ border: '1px solid hsla(40, 50%, 50%, 0.12)' }}
+                  className="absolute inset-2 rounded-full border border-primary/10"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
                 />
               </div>
 
               {/* Video/Image Container */}
-              <div className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-[380px] lg:h-[380px] rounded-full overflow-hidden" style={{
-                background: 'linear-gradient(135deg, hsl(220, 18%, 12%) 0%, hsl(220, 20%, 6%) 100%)',
-                boxShadow: '0 0 80px hsla(40, 50%, 45%, 0.15), 0 0 120px hsla(40, 50%, 45%, 0.08), inset 0 0 60px hsla(220, 20%, 4%, 0.5)'
-              }}>
+              <div 
+                className="relative w-56 h-56 sm:w-72 sm:h-72 md:w-80 md:h-80 lg:w-[380px] lg:h-[380px] rounded-full overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(40, 25%, 92%) 0%, hsl(40, 20%, 88%) 100%)',
+                  boxShadow: '0 20px 60px hsla(40, 30%, 40%, 0.12), 0 8px 24px hsla(40, 30%, 40%, 0.08), inset 0 0 40px hsla(40, 30%, 95%, 0.5)'
+                }}
+              >
                 {hasVideo ? (
                   <video
                     ref={videoRef}
@@ -266,7 +242,7 @@ const LuxuryHeroSection = () => {
                     muted
                     loop
                     playsInline
-                    preload="auto"
+                    preload="metadata"
                     onLoadedData={() => setIsVideoLoaded(true)}
                     poster={currentBanner?.image_url}
                   >
@@ -279,6 +255,7 @@ const LuxuryHeroSection = () => {
                       src={currentProduct.image || currentBanner?.image_url || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop"}
                       alt={currentProduct.name}
                       className="absolute inset-0 w-full h-full object-cover scale-110"
+                      loading="lazy"
                       initial={{ opacity: 0, scale: 1.1 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.95 }}
@@ -290,25 +267,26 @@ const LuxuryHeroSection = () => {
                     src={currentBanner?.image_url || "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&h=800&fit=crop"}
                     alt="Featured Jewelry"
                     className="absolute inset-0 w-full h-full object-cover scale-110"
+                    loading="lazy"
                   />
                 )}
 
                 {/* Loading State */}
                 {hasVideo && !isVideoLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'hsl(220, 20%, 6%)' }}>
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                     >
-                      <Sparkles className="w-8 h-8" style={{ color: 'hsla(40, 50%, 50%, 0.4)' }} />
+                      <Sparkles className="w-8 h-8 text-accent/50" />
                     </motion.div>
                   </div>
                 )}
 
                 {/* Shimmer Effect */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent"
-                  animate={{ x: ['-100%', '100%'], opacity: [0, 0.3, 0] }}
+                  className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent"
+                  animate={{ x: ['-100%', '100%'], opacity: [0, 0.4, 0] }}
                   transition={{ duration: 3.5, repeat: Infinity, repeatDelay: 2 }}
                 />
               </div>
@@ -319,7 +297,7 @@ const LuxuryHeroSection = () => {
                 animate={{ y: [-5, 5, -5], rotate: [0, 10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" style={{ color: 'hsl(40, 55%, 55%)' }} />
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-accent" />
               </motion.div>
               
               <motion.div
@@ -335,13 +313,9 @@ const LuxuryHeroSection = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 backdrop-blur-md px-4 py-2 rounded-full"
-                  style={{ 
-                    backgroundColor: 'hsla(220, 20%, 6%, 0.9)', 
-                    border: '1px solid hsla(40, 50%, 50%, 0.2)' 
-                  }}
+                  className="absolute -bottom-4 left-1/2 -translate-x-1/2 backdrop-blur-md px-4 py-2 rounded-full bg-card/90 border border-border shadow-soft"
                 >
-                  <p className="text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-[200px]" style={{ color: 'hsla(40, 20%, 92%, 0.9)' }}>
+                  <p className="text-xs sm:text-sm font-medium truncate max-w-[150px] sm:max-w-[200px] text-foreground">
                     {currentProduct.name}
                   </p>
                 </motion.div>
@@ -363,11 +337,10 @@ const LuxuryHeroSection = () => {
                     exit={{ opacity: 0, y: -30 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight" style={{ color: 'hsl(40, 20%, 95%)' }}>
-                      <span className="block font-light italic" style={{ color: 'hsla(40, 20%, 90%, 0.7)' }}>{currentText.title}</span>
+                    <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-foreground leading-[1.1] tracking-tight">
+                      <span className="block font-light italic text-muted-foreground">{currentText.title}</span>
                       <motion.span 
-                        className="block mt-1 font-semibold bg-clip-text text-transparent"
-                        style={{ backgroundImage: 'linear-gradient(135deg, hsl(40, 55%, 55%) 0%, hsl(40, 60%, 68%) 50%, hsl(40, 55%, 55%) 100%)' }}
+                        className="block mt-1 font-semibold text-gradient-emerald"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.2 }}
@@ -388,8 +361,7 @@ const LuxuryHeroSection = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.4, delay: 0.3 }}
-                    className="font-body text-sm sm:text-base md:text-lg leading-relaxed"
-                    style={{ color: 'hsla(40, 15%, 75%, 0.55)' }}
+                    className="font-body text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed"
                   >
                     {currentText.subtitle}
                   </motion.p>
@@ -406,12 +378,7 @@ const LuxuryHeroSection = () => {
                 <Link to="/shop">
                   <Button 
                     size="lg" 
-                    className="group relative overflow-hidden px-6 sm:px-8 py-5 sm:py-6 border-0 transition-all duration-500 rounded-full font-display tracking-wide text-sm sm:text-base"
-                    style={{
-                      background: 'linear-gradient(135deg, hsl(40, 50%, 45%) 0%, hsl(40, 45%, 38%) 100%)',
-                      color: 'hsl(220, 20%, 8%)',
-                      boxShadow: '0 8px 32px hsla(40, 50%, 45%, 0.25), 0 0 0 1px hsla(40, 60%, 60%, 0.1) inset'
-                    }}
+                    className="group relative overflow-hidden px-6 sm:px-8 py-5 sm:py-6 bg-primary hover:bg-primary/90 text-primary-foreground border-0 transition-all duration-500 rounded-full font-display tracking-wide text-sm sm:text-base shadow-luxury"
                   >
                     <span className="relative z-10 flex items-center gap-2 font-semibold">
                       Explore Collection
@@ -422,8 +389,8 @@ const LuxuryHeroSection = () => {
                   </Button>
                 </Link>
 
-                <Link to="/collections" className="group flex items-center gap-2 transition-colors" style={{ color: 'hsla(40, 15%, 75%, 0.5)' }}>
-                  <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors" style={{ border: '1px solid hsla(40, 30%, 60%, 0.2)' }}>
+                <Link to="/collections" className="group flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+                  <span className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-border flex items-center justify-center group-hover:border-primary transition-colors">
                     <span className="text-xs">▶</span>
                   </span>
                   <span className="font-body text-xs sm:text-sm">View Story</span>
@@ -435,15 +402,14 @@ const LuxuryHeroSection = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
-                className="flex items-center gap-3 pt-4 sm:pt-6"
-                style={{ borderTop: '1px solid hsla(40, 30%, 50%, 0.12)' }}
+                className="flex items-center gap-3 pt-4 sm:pt-6 border-t border-border"
               >
                 <div className="flex items-center gap-1">
-                  <Award className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: 'hsl(40, 55%, 55%)' }} />
-                  <span className="text-[10px] sm:text-xs font-medium" style={{ color: 'hsla(40, 20%, 85%, 0.6)' }}>925 Certified</span>
+                  <Award className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="text-[10px] sm:text-xs font-medium text-muted-foreground">925 Certified</span>
                 </div>
-                <span style={{ color: 'hsla(40, 30%, 50%, 0.2)' }}>|</span>
-                <p className="text-[10px] sm:text-xs" style={{ color: 'hsla(40, 15%, 75%, 0.4)' }}>
+                <span className="text-border">|</span>
+                <p className="text-[10px] sm:text-xs text-muted-foreground/70">
                   Authenticity & purity guaranteed
                 </p>
               </motion.div>
@@ -463,11 +429,10 @@ const LuxuryHeroSection = () => {
                     style={{ width: i === currentTextIndex ? '40px' : '10px' }}
                     aria-label={`Go to slide ${i + 1}`}
                   >
-                    <span className="absolute inset-0" style={{ backgroundColor: 'hsla(40, 30%, 50%, 0.2)' }} />
+                    <span className="absolute inset-0 bg-border" />
                     {i === currentTextIndex && (
                       <motion.span
-                        className="absolute inset-0 origin-left"
-                        style={{ backgroundColor: 'hsl(40, 55%, 55%)' }}
+                        className="absolute inset-0 bg-primary origin-left"
                         initial={{ scaleX: 0 }}
                         animate={{ scaleX: 1 }}
                         transition={{ duration: 5, ease: 'linear' }}
@@ -488,7 +453,7 @@ const LuxuryHeroSection = () => {
             <Link
               key={item.name}
               to={item.link}
-              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 text-xs hover:bg-[#B8860B]/10 hover:border-[#B8860B]/30 transition-all"
+              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full bg-card/80 border border-border text-muted-foreground text-xs hover:bg-accent/20 hover:border-accent transition-all"
             >
               <span>{item.icon}</span>
               <span>{item.name}</span>
@@ -503,7 +468,7 @@ const LuxuryHeroSection = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2 }}
         onClick={scrollToContent}
-        className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 sm:gap-2 text-white/30 hover:text-white/60 transition-colors group"
+        className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 sm:gap-2 text-muted-foreground/50 hover:text-muted-foreground transition-colors group"
       >
         <span className="font-body text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em]">Scroll</span>
         <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}>
@@ -516,11 +481,11 @@ const LuxuryHeroSection = () => {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 1 }}
-        className="absolute bottom-8 right-8 hidden lg:flex items-center gap-3 bg-[#0D0D0D]/80 backdrop-blur-md px-4 py-3 rounded-xl border border-white/10"
+        className="absolute bottom-8 right-8 hidden lg:flex items-center gap-3 bg-card/90 backdrop-blur-md px-4 py-3 rounded-xl border border-border shadow-soft"
       >
         <div className="flex -space-x-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="w-7 h-7 rounded-full bg-[#B8860B]/20 border-2 border-[#0D0D0D] flex items-center justify-center text-[10px] text-white/60">
+            <div key={i} className="w-7 h-7 rounded-full bg-accent/20 border-2 border-card flex items-center justify-center text-[10px] text-muted-foreground">
               {i}k
             </div>
           ))}
@@ -528,14 +493,16 @@ const LuxuryHeroSection = () => {
         <div>
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Star key={i} className="w-3 h-3 fill-[#B8860B] text-[#B8860B]" />
+              <Star key={i} className="w-3 h-3 fill-accent text-accent" />
             ))}
           </div>
-          <p className="text-[10px] text-white/50">10k+ Happy Customers</p>
+          <p className="text-[10px] text-muted-foreground">10k+ Happy Customers</p>
         </div>
       </motion.div>
     </section>
   );
-};
+});
+
+LuxuryHeroSection.displayName = 'LuxuryHeroSection';
 
 export default LuxuryHeroSection;
