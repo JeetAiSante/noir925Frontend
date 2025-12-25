@@ -8,8 +8,9 @@ import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Loader2 } from 'lucide
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import SEOHead from '@/components/seo/SEOHead';
 
-const contactSchema = z.object({
+const formValidationSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   email: z.string().email('Please enter a valid email'),
   phone: z.string().optional(),
@@ -33,7 +34,7 @@ const Contact = () => {
     setErrors({});
 
     // Validate
-    const result = contactSchema.safeParse(formData);
+    const result = formValidationSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       result.error.errors.forEach(err => {
@@ -108,8 +109,42 @@ const Contact = () => {
     }
   ];
 
+  // Contact Page Schema
+  const contactPageSchema = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact NOIR925",
+    "description": "Get in touch with NOIR925 for jewelry inquiries, custom orders, and customer support.",
+    "url": "https://noir925.com/contact",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "NOIR925",
+      "telephone": "+91-98765-43210",
+      "email": "hello@noir925.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Mumbai",
+        "addressRegion": "Maharashtra",
+        "addressCountry": "IN"
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+        "opens": "10:00",
+        "closes": "19:00"
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Contact Us"
+        description="Contact NOIR925 for inquiries about 925 sterling silver jewelry, custom orders, shipping, or support. Email us at hello@noir925.com or call +91 98765 43210."
+        canonicalUrl="https://noir925.com/contact"
+        keywords="contact NOIR925, jewelry support, custom silver jewelry order, silver jewelry inquiry, NOIR925 customer service"
+        structuredData={contactPageSchema}
+      />
       <Header />
       
       <main>

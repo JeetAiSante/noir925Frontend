@@ -3,6 +3,7 @@ import Footer from "@/components/layout/Footer";
 import { Award, Heart, Gem, Users, Sparkles, Shield, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import SEOHead from "@/components/seo/SEOHead";
 
 const About = () => {
   const values = [
@@ -44,8 +45,48 @@ const About = () => {
     { value: "14+", label: "Years", description: "Of excellence" },
   ];
 
+  // Organization Schema for About page
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "NOIR925",
+    "url": "https://noir925.com",
+    "logo": "https://noir925.com/logo.png",
+    "description": "Premium 925 sterling silver jewelry brand from Jaipur, India. Handcrafted luxury jewelry with BIS hallmark certification.",
+    "foundingDate": "2010",
+    "foundingLocation": {
+      "@type": "Place",
+      "name": "Jaipur, Rajasthan, India"
+    },
+    "sameAs": [
+      "https://instagram.com/noir925",
+      "https://facebook.com/noir925",
+      "https://pinterest.com/noir925"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-98765-43210",
+      "contactType": "customer service",
+      "availableLanguage": ["English", "Hindi"]
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Mumbai",
+      "addressRegion": "Maharashtra",
+      "addressCountry": "IN"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="About NOIR925 | Our Story, Craftsmanship & Heritage"
+        description="Discover NOIR925's journey from Jaipur's jewelry capital. 14+ years of handcrafted 925 sterling silver jewelry, 50+ master artisans, and 100K+ happy customers worldwide."
+        canonicalUrl="https://noir925.com/about"
+        keywords="NOIR925 about, silver jewelry brand India, Jaipur jewelry, handcrafted silver, 925 sterling silver, Indian jewelry brand"
+        structuredData={organizationSchema}
+        ogImage="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1200&q=80"
+      />
       <Header />
       
       {/* Hero Section */}
