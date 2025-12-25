@@ -66,14 +66,7 @@ const Header = () => {
 
   return (
     <>
-      {/* Announcement Bar - Only on Home */}
-      {isHomePage && (
-        <div className="bg-primary text-primary-foreground py-2 text-center text-sm font-body tracking-wide">
-          <p>Free Shipping on Orders Above ₹2,999 | Hallmarked 925 Silver</p>
-        </div>
-      )}
-
-      {/* Main Header */}
+      {/* Main Header - Compact Luxury Design */}
       <header
         className={`sticky top-0 z-50 transition-all duration-500 ${
           isScrolled
@@ -83,7 +76,7 @@ const Header = () => {
       >
         {/* Top Row - Logo, Search, Actions */}
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-20 gap-4">
+          <div className="flex items-center justify-between h-14 md:h-16 gap-4">
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 -ml-2"

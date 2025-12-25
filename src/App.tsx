@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { FestivalThemeProvider } from "@/context/FestivalThemeContext";
 import LuxuryCursor from "@/components/LuxuryCursor";
 import InstallPWAPrompt from "@/components/pwa/InstallPWAPrompt";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -52,8 +53,9 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <CartProvider>
-          <LuxuryCursor />
+        <FestivalThemeProvider>
+          <CartProvider>
+            <LuxuryCursor />
           <InstallPWAPrompt />
           <Toaster />
           <Sonner />
@@ -103,8 +105,9 @@ const App = () => (
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </CartProvider>
+            </BrowserRouter>
+          </CartProvider>
+        </FestivalThemeProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
