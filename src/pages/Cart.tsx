@@ -163,17 +163,6 @@ const Cart = () => {
               </div>
             ))}
 
-            {/* Gift Wrap Option */}
-            <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/10">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 accent-primary rounded" />
-                <Gift className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium text-sm">Add Gift Wrapping</p>
-                  <p className="text-xs text-muted-foreground">Premium packaging for ₹99</p>
-                </div>
-              </label>
-            </div>
           </div>
 
           {/* Order Summary */}
