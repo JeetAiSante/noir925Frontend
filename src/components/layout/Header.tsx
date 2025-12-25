@@ -72,22 +72,15 @@ const Header = () => {
               )}
             </button>
 
-            {/* Logo + Location */}
-            <div className="flex items-center gap-2 md:gap-4">
-              <Link to="/" className="flex items-center gap-2 group">
-                <div className="relative">
-                  <span className="font-display text-xl md:text-2xl lg:text-3xl font-semibold tracking-wider">
-                    NOIR<span className="text-primary">925</span>
-                  </span>
-                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-500" />
-                </div>
-              </Link>
-              
-              {/* Location Dropdown */}
-              <div className="hidden sm:block">
-                <LocationDropdown />
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="relative">
+                <span className="font-display text-xl md:text-2xl lg:text-3xl font-semibold tracking-wider">
+                  NOIR<span className="text-primary">925</span>
+                </span>
+                <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-500" />
               </div>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-6">
@@ -178,6 +171,11 @@ const Header = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-1 md:gap-3">
+              {/* Location Dropdown - Desktop */}
+              <div className="hidden md:block">
+                <LocationDropdown />
+              </div>
+              
               <Button 
                 variant="ghost" 
                 size="icon" 

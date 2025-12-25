@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Package, MapPin, Heart, LogOut, Edit2, Save, Camera, ChevronRight } from 'lucide-react';
+import { User, Package, MapPin, LogOut, Edit2, Save, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,11 +13,13 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AddressManager from '@/components/account/AddressManager';
 import OrderHistory from '@/components/account/OrderHistory';
+import ProfileAvatar from '@/components/account/ProfileAvatar';
 
 const Account = () => {
   const { user, profile, isLoading, signOut, updateProfile } = useAuth();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -39,6 +40,7 @@ const Account = () => {
         email: profile.email || '',
         phone: profile.phone || '',
       });
+      setAvatarUrl(profile.avatar_url);
     }
   }, [profile]);
 
@@ -73,6 +75,10 @@ const Account = () => {
     .join('')
     .toUpperCase() || 'U';
 
+  const handleAvatarUpdate = (url: string) => {
+    setAvatarUrl(url);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -92,39 +98,18 @@ const Account = () => {
               <CardContent className="p-6">
                 {/* Profile Summary */}
                 <div className="text-center mb-6">
-                  <div className="relative inline-block mb-4">
-                    <Avatar className="w-24 h-24">
-                      <AvatarImage src={profile?.avatar_url || ''} />
-                      <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <button className="absolute bottom-0 right-0 p-2 bg-background border border-border rounded-full hover:bg-accent">
-                      <Camera className="w-4 h-4" />
-                    </button>
+                  <div className="mb-4">
+                    <ProfileAvatar
+                      userId={user.id}
+                      avatarUrl={avatarUrl}
+                      fullName={profile?.full_name || null}
+                      onAvatarUpdate={handleAvatarUpdate}
+                    />
                   </div>
                   <h2 className="font-semibold text-lg">{profile?.full_name || 'User'}</h2>
                   <p className="text-sm text-muted-foreground">{profile?.email}</p>
                   <Badge variant="secondary" className="mt-2">Silver Member</Badge>
                 </div>
-
-                {/* Quick Links */}
-                <nav className="space-y-1">
-                  <Link 
-                    to="/wishlist" 
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <Heart className="w-4 h-4" />
-                    <span>Wishlist</span>
-                  </Link>
-                  <Link 
-                    to="/cart" 
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <Package className="w-4 h-4" />
-                    <span>Cart</span>
-                  </Link>
-                </nav>
 
                 <Button 
                   variant="ghost" 

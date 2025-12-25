@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import LocationPopup from './LocationPopup';
 import DiscountPopup from './DiscountPopup';
+import SpinWheelPopup from './SpinWheelPopup';
 
 interface FirstTimePopupProps {
   children: React.ReactNode;
@@ -9,8 +11,30 @@ interface FirstTimePopupProps {
 const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
   const [showLocationPopup, setShowLocationPopup] = useState(false);
   const [showDiscountPopup, setShowDiscountPopup] = useState(false);
+  const [showSpinWheel, setShowSpinWheel] = useState(false);
   const [userLocation, setUserLocation] = useState<string | null>(null);
-  const [scrollCount, setScrollCount] = useState(0);
+  const [pageNavigations, setPageNavigations] = useState(0);
+  const location = useLocation();
+
+  // Track page navigations for spin wheel
+  useEffect(() => {
+    const hasSpun = localStorage.getItem('noir925_has_spun');
+    if (!hasSpun) {
+      setPageNavigations(prev => prev + 1);
+    }
+  }, [location.pathname]);
+
+  // Show spin wheel after 2 page navigations
+  useEffect(() => {
+    const hasSpun = localStorage.getItem('noir925_has_spun');
+    if (!hasSpun && pageNavigations >= 2 && !showLocationPopup && !showDiscountPopup) {
+      const timer = setTimeout(() => {
+        setShowSpinWheel(true);
+        localStorage.setItem('noir925_has_spun', 'true');
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [pageNavigations, showLocationPopup, showDiscountPopup]);
 
   useEffect(() => {
     // Check if user has already set location
@@ -31,30 +55,26 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
 
     // Track scroll for discount popup
     if (!hasSubscribed && popupShownToday !== today) {
-      const handleScroll = () => {
-        setScrollCount(prev => {
-          const newCount = prev + 1;
+      let scrollCount = 0;
+      let lastScrollY = window.scrollY;
+      
+      const scrollListener = () => {
+        if (Math.abs(window.scrollY - lastScrollY) > 300) {
+          scrollCount++;
+          lastScrollY = window.scrollY;
+          
           // Show discount popup after 3 scroll events
-          if (newCount >= 3 && !showDiscountPopup && !showLocationPopup) {
+          if (scrollCount >= 3 && !showDiscountPopup && !showLocationPopup && !showSpinWheel) {
             setShowDiscountPopup(true);
             localStorage.setItem('noir925_popup_date', today);
           }
-          return newCount;
-        });
-      };
-
-      let lastScrollY = window.scrollY;
-      const scrollListener = () => {
-        if (Math.abs(window.scrollY - lastScrollY) > 300) {
-          handleScroll();
-          lastScrollY = window.scrollY;
         }
       };
 
       window.addEventListener('scroll', scrollListener, { passive: true });
       return () => window.removeEventListener('scroll', scrollListener);
     }
-  }, [showLocationPopup, showDiscountPopup]);
+  }, [showLocationPopup, showDiscountPopup, showSpinWheel]);
 
   const handleLocationSelect = (location: string) => {
     setUserLocation(location);
@@ -73,6 +93,11 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
       <DiscountPopup
         open={showDiscountPopup}
         onOpenChange={setShowDiscountPopup}
+      />
+      
+      <SpinWheelPopup
+        open={showSpinWheel}
+        onOpenChange={setShowSpinWheel}
       />
     </>
   );
