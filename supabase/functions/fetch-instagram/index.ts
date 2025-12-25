@@ -16,10 +16,10 @@ serve(async (req) => {
     const instagramUserId = Deno.env.get('INSTAGRAM_USER_ID');
 
     if (!accessToken || !instagramUserId) {
-      // Return fallback data if credentials not configured
+      console.log('Instagram credentials not configured');
       return new Response(JSON.stringify({
         success: false,
-        message: 'Instagram credentials not configured',
+        message: 'Service configuration incomplete',
         fallback: true,
         posts: getFallbackPosts()
       }), {
@@ -35,7 +35,16 @@ serve(async (req) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('Instagram API error:', error);
-      throw new Error(`Instagram API error: ${response.status}`);
+      // Return generic error to client, log details server-side
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Unable to fetch posts at this time',
+        fallback: true,
+        posts: getFallbackPosts()
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
     }
 
     const data = await response.json();
@@ -58,15 +67,16 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
+    // Log detailed error server-side, return generic message to client
     console.error('Error fetching Instagram posts:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      message: 'An error occurred. Please try again later.',
       fallback: true,
       posts: getFallbackPosts()
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200, // Return 200 with fallback data
+      status: 200,
     });
   }
 });

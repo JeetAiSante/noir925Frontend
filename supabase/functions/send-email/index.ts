@@ -19,7 +19,8 @@ const sendEmail = async (payload: { from: string; to: string[]; subject: string;
   
   if (!res.ok) {
     const error = await res.text();
-    throw new Error(`Failed to send email: ${error}`);
+    console.error("Resend API error:", error);
+    throw new Error("Email delivery failed");
   }
   
   return await res.json();
@@ -68,7 +69,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { type, data } = await req.json();
-    console.log("Email type:", type);
+    console.log("Processing email type:", type);
 
     const fromEmail = "NOIR925 <onboarding@resend.dev>";
 
@@ -79,6 +80,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject: `New Contact: ${data.subject}`,
         html: getContactEmailHtml(data.name, data.email, data.subject, data.message),
       });
+      console.log("Contact email sent successfully");
     } else if (type === 'order_confirmation') {
       await sendEmail({
         from: fromEmail,
@@ -86,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject: `Order Confirmed - ${data.orderNumber}`,
         html: getOrderConfirmationHtml(data.orderNumber, data.customerName, data.total),
       });
+      console.log("Order confirmation email sent successfully");
     }
 
     return new Response(JSON.stringify({ success: true }), {
@@ -93,8 +96,12 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error: any) {
-    console.error("Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    // Log detailed error server-side, return generic message to client
+    console.error("Email function error:", error);
+    return new Response(JSON.stringify({ 
+      success: false,
+      error: "An error occurred while sending the email. Please try again later." 
+    }), {
       status: 500,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
