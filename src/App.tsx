@@ -45,6 +45,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminFestivalThemes from "./pages/admin/AdminFestivalThemes";
 import AdminSpinWheel from "./pages/admin/AdminSpinWheel";
+import AdminLuckyDiscounts from "./pages/admin/AdminLuckyDiscounts";
 import AdminLogin from "./pages/AdminLogin";
 
 const queryClient = new QueryClient();
@@ -97,6 +98,7 @@ const App = () => (
                 <Route path="timers" element={<AdminTimers />} />
                 <Route path="themes" element={<AdminFestivalThemes />} />
                 <Route path="spin-wheel" element={<AdminSpinWheel />} />
+                <Route path="lucky-discounts" element={<AdminLuckyDiscounts />} />
                 <Route path="messages" element={<AdminMessages />} />
                 <Route path="customers" element={<AdminCustomers />} />
                 <Route path="analytics" element={<AdminAnalytics />} />

@@ -18,7 +18,8 @@ import {
   Tag,
   FolderTree,
   Palette,
-  Gift
+  Gift,
+  Ticket
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,7 @@ const navItems = [
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
   { icon: Gift, label: 'Spin Wheel', path: '/admin/spin-wheel' },
+  { icon: Ticket, label: 'Lucky Discounts', path: '/admin/lucky-discounts' },
   { icon: Mail, label: 'Messages', path: '/admin/messages' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
