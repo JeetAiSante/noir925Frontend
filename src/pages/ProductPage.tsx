@@ -13,6 +13,8 @@ import ProductImageZoom from '@/components/products/ProductImageZoom';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { SEOHead } from '@/components/seo/SEOHead';
+import { ProductSchema, BreadcrumbSchema } from '@/components/seo/ProductSchema';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -58,6 +60,15 @@ const ProductPage = () => {
   const relatedProducts = products
     .filter((p) => p.category === product.category && p.id !== product.id)
     .slice(0, 4);
+
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Shop', url: '/shop' },
+    { name: product.category, url: `/shop?category=${product.category.toLowerCase()}` },
+    { name: product.name, url: `/product/${product.id}` }
+  ];
+
+  const seoDescription = `Buy ${product.name} - ${product.description?.slice(0, 120) || 'Premium 925 sterling silver jewellery'}. ₹${product.price.toLocaleString()}. Free shipping, BIS Hallmark certified. Shop now at NOIR925.`;
 
   const handleAddToCart = () => {
     if (isOutOfStock) {
@@ -122,6 +133,26 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <SEOHead 
+        title={product.name}
+        description={seoDescription}
+        keywords={`${product.name}, 925 sterling silver ${product.category}, ${product.category} for women, silver ${product.category} online India, ${product.material || 'sterling silver'} jewellery`}
+        canonicalUrl={`https://noir925.com/product/${product.id}`}
+        ogImage={product.image}
+        ogType="product"
+        product={{
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          sku: product.id,
+          availability: isOutOfStock ? 'OutOfStock' : 'InStock',
+          rating: product.rating,
+          reviewCount: product.reviews
+        }}
+      />
+      <ProductSchema product={product} />
+      <BreadcrumbSchema items={breadcrumbItems} />
+      
       <Header />
 
       <main className="container mx-auto px-4 py-4 md:py-8">
