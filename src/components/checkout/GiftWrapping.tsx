@@ -3,7 +3,7 @@ import { Gift, Check, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface GiftWrappingProps {
-  onGiftWrapChange: (selected: boolean) => void;
+  onGiftWrapChange: (selected: boolean, message: string) => void;
   giftWrapCost: number;
 }
 
@@ -14,7 +14,14 @@ const GiftWrapping = ({ onGiftWrapChange, giftWrapCost = 149 }: GiftWrappingProp
   const handleToggle = () => {
     const newValue = !isGiftWrap;
     setIsGiftWrap(newValue);
-    onGiftWrapChange(newValue);
+    onGiftWrapChange(newValue, giftMessage);
+  };
+
+  const handleMessageChange = (message: string) => {
+    setGiftMessage(message);
+    if (isGiftWrap) {
+      onGiftWrapChange(true, message);
+    }
   };
 
   return (
@@ -100,7 +107,7 @@ const GiftWrapping = ({ onGiftWrapChange, giftWrapCost = 149 }: GiftWrappingProp
                 </label>
                 <textarea
                   value={giftMessage}
-                  onChange={(e) => setGiftMessage(e.target.value)}
+                  onChange={(e) => handleMessageChange(e.target.value)}
                   placeholder="Write your heartfelt message here..."
                   maxLength={150}
                   rows={3}
