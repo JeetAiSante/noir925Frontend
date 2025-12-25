@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Eye, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Eye, Star, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
 import { Product, formatPrice } from '@/data/products';
 import ProductQuickView from './ProductQuickView';
 import { ProductSkeleton } from '@/components/ui/product-skeleton';
+import { motion } from 'framer-motion';
 
 interface ProductCardProps {
   product: Product;
@@ -84,15 +85,17 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
 
   return (
     <>
-      <div
-        className={`group relative ${className}`}
+      <motion.div
+        className={`group relative bg-card rounded-xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         data-cursor="product"
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2 }}
       >
         <Link to={`/product/${product.id}`} className="block">
-          {/* Image Container - 2:2 aspect ratio */}
-          <div className="relative overflow-hidden rounded-xl aspect-square bg-muted mb-4">
+          {/* Image Container - Compact aspect ratio */}
+          <div className="relative overflow-hidden aspect-square bg-muted">
             {/* Skeleton loader while image loads */}
             {!imageLoaded && (
               <div className="absolute inset-0 shimmer-skeleton" />
@@ -122,87 +125,120 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               }`}
             />
 
-            {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Gradient overlay on hover */}
+            <div className={`absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
 
-            {/* Badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {/* Compact Badges - Top Left */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
               {product.isNew && (
-                <span className="px-3 py-1 bg-primary text-primary-foreground text-xs font-body tracking-wide rounded-full">
+                <motion.span 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
+                >
+                  <Sparkles className="w-2.5 h-2.5" />
                   NEW
-                </span>
+                </motion.span>
               )}
               {product.isBestseller && (
-                <span className="px-3 py-1 bg-accent text-accent-foreground text-xs font-body tracking-wide rounded-full">
-                  BESTSELLER
-                </span>
-              )}
-              {product.discount && (
-                <span className="px-3 py-1 bg-secondary text-secondary-foreground text-xs font-body tracking-wide rounded-full">
-                  -{product.discount}%
-                </span>
+                <motion.span 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
+                >
+                  <TrendingUp className="w-2.5 h-2.5" />
+                  HOT
+                </motion.span>
               )}
             </div>
+
+            {/* Discount Badge - Top Right with prominent style */}
+            {product.discount && (
+              <motion.div
+                initial={{ scale: 0, rotate: -12 }}
+                animate={{ scale: 1, rotate: 0 }}
+                className="absolute top-2 right-2 z-10"
+              >
+                <div className="relative">
+                  <div className="bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground px-2.5 py-1 rounded-lg shadow-lg">
+                    <div className="flex items-center gap-1">
+                      <Zap className="w-3 h-3" />
+                      <span className="text-sm font-bold">-{product.discount}%</span>
+                    </div>
+                  </div>
+                  {/* Savings amount */}
+                  {product.originalPrice && (
+                    <div className="absolute -bottom-5 right-0 bg-background/90 backdrop-blur-sm text-[9px] font-medium px-1.5 py-0.5 rounded text-foreground whitespace-nowrap">
+                      Save {formatPrice(product.originalPrice - product.price)}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
 
             {/* Wishlist button */}
             <button
               onClick={handleWishlistClick}
-              className={`absolute top-3 right-3 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 z-10 ${
                 inWishlist
-                  ? 'bg-secondary text-secondary-foreground'
-                  : 'bg-background/80 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground'
+                  ? 'bg-secondary text-secondary-foreground scale-100'
+                  : `bg-background/80 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`
               }`}
             >
-              <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
             </button>
 
-            {/* Quick actions */}
+            {/* Quick actions on hover */}
             <div
-              className={`absolute bottom-4 left-4 right-4 flex gap-2 transition-all duration-500 ${
+              className={`absolute bottom-2 left-2 right-12 flex gap-1.5 transition-all duration-300 ${
                 isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
               <Button
                 variant="glass"
                 size="sm"
-                className="flex-1"
+                className="flex-1 h-8 text-xs"
                 onClick={handleAddToCart}
               >
-                <ShoppingBag className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">Add to Cart</span>
+                <ShoppingBag className="w-3.5 h-3.5 mr-1" />
+                Add
               </Button>
               <Button 
                 variant="glass" 
                 size="icon" 
-                className="shrink-0"
+                className="shrink-0 h-8 w-8"
                 onClick={handleQuickView}
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-3.5 h-3.5" />
               </Button>
             </div>
 
-            {/* Shimmer effect on hover */}
+            {/* Subtle shimmer effect on hover */}
             {isHovered && (
-              <div className="absolute inset-0 shimmer pointer-events-none" />
+              <div className="absolute inset-0 shimmer pointer-events-none opacity-50" />
             )}
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-2">
-            <p className="font-body text-xs text-muted-foreground uppercase tracking-wider">
+          {/* Product Info - Compact layout */}
+          <div className="p-3 space-y-1.5">
+            {/* Category */}
+            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-widest">
               {product.category}
             </p>
-            <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
+            
+            {/* Name */}
+            <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight">
               {product.name}
             </h3>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2">
+            {/* Rating - Compact */}
+            <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-3 h-3 ${
+                    className={`w-2.5 h-2.5 ${
                       i < Math.floor(product.rating)
                         ? 'fill-accent text-accent'
                         : 'text-border'
@@ -210,25 +246,25 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                   />
                 ))}
               </div>
-              <span className="font-body text-xs text-muted-foreground">
+              <span className="font-body text-[10px] text-muted-foreground">
                 ({product.reviews})
               </span>
             </div>
 
-            {/* Price */}
-            <div className="flex items-center gap-2">
-              <span className="font-display text-lg font-semibold text-foreground">
+            {/* Price - Enhanced styling */}
+            <div className="flex items-baseline gap-2 pt-1">
+              <span className="font-display text-base font-semibold text-foreground">
                 {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
-                <span className="font-body text-sm text-muted-foreground line-through">
+                <span className="font-body text-xs text-muted-foreground line-through">
                   {formatPrice(product.originalPrice)}
                 </span>
               )}
             </div>
           </div>
         </Link>
-      </div>
+      </motion.div>
 
       <ProductQuickView
         product={product}

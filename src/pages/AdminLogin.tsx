@@ -59,16 +59,41 @@ const AdminLogin = () => {
         return;
       }
       
-      const { error } = await signIn(formData.email, formData.password);
+      const { error, data } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      });
       
       if (error) {
         toast({
           title: "Access Denied",
-          description: "Invalid credentials. Only authorized administrators can access this panel.",
+          description: "Invalid credentials. Please check your email and password.",
           variant: "destructive",
         });
         setIsLoading(false);
         return;
+      }
+
+      // Check if user has admin role
+      if (data.user) {
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        if (roleError || !roleData) {
+          // Not an admin - sign them out
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "You do not have administrator privileges.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
       }
 
       // Send admin login notification email
@@ -84,10 +109,14 @@ const AdminLogin = () => {
         console.error('Failed to send login notification:', notifyError);
       }
 
-      // The useEffect will handle the redirect once isAdmin is confirmed
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 1000);
+      toast({
+        title: "Welcome Admin!",
+        description: "You've successfully signed in to the admin panel.",
+      });
+
+      // Navigate to admin dashboard
+      navigate('/admin');
+      setIsLoading(false);
       
     } catch (err) {
       toast({
