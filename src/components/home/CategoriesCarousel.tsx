@@ -2,10 +2,11 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { categories } from '@/data/products';
+import { useCategories } from '@/hooks/useProducts';
 
 const CategoriesCarousel = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: categories = [] } = useCategories();
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -54,13 +55,13 @@ const CategoriesCarousel = () => {
           {categories.map((category, index) => (
             <Link
               key={category.id}
-              to={`/shop?category=${category.id}`}
+              to={`/shop?category=${category.slug}`}
               className="group flex-shrink-0 w-[160px] md:w-[200px]"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="relative overflow-hidden rounded-2xl aspect-square mb-4 bg-muted" data-cursor="card">
                 <img
-                  src={category.image}
+                  src={category.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400'}
                   alt={category.name}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -70,20 +71,12 @@ const CategoriesCarousel = () => {
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <div className="w-16 h-16 rounded-full bg-secondary/30 animate-bloom" />
                 </div>
-
-                {/* Count badge */}
-                <div className="absolute top-3 right-3 px-2 py-1 bg-background/90 backdrop-blur-sm rounded-full">
-                  <span className="font-body text-xs text-foreground">{category.count}</span>
-                </div>
               </div>
               
               <div className="text-center">
                 <h3 className="font-display text-lg text-foreground group-hover:text-primary transition-colors">
                   {category.name}
                 </h3>
-                <p className="font-body text-sm text-muted-foreground">
-                  {category.count} Pieces
-                </p>
               </div>
             </Link>
           ))}
@@ -91,7 +84,7 @@ const CategoriesCarousel = () => {
 
         {/* Mobile scroll indicator */}
         <div className="flex justify-center gap-1 mt-6 md:hidden">
-          {categories.map((_, index) => (
+          {categories.slice(0, 5).map((_, index) => (
             <div
               key={index}
               className="w-2 h-2 rounded-full bg-border"
