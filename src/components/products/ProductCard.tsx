@@ -202,7 +202,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                 onClick={handleAddToCart}
               >
                 <ShoppingBag className="w-3.5 h-3.5 mr-1" />
-                Add
+                Add to Cart
               </Button>
               <Button 
                 variant="glass" 
@@ -212,14 +212,6 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                 title="Quick View"
               >
                 <Eye className="w-3.5 h-3.5" />
-              </Button>
-              <Button 
-                variant="glass" 
-                size="icon" 
-                className={`shrink-0 h-8 w-8 ${inWishlist ? 'bg-secondary text-secondary-foreground' : ''}`}
-                onClick={handleWishlistClick}
-              >
-                <Heart className={`w-3.5 h-3.5 ${inWishlist ? 'fill-current' : ''}`} />
               </Button>
             </div>
 
