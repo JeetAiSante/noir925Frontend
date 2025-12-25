@@ -32,14 +32,23 @@ import PriceBasedProducts from '@/components/home/PriceBasedProducts';
 import GiftBoxCategories from '@/components/home/GiftBoxCategories';
 import GenderShopSection from '@/components/home/GenderShopSection';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
+import { SEOHead, LocalBusinessSchema } from '@/components/seo/SEOHead';
 
 const Index = () => {
   return (
     <FirstTimePopup>
       <div className="min-h-screen bg-background">
+        <SEOHead 
+          title="Premium 925 Sterling Silver Jewellery"
+          description="Discover exquisite handcrafted 925 sterling silver jewellery at NOIR925. Shop luxury rings, necklaces, bracelets & earrings with BIS Hallmark certification. Free shipping on ₹2000+."
+          keywords="925 sterling silver jewellery India, silver rings online, silver necklace for women, silver bracelet, silver earrings, handcrafted silver jewellery, BIS hallmark silver, luxury silver jewellery, pure silver jewellery online, NOIR925"
+          canonicalUrl="https://noir925.com"
+          ogType="website"
+        />
         <OrganizationSchema />
         <WebsiteSchema />
         <FAQSchema />
+        <LocalBusinessSchema />
         
         <Header />
         

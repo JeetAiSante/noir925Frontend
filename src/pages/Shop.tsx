@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { products } from '@/data/products';
 import { useCategoriesWithCounts, useTotalProductCount } from '@/hooks/useProductCounts';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
+import { SEOHead, CollectionSchema, ItemListSchema } from '@/components/seo/SEOHead';
+import { BreadcrumbSchema } from '@/components/seo/ProductSchema';
 
 const Shop = () => {
   const [searchParams] = useSearchParams();
@@ -70,8 +72,47 @@ const Shop = () => {
     setSortBy('featured');
   };
 
+  const categoryTitle = selectedCategory 
+    ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} - Silver Jewellery`
+    : 'Shop All Silver Jewellery';
+    
+  const categoryDescription = selectedCategory
+    ? `Shop premium 925 sterling silver ${selectedCategory} at NOIR925. Handcrafted with love, BIS Hallmark certified. Free shipping on orders above ₹2000.`
+    : 'Explore our complete collection of handcrafted 925 sterling silver jewellery. Rings, necklaces, bracelets, earrings & more with BIS Hallmark certification.';
+
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Shop', url: '/shop' },
+    ...(selectedCategory ? [{ name: selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1), url: `/shop?category=${selectedCategory}` }] : [])
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title={categoryTitle}
+        description={categoryDescription}
+        keywords={`925 sterling silver ${selectedCategory || 'jewellery'}, silver ${selectedCategory || 'jewelry'} online India, ${selectedCategory || 'luxury jewellery'} for women, handcrafted silver, BIS hallmark silver ${selectedCategory || ''}`}
+        canonicalUrl={`https://noir925.com/shop${selectedCategory ? `?category=${selectedCategory}` : ''}`}
+      />
+      <BreadcrumbSchema items={breadcrumbItems} />
+      <CollectionSchema 
+        name={categoryTitle}
+        description={categoryDescription}
+        url={`https://noir925.com/shop${selectedCategory ? `?category=${selectedCategory}` : ''}`}
+        productCount={filteredProducts.length}
+      />
+      {filteredProducts.length > 0 && (
+        <ItemListSchema 
+          products={filteredProducts.slice(0, 10).map((p, i) => ({
+            id: p.id,
+            name: p.name,
+            price: p.price,
+            image: p.image,
+            position: i + 1
+          }))}
+          listName={categoryTitle}
+        />
+      )}
       <Header />
 
       <main className="pt-4 pb-16">
