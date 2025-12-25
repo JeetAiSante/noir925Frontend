@@ -17,6 +17,8 @@ export interface Banner {
   subtitle: string | null;
   description: string | null;
   image_url: string;
+  video_url: string | null;
+  is_video: boolean | null;
   link: string | null;
   button_text: string | null;
   position: string;
