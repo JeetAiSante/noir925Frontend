@@ -376,6 +376,113 @@ export type Database = {
         }
         Relationships: []
       }
+      lucky_discount_claims: {
+        Row: {
+          created_at: string
+          discount_code: string
+          discount_id: string | null
+          expires_at: string | null
+          id: string
+          is_used: boolean | null
+          login_time: string
+          lucky_number: number
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_code: string
+          discount_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          login_time: string
+          lucky_number: number
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_code?: string
+          discount_id?: string | null
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean | null
+          login_time?: string
+          lucky_number?: number
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lucky_discount_claims_discount_id_fkey"
+            columns: ["discount_id"]
+            isOneToOne: false
+            referencedRelation: "lucky_number_discounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lucky_number_discounts: {
+        Row: {
+          created_at: string
+          description: string | null
+          discount_code: string | null
+          discount_percent: number
+          id: string
+          is_active: boolean
+          login_time_end: string | null
+          login_time_start: string | null
+          lucky_numbers: number[]
+          max_discount_amount: number | null
+          min_order_value: number | null
+          name: string
+          updated_at: string
+          usage_count: number | null
+          usage_limit: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          discount_code?: string | null
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          login_time_end?: string | null
+          login_time_start?: string | null
+          lucky_numbers?: number[]
+          max_discount_amount?: number | null
+          min_order_value?: number | null
+          name: string
+          updated_at?: string
+          usage_count?: number | null
+          usage_limit?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          discount_code?: string | null
+          discount_percent?: number
+          id?: string
+          is_active?: boolean
+          login_time_end?: string | null
+          login_time_start?: string | null
+          lucky_numbers?: number[]
+          max_discount_amount?: number | null
+          min_order_value?: number | null
+          name?: string
+          updated_at?: string
+          usage_count?: number | null
+          usage_limit?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
