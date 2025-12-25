@@ -4,8 +4,18 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+const contactSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters').max(100),
+  email: z.string().email('Please enter a valid email'),
+  phone: z.string().optional(),
+  subject: z.string().min(3, 'Subject is required').max(200),
+  message: z.string().min(10, 'Message must be at least 10 characters').max(1000),
+});
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -15,12 +25,61 @@ const Contact = () => {
     subject: '',
     message: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Thank you for reaching out! We\'ll get back to you within 24 hours.');
-    setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    setErrors({});
+
+    // Validate
+    const result = contactSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach(err => {
+        if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+      });
+      setErrors(fieldErrors);
+      toast.error('Please fix the highlighted fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Save to database
+      const { error: dbError } = await supabase.from('contact_messages').insert({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        subject: formData.subject,
+        message: formData.message,
+      });
+      if (dbError) throw dbError;
+
+      // Send email notification
+      await supabase.functions.invoke('send-email', {
+        body: {
+          type: 'contact',
+          data: {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject,
+            message: formData.message,
+          }
+        }
+      });
+
+      toast.success('Thank you for reaching out! We\'ll get back to you within 24 hours.');
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const getFieldError = (field: string) => errors[field];
 
   const contactInfo = [
     {
@@ -115,22 +174,22 @@ const Contact = () => {
                     <label className="block text-sm font-medium mb-2">Your Name *</label>
                     <Input 
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => { setFormData({ ...formData, name: e.target.value }); setErrors(prev => ({ ...prev, name: '' })); }}
                       placeholder="John Doe"
-                      required
-                      className="bg-card"
+                      className={`bg-card transition-all ${getFieldError('name') ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                     />
+                    {getFieldError('name') && <p className="text-destructive text-xs mt-1">{getFieldError('name')}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Email Address *</label>
                     <Input 
                       type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) => { setFormData({ ...formData, email: e.target.value }); setErrors(prev => ({ ...prev, email: '' })); }}
                       placeholder="john@example.com"
-                      required
-                      className="bg-card"
+                      className={`bg-card transition-all ${getFieldError('email') ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                     />
+                    {getFieldError('email') && <p className="text-destructive text-xs mt-1">{getFieldError('email')}</p>}
                   </div>
                 </div>
 
@@ -148,11 +207,11 @@ const Contact = () => {
                     <label className="block text-sm font-medium mb-2">Subject *</label>
                     <Input 
                       value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      onChange={(e) => { setFormData({ ...formData, subject: e.target.value }); setErrors(prev => ({ ...prev, subject: '' })); }}
                       placeholder="Custom order inquiry"
-                      required
-                      className="bg-card"
+                      className={`bg-card transition-all ${getFieldError('subject') ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                     />
+                    {getFieldError('subject') && <p className="text-destructive text-xs mt-1">{getFieldError('subject')}</p>}
                   </div>
                 </div>
 
@@ -160,17 +219,17 @@ const Contact = () => {
                   <label className="block text-sm font-medium mb-2">Your Message *</label>
                   <Textarea 
                     value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    onChange={(e) => { setFormData({ ...formData, message: e.target.value }); setErrors(prev => ({ ...prev, message: '' })); }}
                     placeholder="Tell us about your inquiry..."
                     rows={6}
-                    required
-                    className="bg-card resize-none"
+                    className={`bg-card resize-none transition-all ${getFieldError('message') ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {getFieldError('message') && <p className="text-destructive text-xs mt-1">{getFieldError('message')}</p>}
                 </div>
 
-                <Button type="submit" className="w-full" size="lg">
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Message
+                <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                  {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
               </form>
             </div>

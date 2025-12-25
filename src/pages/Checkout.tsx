@@ -99,6 +99,28 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
+      // Send order confirmation email
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            type: 'order_confirmation',
+            data: {
+              orderNumber: order.order_number,
+              customerName: shippingInfo.fullName,
+              email: shippingInfo.email || user?.email,
+              total,
+              items: cartItems.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price
+              }))
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+      }
+
       clearCart();
       toast({
         title: "Order Placed Successfully!",
