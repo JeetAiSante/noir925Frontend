@@ -47,6 +47,10 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminFestivalThemes from "./pages/admin/AdminFestivalThemes";
 import AdminSpinWheel from "./pages/admin/AdminSpinWheel";
 import AdminLuckyDiscounts from "./pages/admin/AdminLuckyDiscounts";
+import AdminInventory from "./pages/admin/AdminInventory";
+import AdminLoyalty from "./pages/admin/AdminLoyalty";
+import AdminFeatureToggles from "./pages/admin/AdminFeatureToggles";
+import AdminGiftCards from "./pages/admin/AdminGiftCards";
 import AdminLogin from "./pages/AdminLogin";
 import LuckyDiscountPopup from "./components/popups/LuckyDiscountPopup";
 
@@ -103,6 +107,10 @@ const App = () => (
                 <Route path="themes" element={<AdminFestivalThemes />} />
                 <Route path="spin-wheel" element={<AdminSpinWheel />} />
                 <Route path="lucky-discounts" element={<AdminLuckyDiscounts />} />
+                <Route path="inventory" element={<AdminInventory />} />
+                <Route path="loyalty" element={<AdminLoyalty />} />
+                <Route path="feature-toggles" element={<AdminFeatureToggles />} />
+                <Route path="gift-cards" element={<AdminGiftCards />} />
                 <Route path="messages" element={<AdminMessages />} />
                 <Route path="customers" element={<AdminCustomers />} />
                 <Route path="analytics" element={<AdminAnalytics />} />

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Gift, Copy, Check } from 'lucide-react';
+import { X, Sparkles, Gift, Copy, Check, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useLuckyDiscount } from '@/hooks/useLuckyDiscount';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const LuckyDiscountPopup = () => {
   const { user } = useAuth();
@@ -42,7 +43,34 @@ const LuckyDiscountPopup = () => {
     if (claim) {
       setClaimed(true);
       setClaimedCode(claim.discount_code);
-      toast.success('Discount claimed! Code copied to clipboard.');
+      
+      // Send email notification
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', user?.id)
+          .single();
+        
+        if (profile?.email) {
+          await supabase.functions.invoke('send-lucky-discount-email', {
+            body: {
+              email: profile.email,
+              name: profile.full_name || 'Valued Customer',
+              discountCode: claim.discount_code,
+              discountPercent: result.discount.discount_percent,
+              expiresAt: claim.expires_at,
+              minOrderValue: result.discount.min_order_value || 0,
+            },
+          });
+          toast.success('Discount claimed! Code sent to your email.');
+        } else {
+          toast.success('Discount claimed! Code copied to clipboard.');
+        }
+      } catch (error) {
+        console.error('Error sending email:', error);
+        toast.success('Discount claimed! Code copied to clipboard.');
+      }
     } else {
       toast.error('Failed to claim discount. Please try again.');
     }
