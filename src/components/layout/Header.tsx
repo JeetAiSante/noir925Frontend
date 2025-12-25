@@ -59,7 +59,7 @@ const Header = () => {
     { name: 'Bracelets', href: '/shop?category=bracelets', icon: <Gift className="w-4 h-4" /> },
     { name: 'Collections', href: '/collections', icon: <Crown className="w-4 h-4" /> },
     { name: 'Wedding', href: '/collections/bridal-heritage', icon: <Heart className="w-4 h-4 fill-current" /> },
-    { name: 'Gifting', href: '/shop?tag=gifting', icon: <Gift className="w-4 h-4" /> },
+    { name: 'Gifting', href: '/gifting', icon: <Gift className="w-4 h-4" /> },
   ];
 
   const isHomePage = location.pathname === '/';
