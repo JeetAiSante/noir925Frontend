@@ -28,6 +28,9 @@ import RandomReviewsCarousel from '@/components/home/RandomReviewsCarousel';
 import DailywearSection from '@/components/home/DailywearSection';
 import FestivalBanner from '@/components/home/FestivalBanner';
 import FirstTimePopup from '@/components/popups/FirstTimePopup';
+import PriceBasedProducts from '@/components/home/PriceBasedProducts';
+import GiftBoxCategories from '@/components/home/GiftBoxCategories';
+import GenderShopSection from '@/components/home/GenderShopSection';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 
 const Index = () => {
@@ -59,8 +62,17 @@ const Index = () => {
           {/* Bestsellers */}
           <BestsellersGrid />
           
+          {/* Price Based Products */}
+          <PriceBasedProducts />
+          
+          {/* Him/Her Gender Section */}
+          <GenderShopSection />
+          
           {/* Wedding Collection */}
           <WeddingCollectionShowcase />
+          
+          {/* Gift Box Categories */}
+          <GiftBoxCategories />
           
           {/* Parallax Banner */}
           <ParallaxBanner />
