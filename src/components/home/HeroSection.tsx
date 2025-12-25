@@ -52,63 +52,64 @@ const HeroSection = () => {
       {slides.map((slide, index) => (
         <div
           key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? 'opacity-100 z-0' : 'opacity-0 z-0'
           }`}
         >
           <div
-            className="absolute inset-0 bg-cover bg-center transform scale-105 animate-[pulse-soft_10s_ease-in-out_infinite]"
+            className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${slide.image})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/40 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-foreground/20" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
         </div>
       ))}
 
       {/* Floating Decorative Elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
         <div className="absolute top-20 right-20 w-64 h-64 rounded-full bg-accent/10 blur-3xl animate-float" />
         <div className="absolute bottom-40 left-20 w-48 h-48 rounded-full bg-secondary/10 blur-3xl animate-float delay-300" />
-        <div className="absolute top-1/2 right-1/4 w-32 h-32 rounded-full bg-silver/10 blur-2xl animate-pulse-soft" />
       </div>
 
       {/* Content */}
-      <div className="relative h-full container mx-auto px-4 flex items-center">
-        <div className="max-w-3xl">
+      <div className="relative z-10 h-full container mx-auto px-4 flex items-center">
+        <div className="max-w-3xl relative">
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`transition-all duration-1000 ${
+              className={`transition-all duration-700 ease-out ${
                 index === currentSlide
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-8 absolute'
+                  ? 'relative opacity-100 translate-y-0'
+                  : 'absolute top-0 left-0 opacity-0 translate-y-8 pointer-events-none'
               }`}
             >
-              <div className="space-y-6">
-                <div className="overflow-hidden">
-                  <p className="font-accent text-lg md:text-xl text-background/80 tracking-widest uppercase animate-fade-in">
-                    NOIR925 Presents
-                  </p>
-                </div>
-                <div className="overflow-hidden">
-                  <h1 className="font-display text-5xl md:text-7xl lg:text-8xl text-background leading-none animate-fade-in-up">
-                    {slide.title}
-                    <span className="block text-accent">{slide.subtitle}</span>
-                  </h1>
-                </div>
-                <div className="overflow-hidden">
-                  <p className="font-body text-lg md:text-xl text-background/80 max-w-xl animate-fade-in delay-200">
-                    {slide.description}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-4 pt-4 animate-fade-in delay-400">
+              <div className="space-y-5">
+                <p className="font-accent text-base md:text-lg text-white/70 tracking-[0.2em] uppercase">
+                  NOIR925 Presents
+                </p>
+                <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1]">
+                  {slide.title}
+                  <span className="block text-accent mt-2">{slide.subtitle}</span>
+                </h1>
+                <p className="font-body text-base md:text-lg text-white/80 max-w-lg leading-relaxed">
+                  {slide.description}
+                </p>
+                <div className="flex flex-wrap gap-4 pt-2">
                   <Link to={slide.ctaLink}>
-                    <Button variant="hero" size="xl">
+                    <Button 
+                      variant="default" 
+                      size="lg"
+                      className="bg-white text-black hover:bg-white/90 font-semibold px-8"
+                    >
                       {slide.cta}
                     </Button>
                   </Link>
                   <Link to="/about">
-                    <Button variant="hero-outline" size="xl">
+                    <Button 
+                      variant="outline" 
+                      size="lg"
+                      className="border-white/50 text-white hover:bg-white/10 px-8"
+                    >
                       Our Story
                     </Button>
                   </Link>
@@ -120,7 +121,7 @@ const HeroSection = () => {
       </div>
 
       {/* Slide Indicators */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex items-center gap-3">
+      <div className="absolute bottom-28 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
         {slides.map((_, index) => (
           <button
             key={index}
@@ -130,21 +131,21 @@ const HeroSection = () => {
             }}
             className={`h-1 rounded-full transition-all duration-500 ${
               index === currentSlide
-                ? 'w-12 bg-background'
-                : 'w-4 bg-background/40 hover:bg-background/60'
+                ? 'w-12 bg-white'
+                : 'w-4 bg-white/40 hover:bg-white/60'
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}
         <button
           onClick={() => setIsPlaying(!isPlaying)}
-          className="ml-4 w-8 h-8 rounded-full bg-background/20 flex items-center justify-center hover:bg-background/30 transition-colors"
+          className="ml-4 w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
           aria-label={isPlaying ? 'Pause slideshow' : 'Play slideshow'}
         >
           {isPlaying ? (
-            <Pause className="w-3 h-3 text-background" />
+            <Pause className="w-3 h-3 text-white" />
           ) : (
-            <Play className="w-3 h-3 text-background ml-0.5" />
+            <Play className="w-3 h-3 text-white ml-0.5" />
           )}
         </button>
       </div>
@@ -152,19 +153,19 @@ const HeroSection = () => {
       {/* Scroll Indicator */}
       <button
         onClick={scrollToContent}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-background/60 hover:text-background transition-colors animate-bounce"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-white/60 hover:text-white transition-colors animate-bounce"
       >
         <span className="font-body text-xs uppercase tracking-widest">Explore</span>
         <ChevronDown className="w-5 h-5" />
       </button>
 
       {/* Side Text */}
-      <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden xl:flex flex-col items-center gap-4">
-        <div className="w-px h-20 bg-background/20" />
-        <span className="font-body text-xs text-background/60 tracking-widest [writing-mode:vertical-rl] rotate-180">
+      <div className="absolute right-8 top-1/2 -translate-y-1/2 z-20 hidden xl:flex flex-col items-center gap-4">
+        <div className="w-px h-20 bg-white/20" />
+        <span className="font-body text-xs text-white/60 tracking-widest [writing-mode:vertical-rl] rotate-180">
           925 STERLING SILVER
         </span>
-        <div className="w-px h-20 bg-background/20" />
+        <div className="w-px h-20 bg-white/20" />
       </div>
     </section>
   );

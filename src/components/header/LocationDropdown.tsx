@@ -36,14 +36,43 @@ const LocationDropdown = () => {
     setIsDetecting(true);
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+        navigator.geolocation.getCurrentPosition(resolve, reject, { 
+          timeout: 10000,
+          enableHighAccuracy: true 
+        });
       });
-      // Simplified: just set to nearest major city based on lat
-      const lat = position.coords.latitude;
-      const city = lat > 20 ? 'Delhi' : lat > 15 ? 'Mumbai' : 'Chennai';
-      selectCity(city);
-    } catch {
-      // Fallback
+      
+      const { latitude, longitude } = position.coords;
+      
+      // Use BigDataCloud free reverse geocoding API
+      const response = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        const detectedCity = data.city || data.locality || data.principalSubdivision;
+        
+        // Check if detected city is in our list, otherwise find nearest major city
+        const matchedCity = cities.find(
+          city => city.toLowerCase() === detectedCity?.toLowerCase()
+        );
+        
+        if (matchedCity) {
+          selectCity(matchedCity);
+        } else if (detectedCity) {
+          // Add detected city to selection even if not in predefined list
+          selectCity(detectedCity);
+        } else {
+          // Fallback to state/region
+          selectCity(data.principalSubdivision || 'Mumbai');
+        }
+      } else {
+        throw new Error('Geocoding failed');
+      }
+    } catch (error) {
+      console.error('Location detection failed:', error);
+      // Show error toast or fallback
     } finally {
       setIsDetecting(false);
     }
