@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLoyaltySettings, useUserLoyaltyPoints, useEarnPoints, useRedeemPoints } from "@/hooks/useLoyaltyPoints";
+import { z } from "zod";
 import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins } from "lucide-react";
 import GiftWrapping from "@/components/checkout/GiftWrapping";
 import {
@@ -61,7 +62,20 @@ const indianStates = [
   'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
   'Delhi', 'Jammu and Kashmir', 'Ladakh'
-];
+] as const;
+
+// Zod schema for checkout form validation
+const checkoutSchema = z.object({
+  fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+  email: z.string().trim().email("Invalid email address").optional().or(z.literal("")),
+  phone: z.string().trim().regex(/^[+]?91?[0-9]{10}$/, "Invalid phone number (10 digits required)"),
+  addressLine1: z.string().trim().min(5, "Address must be at least 5 characters").max(200, "Address must be less than 200 characters"),
+  addressLine2: z.string().trim().max(200, "Address must be less than 200 characters").optional().or(z.literal("")),
+  city: z.string().trim().min(2, "City must be at least 2 characters").max(100, "City must be less than 100 characters"),
+  state: z.enum(indianStates, { errorMap: () => ({ message: "Please select a valid state" }) }),
+  postalCode: z.string().trim().regex(/^[0-9]{6}$/, "Postal code must be 6 digits"),
+  country: z.string().default("India"),
+});
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -261,10 +275,14 @@ const Checkout = () => {
   };
 
   const handlePlaceOrderClick = () => {
-    if (!shippingInfo.fullName || !shippingInfo.phone || !shippingInfo.addressLine1 || !shippingInfo.city || !shippingInfo.state || !shippingInfo.postalCode) {
+    // Validate with Zod schema
+    const result = checkoutSchema.safeParse(shippingInfo);
+    
+    if (!result.success) {
+      const firstError = result.error.errors[0];
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: firstError.message,
         variant: "destructive",
       });
       return;
