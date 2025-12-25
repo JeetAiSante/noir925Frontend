@@ -1,6 +1,6 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import DynamicHeroSection from '@/components/home/DynamicHeroSection';
+import LuxuryHeroSection from '@/components/home/LuxuryHeroSection';
 import TrustStrip from '@/components/home/TrustStrip';
 import CountdownBanner from '@/components/home/CountdownBanner';
 import CategoriesCarousel from '@/components/home/CategoriesCarousel';
@@ -44,8 +44,8 @@ const Index = () => {
         <Header />
         
         <main className="overflow-hidden">
-          {/* Dynamic Hero Section - fetches from database */}
-          <DynamicHeroSection />
+          {/* Luxury Hero Section - with video support */}
+          <LuxuryHeroSection />
           
           {/* Countdown Sale Banner */}
           <CountdownBanner />
