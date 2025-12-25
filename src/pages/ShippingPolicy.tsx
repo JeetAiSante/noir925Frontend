@@ -1,10 +1,58 @@
 import { Truck, Clock, MapPin, Package } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEOHead from '@/components/seo/SEOHead';
 
 const ShippingPolicy = () => {
+  // Shipping Policy Schema
+  const shippingSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Shipping Policy - NOIR925",
+    "description": "NOIR925 shipping information including delivery times, charges, and tracking for 925 sterling silver jewelry orders across India.",
+    "url": "https://noir925.com/shipping-policy",
+    "mainEntity": {
+      "@type": "Organization",
+      "name": "NOIR925",
+      "shippingDetails": {
+        "@type": "OfferShippingDetails",
+        "shippingRate": {
+          "@type": "MonetaryAmount",
+          "value": "0",
+          "currency": "INR"
+        },
+        "shippingDestination": {
+          "@type": "DefinedRegion",
+          "addressCountry": "IN"
+        },
+        "deliveryTime": {
+          "@type": "ShippingDeliveryTime",
+          "handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 2,
+            "unitCode": "DAY"
+          },
+          "transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 3,
+            "maxValue": 7,
+            "unitCode": "DAY"
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Shipping Policy - Free Delivery & Fast Shipping"
+        description="Free shipping on orders above ₹999. NOIR925 delivers 925 sterling silver jewelry across India in 3-7 business days with secure, tamper-proof packaging."
+        canonicalUrl="https://noir925.com/shipping-policy"
+        keywords="NOIR925 shipping, jewelry delivery India, free shipping silver jewelry, order tracking, express delivery jewelry"
+        structuredData={shippingSchema}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-16">

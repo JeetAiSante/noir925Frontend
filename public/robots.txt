@@ -1,5 +1,5 @@
-# NOIR925 - Premium Sterling Silver Jewellery
-# robots.txt
+# NOIR925 - Premium 925 Sterling Silver Jewellery
+# https://noir925.com
 
 # Allow all major search engines
 User-agent: Googlebot
@@ -35,11 +35,31 @@ User-agent: *
 Allow: /
 Crawl-delay: 5
 
+# Core pages - high priority
+Allow: /shop
+Allow: /product/
+Allow: /collections
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /silver-care
+Allow: /gifting
+
+# Category pages
+Allow: /shop?category=
+
 # Disallow admin and private pages
 Disallow: /admin
 Disallow: /admin/*
+Disallow: /admin-login
 Disallow: /account
 Disallow: /checkout
+Disallow: /cart
+Disallow: /wishlist
+Disallow: /auth
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /otp-login
 Disallow: /api/
 Disallow: /*.json$
 Disallow: /*?*sort=
@@ -57,7 +77,10 @@ Allow: /*.gif
 Allow: /*.svg
 Allow: /*.webp
 
-# Sitemap location
+# Dynamic Sitemap (auto-generated with all products from database)
+Sitemap: https://rydafpzgudalfkyorofh.supabase.co/functions/v1/generate-sitemap
+
+# Static Sitemap fallback
 Sitemap: https://noir925.com/sitemap.xml
 
 # Host directive
