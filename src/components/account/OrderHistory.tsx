@@ -1,13 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Package, ChevronRight, Clock, CheckCircle, Truck, XCircle } from 'lucide-react';
+import { Package, ChevronRight, Clock, CheckCircle, Truck, XCircle, Ban } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/data/products';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface OrderItem {
   id: string;
@@ -48,6 +60,8 @@ const OrderHistory = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -84,6 +98,58 @@ const OrderHistory = () => {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const canCancelOrder = (status: string) => {
+    return ['pending', 'confirmed', 'processing'].includes(status);
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    setCancellingOrderId(orderId);
+    
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setOrders(prev => prev.map(order => 
+        order.id === orderId ? { ...order, status: 'cancelled' } : order
+      ));
+
+      toast({
+        title: 'Order Cancelled',
+        description: 'Your order has been cancelled successfully.',
+      });
+
+      // Send cancellation email
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            type: 'order_cancelled',
+            data: {
+              orderId,
+              email: user?.email,
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Email error:', emailError);
+      }
+    } catch (error) {
+      console.error('Cancel error:', error);
+      toast({
+        title: 'Cancellation Failed',
+        description: 'Failed to cancel order. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancellingOrderId(null);
+    }
   };
 
   if (isLoading) {
@@ -213,6 +279,45 @@ const OrderHistory = () => {
                           {order.shipping_address.address_line2 && <>{order.shipping_address.address_line2}<br /></>}
                           {order.shipping_address.city}, {order.shipping_address.state} - {order.shipping_address.postal_code}
                         </p>
+                      </div>
+                    )}
+
+                    {/* Cancel Order Button */}
+                    {canCancelOrder(order.status) && (
+                      <div className="mt-4 pt-4 border-t">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="destructive" 
+                              size="sm"
+                              disabled={cancellingOrderId === order.id}
+                            >
+                              {cancellingOrderId === order.id ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
+                              ) : (
+                                <Ban className="w-4 h-4 mr-2" />
+                              )}
+                              Cancel Order
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to cancel order {order.order_number}? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep Order</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleCancelOrder(order.id)}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Yes, Cancel Order
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     )}
                   </AccordionContent>

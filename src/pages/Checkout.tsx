@@ -11,7 +11,10 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles } from "lucide-react";
+import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag } from "lucide-react";
+import GiftWrapping from "@/components/checkout/GiftWrapping";
+
+const GIFT_WRAP_COST = 99;
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -20,6 +23,11 @@ const Checkout = () => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [isGiftWrap, setIsGiftWrap] = useState(false);
+  const [giftMessage, setGiftMessage] = useState("");
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
@@ -35,10 +43,70 @@ const Checkout = () => {
 
   const shipping = cartTotal > 2000 ? 0 : 99;
   const tax = Math.round(cartTotal * 0.18);
-  const total = cartTotal + shipping + tax;
+  const giftWrapCost = isGiftWrap ? GIFT_WRAP_COST : 0;
+  const couponDiscount = appliedCoupon ? Math.round(cartTotal * (appliedCoupon.discount / 100)) : 0;
+  const total = cartTotal + shipping + tax + giftWrapCost - couponDiscount;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value });
+  };
+
+  const handleGiftWrapChange = (enabled: boolean, message: string) => {
+    setIsGiftWrap(enabled);
+    setGiftMessage(message);
+  };
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    setIsApplyingCoupon(true);
+    
+    // Check for spin wheel generated coupons
+    const validCoupons: Record<string, number> = {
+      'SPIN5': 5,
+      'SPIN10': 10,
+      'SPIN15': 15,
+      'SPIN20': 20,
+      'SPIN25': 25,
+      'FREESHIP': 0, // Special case
+      'WELCOME10': 10,
+      'NOIR15': 15,
+    };
+    
+    const upperCode = couponCode.toUpperCase();
+    
+    if (validCoupons[upperCode] !== undefined) {
+      if (upperCode === 'FREESHIP') {
+        toast({
+          title: 'Free Shipping Applied!',
+          description: 'Free shipping has been applied to your order.',
+        });
+        setAppliedCoupon({ code: upperCode, discount: 0 });
+      } else {
+        setAppliedCoupon({ code: upperCode, discount: validCoupons[upperCode] });
+        toast({
+          title: 'Coupon Applied!',
+          description: `${validCoupons[upperCode]}% discount applied to your order.`,
+        });
+      }
+    } else {
+      toast({
+        title: 'Invalid Coupon',
+        description: 'This coupon code is not valid.',
+        variant: 'destructive',
+      });
+    }
+    
+    setIsApplyingCoupon(false);
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast({
+      title: 'Coupon Removed',
+      description: 'The discount has been removed from your order.',
+    });
   };
 
   const handlePlaceOrder = async () => {
@@ -62,10 +130,12 @@ const Checkout = () => {
           subtotal: cartTotal,
           shipping_cost: shipping,
           tax,
+          discount: couponDiscount,
           total,
           payment_method: paymentMethod,
           payment_status: "pending",
           status: "pending",
+          notes: isGiftWrap ? `Gift wrapped with message: ${giftMessage}` : null,
           shipping_address: {
             full_name: shippingInfo.fullName,
             address_line1: shippingInfo.addressLine1,
@@ -75,12 +145,32 @@ const Checkout = () => {
             postal_code: shippingInfo.postalCode,
             country: shippingInfo.country,
             phone: shippingInfo.phone,
+            gift_wrap: isGiftWrap,
+            gift_message: giftMessage,
+            coupon_code: appliedCoupon?.code || null,
           },
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
+
+      const orderItems = cartItems.map((item) => ({
+        order_id: order.id,
+        product_id: item.id,
+        product_name: item.name,
+        product_image: item.image,
+        quantity: item.quantity,
+        price: item.price,
+        size: item.size || null,
+        variant: item.variant || null,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
 
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
@@ -354,6 +444,52 @@ const Checkout = () => {
                 </label>
               </RadioGroup>
             </div>
+
+            {/* Gift Wrapping */}
+            <GiftWrapping
+              onGiftWrapChange={handleGiftWrapChange}
+              giftWrapCost={GIFT_WRAP_COST}
+            />
+
+            {/* Coupon Code */}
+            <div className="bg-card rounded-xl p-5 border border-border">
+              <h2 className="text-lg font-display mb-5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Tag className="w-4 h-4 text-primary" />
+                </div>
+                Coupon Code
+              </h2>
+              
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-primary" />
+                    <span className="font-medium">{appliedCoupon.code}</span>
+                    <span className="text-sm text-muted-foreground">
+                      ({appliedCoupon.discount > 0 ? `${appliedCoupon.discount}% off` : 'Free Shipping'})
+                    </span>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={removeCoupon}>
+                    Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="uppercase"
+                  />
+                  <Button 
+                    onClick={applyCoupon} 
+                    disabled={isApplyingCoupon || !couponCode.trim()}
+                  >
+                    {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Order Summary */}
@@ -390,10 +526,29 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className={shipping === 0 ? 'text-primary font-medium' : ''}>
-                    {shipping === 0 ? "FREE" : `₹${shipping}`}
+                  <span className={shipping === 0 || appliedCoupon?.code === 'FREESHIP' ? 'text-primary font-medium' : ''}>
+                    {shipping === 0 || appliedCoupon?.code === 'FREESHIP' ? "FREE" : `₹${shipping}`}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Tax (18% GST)</span>
+                  <span>₹{tax.toLocaleString()}</span>
+                </div>
+                {isGiftWrap && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Gift className="w-3 h-3" /> Gift Wrapping
+                    </span>
+                    <span>₹{giftWrapCost}</span>
+                  </div>
+                )}
+                {appliedCoupon && appliedCoupon.discount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span>-₹{couponDiscount.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax (18% GST)</span>
                   <span>₹{tax.toLocaleString()}</span>
