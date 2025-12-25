@@ -1,10 +1,36 @@
 import { RotateCcw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import SEOHead from '@/components/seo/SEOHead';
 
 const ReturnsPolicy = () => {
+  // Returns Policy Schema
+  const returnsSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Returns & Refund Policy - NOIR925",
+    "description": "NOIR925 7-day easy returns policy for 925 sterling silver jewelry. Learn about eligibility, refund process, and exchange options.",
+    "url": "https://noir925.com/returns-policy",
+    "mainEntity": {
+      "@type": "MerchantReturnPolicy",
+      "applicableCountry": "IN",
+      "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+      "merchantReturnDays": 7,
+      "returnMethod": "https://schema.org/ReturnByMail",
+      "returnFees": "https://schema.org/FreeReturn",
+      "refundType": "https://schema.org/FullRefund"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Returns & Refund Policy - 7 Day Easy Returns"
+        description="NOIR925 offers 7-day hassle-free returns on 925 sterling silver jewelry. Full refund or exchange for unused items in original packaging."
+        canonicalUrl="https://noir925.com/returns-policy"
+        keywords="NOIR925 returns, jewelry refund policy, 7 day return, exchange silver jewelry, refund process India"
+        structuredData={returnsSchema}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-16">

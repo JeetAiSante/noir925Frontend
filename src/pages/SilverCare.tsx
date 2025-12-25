@@ -1,6 +1,7 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Droplets, Sparkles, Shield, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import SEOHead from '@/components/seo/SEOHead';
 
 const SilverCare = () => {
   const careTips = [
@@ -43,8 +44,57 @@ const SilverCare = () => {
     ]
   };
 
+  // HowTo Schema for Silver Care
+  const howToSchema = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "name": "How to Care for 925 Sterling Silver Jewelry",
+    "description": "Complete guide to maintaining and caring for your 925 sterling silver jewelry to prevent tarnish and keep it shining.",
+    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600",
+    "totalTime": "PT10M",
+    "estimatedCost": {
+      "@type": "MonetaryAmount",
+      "currency": "INR",
+      "value": "0"
+    },
+    "supply": [
+      {"@type": "HowToSupply", "name": "Soft lint-free cloth"},
+      {"@type": "HowToSupply", "name": "Anti-tarnish pouch"},
+      {"@type": "HowToSupply", "name": "Mild soap (optional)"}
+    ],
+    "step": [
+      {
+        "@type": "HowToStep",
+        "name": "Keep It Dry",
+        "text": "Remove silver jewelry before swimming, showering, or exercising. Water and sweat can cause tarnishing."
+      },
+      {
+        "@type": "HowToStep", 
+        "name": "Polish Regularly",
+        "text": "Use a soft, lint-free cloth to gently polish your silver pieces. This removes oils and prevents tarnish buildup."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Store Properly", 
+        "text": "Keep pieces in anti-tarnish pouches or airtight containers. Store items separately to prevent scratching."
+      },
+      {
+        "@type": "HowToStep",
+        "name": "Last On, First Off",
+        "text": "Put on jewelry after applying cosmetics, perfumes, and lotions. Remove it first when undressing."
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Silver Care Guide - How to Clean & Maintain 925 Sterling Silver"
+        description="Learn how to care for your 925 sterling silver jewelry. Expert tips on cleaning, polishing, storage, and preventing tarnish to keep your NOIR925 pieces beautiful."
+        canonicalUrl="https://noir925.com/silver-care"
+        keywords="silver care guide, how to clean silver jewelry, 925 sterling silver care, prevent silver tarnish, silver polishing tips, jewelry maintenance"
+        structuredData={howToSchema}
+      />
       <Header />
       
       <main>
