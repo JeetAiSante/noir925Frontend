@@ -286,6 +286,63 @@ export type Database = {
         }
         Relationships: []
       }
+      festival_themes: {
+        Row: {
+          accent_color: string
+          background_color: string
+          banner_image: string | null
+          created_at: string
+          discount_percent: number | null
+          end_date: string | null
+          id: string
+          is_active: boolean
+          logo_overlay: string | null
+          name: string
+          primary_color: string
+          secondary_color: string
+          slug: string
+          special_offer: string | null
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          background_color?: string
+          banner_image?: string | null
+          created_at?: string
+          discount_percent?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          logo_overlay?: string | null
+          name: string
+          primary_color?: string
+          secondary_color?: string
+          slug: string
+          special_offer?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          background_color?: string
+          banner_image?: string | null
+          created_at?: string
+          discount_percent?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          logo_overlay?: string | null
+          name?: string
+          primary_color?: string
+          secondary_color?: string
+          slug?: string
+          special_offer?: string | null
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       homepage_sections: {
         Row: {
           created_at: string
@@ -694,6 +751,72 @@ export type Database = {
           redeemed_at?: string | null
           session_id?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      spin_wheel_prizes: {
+        Row: {
+          color: string
+          created_at: string
+          discount_percent: number | null
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+          updated_at: string
+          value: string
+          weight: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+          updated_at?: string
+          value: string
+          weight?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          discount_percent?: number | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+          updated_at?: string
+          value?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      spin_wheel_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          show_on_pages: string[] | null
+          spins_per_day: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          show_on_pages?: string[] | null
+          spins_per_day?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          show_on_pages?: string[] | null
+          spins_per_day?: number
+          updated_at?: string
         }
         Relationships: []
       }
