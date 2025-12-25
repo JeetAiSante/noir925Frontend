@@ -7,6 +7,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
 import { products } from '@/data/products';
 import { useCategoriesWithCounts, useTotalProductCount } from '@/hooks/useProductCounts';
+import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 
 const Shop = () => {
   const [searchParams] = useSearchParams();
@@ -321,6 +322,7 @@ const Shop = () => {
         </div>
       </main>
 
+      <FloatingSpinWheel />
       <Footer />
     </div>
   );
