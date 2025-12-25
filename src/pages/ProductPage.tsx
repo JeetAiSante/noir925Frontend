@@ -10,6 +10,7 @@ import { products, formatPrice } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
 import Product360View from '@/components/products/Product360View';
 import ProductImageZoom from '@/components/products/ProductImageZoom';
+import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -393,6 +394,7 @@ const ProductPage = () => {
         )}
       </main>
 
+      <FloatingSpinWheel />
       <Footer />
       <MobileFooter />
 
