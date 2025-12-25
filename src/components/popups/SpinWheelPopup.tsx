@@ -14,22 +14,13 @@ interface SpinWheelPopupProps {
 }
 
 interface WheelSegment {
+  id: string;
   label: string;
   value: string;
-  discount: number;
+  discount_percent: number | null;
   color: string;
+  weight: number;
 }
-
-const WHEEL_SEGMENTS: WheelSegment[] = [
-  { label: '5% OFF', value: 'SPIN5', discount: 5, color: 'hsl(350, 89%, 60%)' },
-  { label: '10% OFF', value: 'SPIN10', discount: 10, color: 'hsl(270, 76%, 60%)' },
-  { label: 'Try Again', value: '', discount: 0, color: 'hsl(220, 9%, 46%)' },
-  { label: '15% OFF', value: 'SPIN15', discount: 15, color: 'hsl(217, 91%, 60%)' },
-  { label: 'Free Ship', value: 'FREESHIP', discount: 0, color: 'hsl(142, 71%, 45%)' },
-  { label: '20% OFF', value: 'SPIN20', discount: 20, color: 'hsl(48, 96%, 53%)' },
-  { label: 'Try Again', value: '', discount: 0, color: 'hsl(220, 9%, 46%)' },
-  { label: '25% OFF', value: 'SPIN25', discount: 25, color: 'hsl(330, 81%, 60%)' },
-];
 
 const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
@@ -37,12 +28,51 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   const [result, setResult] = useState<WheelSegment | null>(null);
   const [copied, setCopied] = useState(false);
   const [hasSpun, setHasSpun] = useState(false);
+  const [prizes, setPrizes] = useState<WheelSegment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const segmentAngle = 360 / WHEEL_SEGMENTS.length;
+  // Fetch prizes from database
+  useEffect(() => {
+    const fetchPrizes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('spin_wheel_prizes')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order');
+
+        if (!error && data && data.length > 0) {
+          setPrizes(data);
+        } else {
+          // Fallback to default prizes if none in database
+          setPrizes([
+            { id: '1', label: '5% OFF', value: 'SPIN5', discount_percent: 5, color: '#e63946', weight: 20 },
+            { id: '2', label: '10% OFF', value: 'SPIN10', discount_percent: 10, color: '#9d4edd', weight: 15 },
+            { id: '3', label: 'Try Again', value: '', discount_percent: null, color: '#6b7280', weight: 25 },
+            { id: '4', label: '15% OFF', value: 'SPIN15', discount_percent: 15, color: '#3b82f6', weight: 10 },
+            { id: '5', label: 'Free Ship', value: 'FREESHIP', discount_percent: null, color: '#22c55e', weight: 15 },
+            { id: '6', label: '20% OFF', value: 'SPIN20', discount_percent: 20, color: '#eab308', weight: 5 },
+            { id: '7', label: 'Try Again', value: '', discount_percent: null, color: '#6b7280', weight: 25 },
+            { id: '8', label: '25% OFF', value: 'SPIN25', discount_percent: 25, color: '#ec4899', weight: 5 },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching prizes:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (open) {
+      fetchPrizes();
+    }
+  }, [open]);
+
+  const segmentAngle = prizes.length > 0 ? 360 / prizes.length : 45;
 
   // Check if user already spun today
   useEffect(() => {
@@ -70,7 +100,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   // Draw wheel on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || prizes.length === 0) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -81,7 +111,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    WHEEL_SEGMENTS.forEach((segment, index) => {
+    prizes.forEach((segment, index) => {
       const startAngle = (index * segmentAngle - 90) * (Math.PI / 180);
       const endAngle = ((index + 1) * segmentAngle - 90) * (Math.PI / 180);
 
@@ -117,7 +147,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
     ctx.strokeStyle = 'hsl(var(--primary))';
     ctx.lineWidth = 2;
     ctx.stroke();
-  }, [open]);
+  }, [open, prizes, segmentAngle]);
 
   const handleLoginRedirect = () => {
     onOpenChange(false);
@@ -125,7 +155,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   };
 
   const spinWheel = async () => {
-    if (isSpinning || hasSpun) return;
+    if (isSpinning || hasSpun || prizes.length === 0) return;
 
     if (!user) {
       toast({
@@ -138,14 +168,13 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
     setIsSpinning(true);
     setResult(null);
 
-    // Calculate winning segment (weighted towards lower discounts)
-    const weights = [20, 15, 25, 10, 15, 5, 25, 5];
-    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    // Calculate winning segment (weighted)
+    const totalWeight = prizes.reduce((a, b) => a + b.weight, 0);
     let random = Math.random() * totalWeight;
     let winningIndex = 0;
 
-    for (let i = 0; i < weights.length; i++) {
-      random -= weights[i];
+    for (let i = 0; i < prizes.length; i++) {
+      random -= prizes[i].weight;
       if (random <= 0) {
         winningIndex = i;
         break;
@@ -160,7 +189,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
 
     // Wait for animation
     setTimeout(async () => {
-      const winner = WHEEL_SEGMENTS[winningIndex];
+      const winner = prizes[winningIndex];
       setResult(winner);
       setIsSpinning(false);
       setHasSpun(true);
@@ -199,6 +228,16 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[340px] p-6 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -251,7 +290,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
               <Button 
                 onClick={handleLoginRedirect}
                 className="gap-2"
-                variant="luxury"
+                variant="default"
                 size="sm"
               >
                 <LogIn className="w-4 h-4" />
