@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { categories } from '@/data/products';
 import SearchModal from '@/components/search/SearchModal';
+import LocationDropdown from '@/components/header/LocationDropdown';
+
+const INSTAGRAM_URL = 'https://www.instagram.com/noir925_official?igsh=bGZkcHR6eTV6cG4x';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -69,15 +72,22 @@ const Header = () => {
               )}
             </button>
 
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative">
-                <span className="font-display text-xl md:text-2xl lg:text-3xl font-semibold tracking-wider">
-                  NOIR<span className="text-primary">925</span>
-                </span>
-                <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-500" />
+            {/* Logo + Location */}
+            <div className="flex items-center gap-2 md:gap-4">
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="relative">
+                  <span className="font-display text-xl md:text-2xl lg:text-3xl font-semibold tracking-wider">
+                    NOIR<span className="text-primary">925</span>
+                  </span>
+                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary group-hover:w-full transition-all duration-500" />
+                </div>
+              </Link>
+              
+              {/* Location Dropdown */}
+              <div className="hidden sm:block">
+                <LocationDropdown />
               </div>
-            </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-6">
@@ -224,6 +234,11 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="lg:hidden bg-background border-t border-border animate-fade-in">
             <nav className="container mx-auto px-4 py-4 space-y-1">
+              {/* Mobile Location */}
+              <div className="py-3 border-b border-border/50">
+                <LocationDropdown />
+              </div>
+              
               {navLinks.map((link) => (
                 <Link
                   key={link.name}

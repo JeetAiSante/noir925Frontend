@@ -15,14 +15,17 @@ import {
   X,
   ChevronRight,
   BarChart3,
-  Tag
+  Tag,
+  FolderTree
 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
   { icon: Package, label: 'Products', path: '/admin/products' },
+  { icon: FolderTree, label: 'Categories', path: '/admin/categories' },
   { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
   { icon: Tag, label: 'Sales & Offers', path: '/admin/sales' },
   { icon: Image, label: 'Banners', path: '/admin/banners' },
@@ -37,6 +40,16 @@ const AdminDashboard = () => {
   const { user, isAdmin, isLoading, signOut } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+
+  const handleSignOut = () => {
+    setShowSignOutDialog(true);
+  };
+
+  const confirmSignOut = () => {
+    signOut();
+    setShowSignOutDialog(false);
+  };
 
   if (isLoading) {
     return (
@@ -116,7 +129,7 @@ const AdminDashboard = () => {
             <Button 
               variant="ghost" 
               className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
-              onClick={signOut}
+              onClick={handleSignOut}
             >
               <LogOut className="w-5 h-5" />
               Sign Out
@@ -129,6 +142,22 @@ const AdminDashboard = () => {
       <main className="lg:ml-72 min-h-screen pt-16 lg:pt-0">
         <Outlet />
       </main>
+
+      {/* Sign Out Confirmation */}
+      <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out of the admin panel?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmSignOut}>Sign Out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
