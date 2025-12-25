@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const adminLoginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -70,8 +71,20 @@ const AdminLogin = () => {
         return;
       }
 
+      // Send admin login notification email
+      try {
+        await supabase.functions.invoke('admin-login-notify', {
+          body: {
+            adminEmail: formData.email,
+            loginTime: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+          }
+        });
+      } catch (notifyError) {
+        console.error('Failed to send login notification:', notifyError);
+      }
+
       // The useEffect will handle the redirect once isAdmin is confirmed
-      // Add a small delay to let auth state update
       setTimeout(() => {
         setIsLoading(false);
       }, 1000);
