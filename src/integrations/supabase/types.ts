@@ -74,6 +74,7 @@ export type Database = {
           id: string
           image_url: string
           is_active: boolean
+          is_video: boolean | null
           link: string | null
           position: string
           sort_order: number
@@ -81,6 +82,7 @@ export type Database = {
           subtitle: string | null
           title: string
           updated_at: string
+          video_url: string | null
         }
         Insert: {
           button_text?: string | null
@@ -90,6 +92,7 @@ export type Database = {
           id?: string
           image_url: string
           is_active?: boolean
+          is_video?: boolean | null
           link?: string | null
           position?: string
           sort_order?: number
@@ -97,6 +100,7 @@ export type Database = {
           subtitle?: string | null
           title: string
           updated_at?: string
+          video_url?: string | null
         }
         Update: {
           button_text?: string | null
@@ -106,6 +110,7 @@ export type Database = {
           id?: string
           image_url?: string
           is_active?: boolean
+          is_video?: boolean | null
           link?: string | null
           position?: string
           sort_order?: number
@@ -113,6 +118,7 @@ export type Database = {
           subtitle?: string | null
           title?: string
           updated_at?: string
+          video_url?: string | null
         }
         Relationships: []
       }
@@ -1049,6 +1055,39 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      sold_products: {
+        Row: {
+          created_at: string
+          id: string
+          is_removed: boolean
+          product_id: string
+          product_name: string
+          product_slug: string
+          remove_after: string
+          sold_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_removed?: boolean
+          product_id: string
+          product_name: string
+          product_slug: string
+          remove_after?: string
+          sold_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_removed?: boolean
+          product_id?: string
+          product_name?: string
+          product_slug?: string
+          remove_after?: string
+          sold_at?: string
         }
         Relationships: []
       }

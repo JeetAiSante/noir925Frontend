@@ -24,6 +24,11 @@ const ProductPage = () => {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
 
   const product = products.find((p) => p.id === id);
+  
+  // Stock status
+  const stockQuantity = product?.stockQuantity ?? 10;
+  const isLowStock = stockQuantity > 0 && stockQuantity <= 5;
+  const isOutOfStock = stockQuantity === 0;
 
   useEffect(() => {
     if (product) {
@@ -55,6 +60,14 @@ const ProductPage = () => {
     .slice(0, 4);
 
   const handleAddToCart = () => {
+    if (isOutOfStock) {
+      toast.error('This product is currently out of stock');
+      return;
+    }
+    if (quantity > stockQuantity) {
+      toast.error(`Only ${stockQuantity} items available`);
+      return;
+    }
     if (product.sizes && product.sizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
@@ -324,31 +337,40 @@ const ProductPage = () => {
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     className="p-2.5 md:p-3 hover:bg-muted transition-colors"
+                    disabled={isOutOfStock}
                   >
                     <Minus className="w-4 h-4" />
                   </button>
                   <span className="w-10 md:w-12 text-center font-medium">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(stockQuantity, quantity + 1))}
                     className="p-2.5 md:p-3 hover:bg-muted transition-colors"
+                    disabled={isOutOfStock || quantity >= stockQuantity}
                   >
                     <Plus className="w-4 h-4" />
                   </button>
                 </div>
-                <span className="text-sm text-muted-foreground">In Stock</span>
+                {isOutOfStock ? (
+                  <span className="text-sm font-medium text-destructive">Out of Stock</span>
+                ) : isLowStock ? (
+                  <span className="text-sm font-medium text-secondary animate-pulse">Only {stockQuantity} left!</span>
+                ) : (
+                  <span className="text-sm text-muted-foreground">In Stock</span>
+                )}
               </div>
             </div>
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-3">
               <Button
-                variant="luxury"
+                variant={isOutOfStock ? "secondary" : "luxury"}
                 size="lg"
                 className="flex-1 h-12 md:h-14 text-base"
                 onClick={handleAddToCart}
+                disabled={isOutOfStock}
               >
                 <ShoppingBag className="w-5 h-5 mr-2" />
-                Add to Cart
+                {isOutOfStock ? 'Sold Out' : 'Add to Cart'}
               </Button>
               <Button
                 variant="outline"

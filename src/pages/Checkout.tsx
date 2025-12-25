@@ -277,6 +277,35 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
+      // Validate stock availability before placing order
+      for (const item of cartItems) {
+        const { data: product, error } = await supabase
+          .from('products')
+          .select('stock_quantity, name')
+          .eq('id', item.id)
+          .single();
+
+        if (error || !product) {
+          toast({
+            title: "Product Not Found",
+            description: `${item.name} is no longer available.`,
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        if (product.stock_quantity < item.quantity) {
+          toast({
+            title: "Insufficient Stock",
+            description: `Only ${product.stock_quantity} units of ${product.name} available.`,
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+      }
+
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({

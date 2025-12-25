@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 interface CategoryCard {
@@ -45,17 +45,33 @@ const dailywearCategories: CategoryCard[] = [
 
 const DailywearSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const visibleCount = 3;
+
+  const getVisibleCount = () => {
+    if (typeof window !== 'undefined') {
+      if (window.innerWidth < 640) return 2;
+      if (window.innerWidth < 1024) return 3;
+      return 4;
+    }
+    return 3;
+  };
+
+  const [visibleCount, setVisibleCount] = useState(getVisibleCount());
+
+  useEffect(() => {
+    const handleResize = () => setVisibleCount(getVisibleCount());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const nextSlide = () => {
     setCurrentIndex((prev) => 
-      prev + visibleCount >= dailywearCategories.length ? 0 : prev + 1
+      prev + 1 >= dailywearCategories.length ? 0 : prev + 1
     );
   };
 
   const prevSlide = () => {
     setCurrentIndex((prev) => 
-      prev === 0 ? Math.max(0, dailywearCategories.length - visibleCount) : prev - 1
+      prev === 0 ? dailywearCategories.length - 1 : prev - 1
     );
   };
 

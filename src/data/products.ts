@@ -18,6 +18,7 @@ export interface Product {
   material: string;
   weight: string;
   purity: string;
+  stockQuantity?: number;
 }
 
 export const products: Product[] = [
