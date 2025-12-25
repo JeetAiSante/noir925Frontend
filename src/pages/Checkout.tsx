@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -11,10 +11,56 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag } from "lucide-react";
+import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus } from "lucide-react";
 import GiftWrapping from "@/components/checkout/GiftWrapping";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const GIFT_WRAP_COST = 99;
+
+interface SavedAddress {
+  id: string;
+  full_name: string;
+  phone: string;
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  state: string;
+  postal_code: string;
+  country: string;
+  is_default: boolean;
+  address_type: string;
+}
+
+const indianStates = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+  'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+  'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+  'Delhi', 'Jammu and Kashmir', 'Ladakh'
+];
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -28,6 +74,10 @@ const Checkout = () => {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [showAddressDialog, setShowAddressDialog] = useState(false);
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
@@ -41,6 +91,56 @@ const Checkout = () => {
     country: "India",
   });
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to proceed with checkout",
+      });
+      navigate("/auth?redirect=/checkout");
+    }
+  }, [user, navigate, toast]);
+
+  // Fetch saved addresses
+  useEffect(() => {
+    if (user) {
+      fetchSavedAddresses();
+    }
+  }, [user]);
+
+  const fetchSavedAddresses = async () => {
+    const { data } = await supabase
+      .from('addresses')
+      .select('*')
+      .eq('user_id', user?.id)
+      .order('is_default', { ascending: false });
+    
+    if (data && data.length > 0) {
+      setSavedAddresses(data);
+      // Auto-select default address
+      const defaultAddr = data.find(a => a.is_default) || data[0];
+      if (defaultAddr) {
+        selectAddress(defaultAddr);
+      }
+    }
+  };
+
+  const selectAddress = (address: SavedAddress) => {
+    setSelectedAddressId(address.id);
+    setShippingInfo({
+      fullName: address.full_name,
+      email: user?.email || "",
+      phone: address.phone,
+      addressLine1: address.address_line1,
+      addressLine2: address.address_line2 || "",
+      city: address.city,
+      state: address.state,
+      postalCode: address.postal_code,
+      country: address.country,
+    });
+  };
+
   const shipping = cartTotal > 2000 ? 0 : 99;
   const tax = Math.round(cartTotal * 0.18);
   const giftWrapCost = isGiftWrap ? GIFT_WRAP_COST : 0;
@@ -48,6 +148,7 @@ const Checkout = () => {
   const total = cartTotal + shipping + tax + giftWrapCost - couponDiscount;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedAddressId(null); // Clear selected address when typing
     setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value });
   };
 
@@ -61,33 +162,46 @@ const Checkout = () => {
     
     setIsApplyingCoupon(true);
     
-    const validCoupons: Record<string, number> = {
-      'SPIN5': 5,
-      'SPIN10': 10,
-      'SPIN15': 15,
-      'SPIN20': 20,
-      'SPIN25': 25,
-      'FREESHIP': 0,
-      'WELCOME10': 10,
-      'NOIR15': 15,
-    };
+    // Fetch from database
+    const { data: coupon } = await supabase
+      .from('coupons')
+      .select('*')
+      .eq('code', couponCode.toUpperCase())
+      .eq('is_active', true)
+      .single();
     
-    const upperCode = couponCode.toUpperCase();
-    
-    if (validCoupons[upperCode] !== undefined) {
-      if (upperCode === 'FREESHIP') {
+    if (coupon) {
+      // Check min order value
+      if (coupon.min_order_value && cartTotal < Number(coupon.min_order_value)) {
         toast({
-          title: 'Free Shipping Applied!',
-          description: 'Free shipping has been applied to your order.',
+          title: 'Minimum Order Not Met',
+          description: `This coupon requires a minimum order of ₹${coupon.min_order_value}`,
+          variant: 'destructive',
         });
-        setAppliedCoupon({ code: upperCode, discount: 0 });
-      } else {
-        setAppliedCoupon({ code: upperCode, discount: validCoupons[upperCode] });
-        toast({
-          title: 'Coupon Applied!',
-          description: `${validCoupons[upperCode]}% discount applied to your order.`,
-        });
+        setIsApplyingCoupon(false);
+        return;
       }
+
+      // Check usage limit
+      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+        toast({
+          title: 'Coupon Expired',
+          description: 'This coupon has reached its usage limit',
+          variant: 'destructive',
+        });
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      const discountValue = coupon.discount_type === 'percentage' 
+        ? Number(coupon.discount_value) 
+        : (Number(coupon.discount_value) / cartTotal) * 100;
+
+      setAppliedCoupon({ code: coupon.code, discount: discountValue });
+      toast({
+        title: 'Coupon Applied!',
+        description: `${coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `₹${coupon.discount_value}`} discount applied`,
+      });
     } else {
       toast({
         title: 'Invalid Coupon',
@@ -108,7 +222,7 @@ const Checkout = () => {
     });
   };
 
-  const handlePlaceOrder = async () => {
+  const handlePlaceOrderClick = () => {
     if (!shippingInfo.fullName || !shippingInfo.phone || !shippingInfo.addressLine1 || !shippingInfo.city || !shippingInfo.state || !shippingInfo.postalCode) {
       toast({
         title: "Missing Information",
@@ -117,7 +231,11 @@ const Checkout = () => {
       });
       return;
     }
+    setShowConfirmDialog(true);
+  };
 
+  const handlePlaceOrder = async () => {
+    setShowConfirmDialog(false);
     setIsProcessing(true);
 
     try {
@@ -171,6 +289,22 @@ const Checkout = () => {
 
       if (itemsError) throw itemsError;
 
+      // Update coupon usage count
+      if (appliedCoupon) {
+        const { data: coupon } = await supabase
+          .from('coupons')
+          .select('usage_count')
+          .eq('code', appliedCoupon.code)
+          .single();
+        
+        if (coupon) {
+          await supabase
+            .from('coupons')
+            .update({ usage_count: (coupon.usage_count || 0) + 1 })
+            .eq('code', appliedCoupon.code);
+        }
+      }
+
       // Send order confirmation email
       try {
         await supabase.functions.invoke('send-email', {
@@ -179,7 +313,7 @@ const Checkout = () => {
             data: {
               orderNumber: order.order_number,
               customerName: shippingInfo.fullName,
-              email: shippingInfo.email || user?.email,
+              customerEmail: shippingInfo.email || user?.email,
               total,
               items: cartItems.map(item => ({
                 name: item.name,
@@ -195,8 +329,8 @@ const Checkout = () => {
 
       clearCart();
       toast({
-        title: "Order Placed Successfully!",
-        description: `Your order #${order.order_number} has been placed.`,
+        title: "🎉 Order Placed Successfully!",
+        description: `Your order #${order.order_number} has been placed. Thank you for shopping with us!`,
       });
       navigate("/account");
     } catch (error) {
@@ -210,6 +344,36 @@ const Checkout = () => {
       setIsProcessing(false);
     }
   };
+
+  const saveNewAddress = async () => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('addresses')
+      .insert({
+        user_id: user.id,
+        full_name: shippingInfo.fullName,
+        phone: shippingInfo.phone,
+        address_line1: shippingInfo.addressLine1,
+        address_line2: shippingInfo.addressLine2 || null,
+        city: shippingInfo.city,
+        state: shippingInfo.state,
+        postal_code: shippingInfo.postalCode,
+        country: shippingInfo.country,
+        is_default: savedAddresses.length === 0,
+        address_type: 'home',
+      });
+
+    if (!error) {
+      toast({ title: 'Address saved successfully' });
+      fetchSavedAddresses();
+      setShowAddressDialog(false);
+    }
+  };
+
+  if (!user) {
+    return null; // Will redirect via useEffect
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -253,13 +417,53 @@ const Checkout = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Shipping & Payment */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Saved Addresses */}
+            {savedAddresses.length > 0 && (
+              <div className="bg-card rounded-xl p-5 border border-border">
+                <h2 className="text-lg font-display mb-4 flex items-center gap-2">
+                  <MapPin className="w-5 h-5 text-primary" />
+                  Select Delivery Address
+                </h2>
+                <div className="grid md:grid-cols-2 gap-3 mb-4">
+                  {savedAddresses.map((addr) => (
+                    <div
+                      key={addr.id}
+                      onClick={() => selectAddress(addr)}
+                      className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                        selectedAddressId === addr.id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium capitalize">{addr.address_type}</span>
+                        {addr.is_default && (
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Default</span>
+                        )}
+                      </div>
+                      <p className="font-medium text-sm">{addr.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{addr.address_line1}</p>
+                      <p className="text-xs text-muted-foreground">{addr.city}, {addr.state} - {addr.postal_code}</p>
+                      {selectedAddressId === addr.id && (
+                        <CheckCircle className="w-5 h-5 text-primary mt-2" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowAddressDialog(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add New Address
+                </Button>
+              </div>
+            )}
+
             {/* Shipping Information */}
             <div className="bg-card rounded-xl p-5 border border-border">
               <h2 className="text-lg font-display mb-5 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <Truck className="w-4 h-4 text-primary" />
                 </div>
-                Shipping Information
+                {savedAddresses.length > 0 ? 'Or Enter New Address' : 'Shipping Information'}
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
@@ -331,14 +535,19 @@ const Checkout = () => {
                 </div>
                 <div>
                   <Label htmlFor="state" className="text-sm">State *</Label>
-                  <Input
-                    id="state"
-                    name="state"
+                  <Select
                     value={shippingInfo.state}
-                    onChange={handleInputChange}
-                    placeholder="State"
-                    className="mt-1.5"
-                  />
+                    onValueChange={(value) => setShippingInfo({ ...shippingInfo, state: value })}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {indianStates.map((state) => (
+                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="postalCode" className="text-sm">Postal Code *</Label>
@@ -448,7 +657,7 @@ const Checkout = () => {
                     <CheckCircle className="w-4 h-4 text-primary" />
                     <span className="font-medium">{appliedCoupon.code}</span>
                     <span className="text-sm text-muted-foreground">
-                      ({appliedCoupon.discount > 0 ? `${appliedCoupon.discount}% off` : 'Free Shipping'})
+                      ({appliedCoupon.discount}% off)
                     </span>
                   </div>
                   <Button variant="ghost" size="sm" onClick={removeCoupon}>
@@ -508,8 +717,8 @@ const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span className={shipping === 0 || appliedCoupon?.code === 'FREESHIP' ? 'text-primary font-medium' : ''}>
-                    {shipping === 0 || appliedCoupon?.code === 'FREESHIP' ? "FREE" : `₹${shipping}`}
+                  <span className={shipping === 0 ? 'text-primary font-medium' : ''}>
+                    {shipping === 0 ? "FREE" : `₹${shipping}`}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -543,7 +752,7 @@ const Checkout = () => {
                 className="w-full"
                 size="lg"
                 variant="luxury"
-                onClick={handlePlaceOrder}
+                onClick={handlePlaceOrderClick}
                 disabled={isProcessing}
               >
                 {isProcessing ? (
@@ -569,6 +778,53 @@ const Checkout = () => {
           </div>
         </div>
       </main>
+
+      {/* Order Confirmation Dialog */}
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Your Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to place an order for ₹{total.toLocaleString()}. 
+              This will be delivered to {shippingInfo.addressLine1}, {shippingInfo.city}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePlaceOrder}>
+              Confirm Order
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Add Address Dialog */}
+      <Dialog open={showAddressDialog} onOpenChange={setShowAddressDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save This Address</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Would you like to save this address for future orders?
+            </p>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <p className="font-medium">{shippingInfo.fullName}</p>
+              <p className="text-sm text-muted-foreground">{shippingInfo.addressLine1}</p>
+              <p className="text-sm text-muted-foreground">{shippingInfo.city}, {shippingInfo.state} - {shippingInfo.postalCode}</p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => setShowAddressDialog(false)}>
+                Not Now
+              </Button>
+              <Button className="flex-1" onClick={saveNewAddress}>
+                Save Address
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );

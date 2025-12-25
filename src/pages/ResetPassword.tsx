@@ -69,6 +69,8 @@ const ResetPassword = () => {
         });
       } else {
         setIsSuccess(true);
+        // Sign out the user to clear any existing session
+        await supabase.auth.signOut();
         toast({
           title: "Password updated",
           description: "Your password has been successfully reset.",

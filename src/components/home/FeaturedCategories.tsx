@@ -104,9 +104,6 @@ const FeaturedCategories = () => {
               {/* Content */}
               <div className="absolute inset-0 p-3 md:p-4 flex flex-col justify-end">
                 <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
-                  <p className="font-body text-[10px] md:text-xs text-background/60 mb-0.5">
-                    {category.count} Products
-                  </p>
                   <h3 className="font-display text-base md:text-xl text-background mb-1 flex items-center gap-1">
                     {category.name}
                     <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all duration-300" />

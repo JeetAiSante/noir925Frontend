@@ -346,6 +346,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_toggles: {
+        Row: {
+          created_at: string
+          description: string | null
+          feature_key: string
+          feature_name: string
+          id: string
+          is_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          feature_key: string
+          feature_name: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          feature_key?: string
+          feature_name?: string
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       festival_themes: {
         Row: {
           accent_color: string
@@ -403,6 +433,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_card_denominations: {
+        Row: {
+          amount: number
+          bonus_amount: number
+          created_at: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bonus_amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bonus_amount?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       homepage_sections: {
         Row: {
           created_at: string
@@ -435,6 +495,113 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      inventory_settings: {
+        Row: {
+          created_at: string
+          critical_stock_threshold: number
+          enable_low_stock_alerts: boolean
+          enable_reorder_notifications: boolean
+          id: string
+          low_stock_threshold: number
+          reorder_email: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          critical_stock_threshold?: number
+          enable_low_stock_alerts?: boolean
+          enable_reorder_notifications?: boolean
+          id?: string
+          low_stock_threshold?: number
+          reorder_email?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          critical_stock_threshold?: number
+          enable_low_stock_alerts?: boolean
+          enable_reorder_notifications?: boolean
+          id?: string
+          low_stock_threshold?: number
+          reorder_email?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean
+          max_discount_percent: number
+          min_points_to_redeem: number
+          points_per_rupee: number
+          points_value_per_rupee: number
+          updated_at: string
+          welcome_bonus_points: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          max_discount_percent?: number
+          min_points_to_redeem?: number
+          points_per_rupee?: number
+          points_value_per_rupee?: number
+          updated_at?: string
+          welcome_bonus_points?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          max_discount_percent?: number
+          min_points_to_redeem?: number
+          points_per_rupee?: number
+          points_value_per_rupee?: number
+          updated_at?: string
+          welcome_bonus_points?: number
+        }
+        Relationships: []
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          points: number
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          points?: number
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lucky_discount_claims: {
         Row: {
@@ -984,6 +1151,39 @@ export type Database = {
           show_on_pages?: string[] | null
           spins_per_day?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_loyalty_points: {
+        Row: {
+          available_points: number | null
+          created_at: string
+          id: string
+          redeemed_points: number
+          tier: string
+          total_points: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_points?: number | null
+          created_at?: string
+          id?: string
+          redeemed_points?: number
+          tier?: string
+          total_points?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_points?: number | null
+          created_at?: string
+          id?: string
+          redeemed_points?: number
+          tier?: string
+          total_points?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
