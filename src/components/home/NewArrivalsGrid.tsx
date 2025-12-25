@@ -4,7 +4,8 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import ProductQuickView from '@/components/products/ProductQuickView';
-import { products, Product } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
+import { products as staticProducts, Product } from '@/data/products';
 
 const NewArrivalsGrid = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -12,7 +13,12 @@ const NewArrivalsGrid = () => {
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const newProducts = products.filter((p) => p.isNew).slice(0, 6);
+  const { data: dbProducts, isLoading } = useProducts({ new: true, limit: 6 });
+
+  // Use database products if available, fallback to static
+  const newProducts = dbProducts && dbProducts.length > 0 
+    ? dbProducts 
+    : staticProducts.filter((p) => p.isNew).slice(0, 6);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -31,7 +37,7 @@ const NewArrivalsGrid = () => {
     items?.forEach((item) => observer.observe(item));
 
     return () => observer.disconnect();
-  }, []);
+  }, [newProducts]);
 
   const handleQuickView = (product: Product) => {
     setSelectedProduct(product);
@@ -82,6 +88,7 @@ const NewArrivalsGrid = () => {
             >
               <ProductCard
                 product={product}
+                isLoading={isLoading}
                 className="h-full"
               />
             </div>

@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
-import { products } from '@/data/products';
+import { useProducts } from '@/hooks/useProducts';
+import { products as staticProducts } from '@/data/products';
 
 const BestsellersGrid = () => {
   const [filter, setFilter] = useState('all');
+  const { data: dbProducts, isLoading } = useProducts({ limit: 12 });
 
   const filters = [
     { id: 'all', name: 'All' },
@@ -14,7 +16,10 @@ const BestsellersGrid = () => {
     { id: 'trending', name: 'Trending' },
   ];
 
-  const filteredProducts = products.filter((product) => {
+  // Use database products if available, fallback to static
+  const allProducts = dbProducts && dbProducts.length > 0 ? dbProducts : staticProducts;
+
+  const filteredProducts = allProducts.filter((product) => {
     if (filter === 'all') return true;
     if (filter === 'bestseller') return product.isBestseller;
     if (filter === 'new') return product.isNew;
@@ -62,6 +67,7 @@ const BestsellersGrid = () => {
             <ProductCard
               key={product.id}
               product={product}
+              isLoading={isLoading}
               className="animate-fade-in"
             />
           ))}

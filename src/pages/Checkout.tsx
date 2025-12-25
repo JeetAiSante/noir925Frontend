@@ -11,7 +11,8 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus } from "lucide-react";
+import { useLoyaltySettings, useUserLoyaltyPoints, useEarnPoints, useRedeemPoints } from "@/hooks/useLoyaltyPoints";
+import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins } from "lucide-react";
 import GiftWrapping from "@/components/checkout/GiftWrapping";
 import {
   AlertDialog,
@@ -78,6 +79,14 @@ const Checkout = () => {
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showAddressDialog, setShowAddressDialog] = useState(false);
+  const [pointsToRedeem, setPointsToRedeem] = useState(0);
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
+
+  // Loyalty hooks
+  const { data: loyaltySettings } = useLoyaltySettings();
+  const { data: userPoints } = useUserLoyaltyPoints();
+  const earnPointsMutation = useEarnPoints();
+  const redeemPointsMutation = useRedeemPoints();
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
@@ -145,7 +154,36 @@ const Checkout = () => {
   const tax = Math.round(cartTotal * 0.18);
   const giftWrapCost = isGiftWrap ? GIFT_WRAP_COST : 0;
   const couponDiscount = appliedCoupon ? Math.round(cartTotal * (appliedCoupon.discount / 100)) : 0;
-  const total = cartTotal + shipping + tax + giftWrapCost - couponDiscount;
+  const total = cartTotal + shipping + tax + giftWrapCost - couponDiscount - loyaltyDiscount;
+  const potentialPoints = loyaltySettings?.is_enabled ? Math.floor(cartTotal * (loyaltySettings.points_per_rupee || 1)) : 0;
+
+  const handleRedeemPoints = () => {
+    if (!userPoints || !loyaltySettings) return;
+
+    const availablePoints = userPoints.available_points || 0;
+    const maxPointsToRedeem = Math.min(
+      availablePoints,
+      Math.floor((cartTotal * (loyaltySettings.max_discount_percent || 50)) / 100 / (loyaltySettings.points_value_per_rupee || 0.25))
+    );
+
+    if (pointsToRedeem > 0 && pointsToRedeem <= maxPointsToRedeem) {
+      const discount = Math.floor(pointsToRedeem * (loyaltySettings.points_value_per_rupee || 0.25));
+      setLoyaltyDiscount(discount);
+      toast({
+        title: 'Points Applied!',
+        description: `${pointsToRedeem} points redeemed for ₹${discount} discount`,
+      });
+    }
+  };
+
+  const removePointsDiscount = () => {
+    setPointsToRedeem(0);
+    setLoyaltyDiscount(0);
+    toast({
+      title: 'Points Removed',
+      description: 'Loyalty points discount has been removed',
+    });
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedAddressId(null); // Clear selected address when typing
@@ -302,6 +340,44 @@ const Checkout = () => {
             .from('coupons')
             .update({ usage_count: (coupon.usage_count || 0) + 1 })
             .eq('code', appliedCoupon.code);
+        }
+      }
+
+      // Redeem loyalty points if applied
+      if (loyaltyDiscount > 0 && pointsToRedeem > 0) {
+        try {
+          await redeemPointsMutation.mutateAsync({ points: pointsToRedeem, orderId: order.id });
+        } catch (err) {
+          console.error('Error redeeming points:', err);
+        }
+      }
+
+      // Earn loyalty points on this order
+      if (loyaltySettings?.is_enabled) {
+        try {
+          await earnPointsMutation.mutateAsync({ orderTotal: cartTotal, orderId: order.id });
+        } catch (err) {
+          console.error('Error earning points:', err);
+        }
+      }
+
+      // Update stock quantities
+      for (const item of cartItems) {
+        try {
+          const { data: product } = await supabase
+            .from('products')
+            .select('stock_quantity')
+            .eq('id', item.id)
+            .single();
+          
+          if (product) {
+            await supabase
+              .from('products')
+              .update({ stock_quantity: Math.max(0, product.stock_quantity - item.quantity) })
+              .eq('id', item.id);
+          }
+        } catch (stockError) {
+          console.error('Error updating stock:', stockError);
         }
       }
 
@@ -681,9 +757,71 @@ const Checkout = () => {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Order Summary */}
+            {/* Loyalty Points */}
+            {loyaltySettings?.is_enabled && userPoints && (userPoints.available_points || 0) > 0 && (
+              <div className="bg-card rounded-xl p-5 border border-border">
+                <h2 className="text-lg font-display mb-5 flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Coins className="w-4 h-4 text-primary" />
+                  </div>
+                  Loyalty Points
+                </h2>
+                
+                <div className="mb-4 p-3 bg-accent/10 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-accent" />
+                    <span className="font-medium">Available Points:</span>
+                  </div>
+                  <span className="font-display text-lg text-primary">{userPoints.available_points?.toLocaleString()}</span>
+                </div>
+
+                {loyaltyDiscount > 0 ? (
+                  <div className="flex items-center justify-between p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-primary" />
+                      <span className="font-medium">{pointsToRedeem} points = ₹{loyaltyDiscount}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={removePointsDiscount}>
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        placeholder={`Enter points (min ${loyaltySettings.min_points_to_redeem})`}
+                        value={pointsToRedeem || ''}
+                        onChange={(e) => setPointsToRedeem(Math.min(parseInt(e.target.value) || 0, userPoints.available_points || 0))}
+                        min={loyaltySettings.min_points_to_redeem}
+                        max={userPoints.available_points || 0}
+                      />
+                      <Button 
+                        onClick={handleRedeemPoints} 
+                        disabled={pointsToRedeem < (loyaltySettings.min_points_to_redeem || 100)}
+                      >
+                        Redeem
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {loyaltySettings.points_value_per_rupee} points = ₹1 | Min: {loyaltySettings.min_points_to_redeem} points
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Points to earn banner */}
+            {loyaltySettings?.is_enabled && potentialPoints > 0 && (
+              <div className="p-3 bg-accent/10 border border-accent/30 rounded-lg flex items-center gap-3">
+                <Star className="w-5 h-5 text-accent" />
+                <p className="text-sm">
+                  <span className="font-medium">Earn {potentialPoints} points</span> on this order!
+                </p>
+              </div>
+            )}
+          </div>
           <div className="lg:col-span-1">
             <div className="bg-card rounded-xl p-5 border border-border sticky top-20">
               <h2 className="text-lg font-display mb-5">Order Summary</h2>
@@ -737,6 +875,14 @@ const Checkout = () => {
                   <div className="flex justify-between text-primary">
                     <span>Discount ({appliedCoupon.code})</span>
                     <span>-₹{couponDiscount.toLocaleString()}</span>
+                  </div>
+                )}
+                {loyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-accent">
+                    <span className="flex items-center gap-1">
+                      <Coins className="w-3 h-3" /> Points Discount
+                    </span>
+                    <span>-₹{loyaltyDiscount.toLocaleString()}</span>
                   </div>
                 )}
               </div>
