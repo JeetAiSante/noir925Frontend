@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Search, ChevronDown } from 'lucide-react';
+import { Search } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import SEOHead from '@/components/seo/SEOHead';
 
 const faqCategories = [
   {
@@ -76,8 +77,31 @@ const FAQ = () => {
     ),
   })).filter(category => category.faqs.length > 0);
 
+  // Generate FAQ Schema
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": faqCategories.flatMap(category => 
+      category.faqs.map(faq => ({
+        "@type": "Question",
+        "name": faq.question,
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": faq.answer
+        }
+      }))
+    )
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Frequently Asked Questions"
+        description="Find answers to common questions about NOIR925 sterling silver jewelry, including orders, shipping, returns, payments, and silver care tips."
+        canonicalUrl="https://noir925.com/faq"
+        keywords="NOIR925 FAQ, silver jewelry questions, 925 silver care, jewelry shipping, return policy, payment options"
+        structuredData={faqSchema}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-16">
