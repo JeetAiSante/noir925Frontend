@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.send-email]
 verify_jwt = false
+
+[functions.generate-avatar]
+verify_jwt = false
+
+[functions.admin-login-notify]
+verify_jwt = false

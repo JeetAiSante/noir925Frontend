@@ -25,6 +25,7 @@ import LuxuryEditorialSection from '@/components/home/LuxuryEditorialSection';
 import SeasonalBanner from '@/components/home/SeasonalBanner';
 import BrandStorySection from '@/components/home/BrandStorySection';
 import RandomReviewsCarousel from '@/components/home/RandomReviewsCarousel';
+import DailywearSection from '@/components/home/DailywearSection';
 import FirstTimePopup from '@/components/popups/FirstTimePopup';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 
@@ -65,6 +66,9 @@ const Index = () => {
           
           {/* Trending Slider with Auto-scroll */}
           <TrendingSlider />
+          
+          {/* Dailywear Jewellery Section */}
+          <DailywearSection />
           
           {/* Random Reviews Carousel */}
           <RandomReviewsCarousel />
