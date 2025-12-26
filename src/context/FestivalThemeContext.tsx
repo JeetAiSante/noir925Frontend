@@ -38,14 +38,14 @@ export const FestivalThemeProvider = ({ children }: { children: ReactNode }) => 
           .or(`start_date.is.null,start_date.lte.${now}`)
           .or(`end_date.is.null,end_date.gte.${now}`)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         if (!error && data) {
           setActiveTheme(data);
           applyThemeColors(data);
         }
       } catch (error) {
-        console.error('Error fetching festival theme:', error);
+        // Silently handle - no active theme is fine
       } finally {
         setIsLoading(false);
       }

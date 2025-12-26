@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 const allowedOrigins = [
   'https://noir925.com',
   'https://www.noir925.com',
+  'https://preview--noir925-silver-grace.lovable.app',
 ];
 
 const getCorsHeaders = (origin: string | null) => {
