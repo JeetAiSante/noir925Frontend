@@ -1,18 +1,15 @@
 import { useState } from 'react';
-import { useSiteSettings, useUpdateSiteSetting, useHomepageSections, useUpdateHomepageSection } from '@/hooks/useAdminData';
+import { useSiteSettings, useUpdateSiteSetting } from '@/hooks/useAdminData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Globe, Mail, Share2, Eye, EyeOff, GripVertical, Save, Loader2 } from 'lucide-react';
+import { Settings, Mail, Share2, Save, Loader2 } from 'lucide-react';
 
 const AdminSettings = () => {
   const { data: settings, isLoading: settingsLoading } = useSiteSettings();
-  const { data: sections, isLoading: sectionsLoading } = useHomepageSections();
   const updateSetting = useUpdateSiteSetting();
-  const updateSection = useUpdateHomepageSection();
   const [editedSettings, setEditedSettings] = useState<Record<string, any>>({});
 
   const getSettingsByCategory = (category: string) => {
@@ -30,11 +27,7 @@ const AdminSettings = () => {
     setEditedSettings({});
   };
 
-  const toggleSectionVisibility = (id: string, isVisible: boolean) => {
-    updateSection.mutate({ id, data: { is_visible: isVisible } });
-  };
-
-  if (settingsLoading || sectionsLoading) {
+  if (settingsLoading) {
     return (
       <div className="p-6 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -58,7 +51,7 @@ const AdminSettings = () => {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-flex">
+        <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex">
           <TabsTrigger value="general" className="gap-2">
             <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">General</span>
@@ -70,10 +63,6 @@ const AdminSettings = () => {
           <TabsTrigger value="social" className="gap-2">
             <Share2 className="w-4 h-4" />
             <span className="hidden sm:inline">Social</span>
-          </TabsTrigger>
-          <TabsTrigger value="sections" className="gap-2">
-            <Globe className="w-4 h-4" />
-            <span className="hidden sm:inline">Sections</span>
           </TabsTrigger>
         </TabsList>
 
@@ -94,6 +83,9 @@ const AdminSettings = () => {
                   />
                 </div>
               ))}
+              {getSettingsByCategory('general').length === 0 && (
+                <p className="text-muted-foreground text-sm">No general settings configured yet.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -115,6 +107,9 @@ const AdminSettings = () => {
                   />
                 </div>
               ))}
+              {getSettingsByCategory('contact').length === 0 && (
+                <p className="text-muted-foreground text-sm">No contact settings configured yet.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -136,44 +131,9 @@ const AdminSettings = () => {
                   />
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="sections" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Homepage Sections</CardTitle>
-              <CardDescription>Control which sections are visible on the homepage</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {sections?.map(section => (
-                  <div
-                    key={section.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <GripVertical className="w-4 h-4 text-muted-foreground cursor-grab" />
-                      <div>
-                        <p className="font-medium">{section.section_name}</p>
-                        <p className="text-xs text-muted-foreground">{section.section_key}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {section.is_visible ? (
-                        <Eye className="w-4 h-4 text-primary" />
-                      ) : (
-                        <EyeOff className="w-4 h-4 text-muted-foreground" />
-                      )}
-                      <Switch
-                        checked={section.is_visible}
-                        onCheckedChange={(checked) => toggleSectionVisibility(section.id, checked)}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {getSettingsByCategory('social').length === 0 && (
+                <p className="text-muted-foreground text-sm">No social media links configured yet.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
