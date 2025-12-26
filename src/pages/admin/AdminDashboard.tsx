@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -23,7 +23,8 @@ import {
   Warehouse,
   Star,
   ToggleLeft,
-  CreditCard
+  CreditCard,
+  Shield
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,7 @@ const navItems = [
   { icon: Star, label: 'Loyalty Program', path: '/admin/loyalty' },
   { icon: CreditCard, label: 'Gift Cards', path: '/admin/gift-cards' },
   { icon: ToggleLeft, label: 'Feature Toggles', path: '/admin/feature-toggles' },
+  { icon: Shield, label: 'Trust Badges', path: '/admin/trust-badges' },
   { icon: Mail, label: 'Messages', path: '/admin/messages' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
@@ -55,6 +57,26 @@ const AdminDashboard = () => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+
+  // Add noindex meta tags to prevent search engine crawling of admin pages
+  useEffect(() => {
+    // Create noindex meta tag
+    const noindexMeta = document.createElement('meta');
+    noindexMeta.name = 'robots';
+    noindexMeta.content = 'noindex, nofollow, noarchive, nosnippet';
+    noindexMeta.setAttribute('data-admin', 'true');
+    document.head.appendChild(noindexMeta);
+
+    // Set neutral title that doesn't reveal admin access
+    document.title = 'Dashboard | NOIR925';
+
+    return () => {
+      // Cleanup on unmount
+      const adminMetas = document.querySelectorAll('meta[data-admin="true"]');
+      adminMetas.forEach(meta => meta.remove());
+      document.title = 'NOIR925 | Premium 925 Sterling Silver Jewellery';
+    };
+  }, []);
 
   const handleSignOut = () => {
     setShowSignOutDialog(true);
@@ -74,7 +96,7 @@ const AdminDashboard = () => {
   }
 
   if (!user || !isAdmin) {
-    return <Navigate to="/admin-login" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   return (
