@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { FestivalThemeProvider } from "@/context/FestivalThemeContext";
+import PwaManifestLink from "@/components/pwa/PwaManifestLink";
 
 // Eagerly loaded components for critical path
 import Index from "./pages/Index";
@@ -87,6 +88,7 @@ PageLoader.displayName = 'PageLoader';
 
 const App = memo(() => (
   <QueryClientProvider client={queryClient}>
+    <PwaManifestLink />
     <TooltipProvider delayDuration={0}>
       <AuthProvider>
         <FestivalThemeProvider>

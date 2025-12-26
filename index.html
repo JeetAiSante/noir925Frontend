@@ -181,7 +181,7 @@
 
     <!-- Security Headers -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
+    <!-- NOTE: X-Frame-Options must be set via HTTP header (not meta) -->
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta http-equiv="Permissions-Policy" content="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" />
     
@@ -196,8 +196,7 @@
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
     <link rel="dns-prefetch" href="https://rydafpzgudalfkyorofh.supabase.co" />
     
-    <!-- PWA Manifest & Icons -->
-    <link rel="manifest" href="/manifest.json" />
+    <!-- PWA Icons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
