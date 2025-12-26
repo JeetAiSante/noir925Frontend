@@ -85,15 +85,17 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
 
   return (
     <>
-      <motion.div
+      <motion.article
         className={`group relative bg-card rounded-xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         data-cursor="product"
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2 }}
+        itemScope
+        itemType="https://schema.org/Product"
       >
-        <Link to={`/product/${product.id}`} className="block">
+        <Link to={`/product/${product.id}`} className="block" aria-label={`View ${product.name} - ${formatPrice(product.price)}`}>
           {/* Image Container - Compact aspect ratio */}
           <div className="relative overflow-hidden aspect-square bg-muted">
             {/* Skeleton loader while image loads */}
@@ -104,9 +106,12 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             {/* Primary Image */}
             <img
               src={product.image}
-              alt={product.name}
+              alt={`${product.name} - ${product.category} in 925 Sterling Silver | NOIR925`}
               loading="lazy"
               decoding="async"
+              width={600}
+              height={600}
+              itemProp="image"
               onLoad={() => setImageLoaded(true)}
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
                 isHovered ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
@@ -116,9 +121,11 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             {/* Alternate Image (shown on hover) */}
             <img
               src={alternateImage}
-              alt={`${product.name} - alternate view`}
+              alt={`${product.name} - alternate view showing different angle`}
               loading="lazy"
               decoding="async"
+              width={600}
+              height={600}
               onLoad={() => setAltImageLoaded(true)}
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
                 isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
@@ -221,21 +228,24 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             )}
           </div>
 
-          {/* Product Info - Compact layout */}
+          {/* Product Info - Compact layout with microdata */}
           <div className="p-3 space-y-1.5">
             {/* Category */}
             <p className="font-body text-[10px] text-muted-foreground uppercase tracking-widest">
-              {product.category}
+              <span itemProp="category">{product.category}</span>
             </p>
             
             {/* Name */}
-            <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight">
+            <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight" itemProp="name">
               {product.name}
             </h3>
 
-            {/* Rating - Compact */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-0.5">
+            {/* Rating - Compact with microdata */}
+            <div className="flex items-center gap-1.5" itemProp="aggregateRating" itemScope itemType="https://schema.org/AggregateRating">
+              <meta itemProp="ratingValue" content={product.rating.toString()} />
+              <meta itemProp="reviewCount" content={product.reviews.toString()} />
+              <meta itemProp="bestRating" content="5" />
+              <div className="flex items-center gap-0.5" aria-label={`Rating: ${product.rating} out of 5 stars`}>
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
@@ -244,6 +254,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                         ? 'fill-accent text-accent'
                         : 'text-border'
                     }`}
+                    aria-hidden="true"
                   />
                 ))}
               </div>
@@ -252,9 +263,11 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               </span>
             </div>
 
-            {/* Price - Enhanced styling */}
-            <div className="flex items-baseline gap-2 pt-1">
-              <span className="font-display text-base font-semibold text-foreground">
+            {/* Price - Enhanced styling with microdata */}
+            <div className="flex items-baseline gap-2 pt-1" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+              <meta itemProp="priceCurrency" content="INR" />
+              <meta itemProp="availability" content="https://schema.org/InStock" />
+              <span className="font-display text-base font-semibold text-foreground" itemProp="price" content={product.price.toString()}>
                 {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
@@ -265,7 +278,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             </div>
           </div>
         </Link>
-      </motion.div>
+      </motion.article>
 
       <ProductQuickView
         product={product}
