@@ -190,88 +190,10 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
-              <button
-                className="flex items-center gap-2 px-4 py-3 text-sm font-body text-foreground/80 hover:text-primary hover:bg-primary/5 transition-colors rounded-lg"
-                onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
-              >
-                More
-                <ChevronDown className={`w-4 h-4 transition-transform ${isMegaMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
             </nav>
           </div>
         </div>
 
-        {/* Mega Menu Dropdown */}
-        {isMegaMenuOpen && (
-          <div className="hidden lg:block absolute top-full left-0 right-0 bg-card/98 backdrop-blur-2xl border-b border-border/50 shadow-luxury animate-fade-in">
-            <div className="container mx-auto px-4 py-6">
-              <div className="grid grid-cols-4 gap-6">
-                {/* Categories */}
-                <div className="col-span-2">
-                  <h3 className="font-display text-lg mb-3 text-foreground">Shop by Category</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {categories.slice(0, 8).map((cat) => (
-                      <Link
-                        key={cat.id}
-                        to={`/shop?category=${cat.id}`}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors group"
-                        onClick={() => setIsMegaMenuOpen(false)}
-                      >
-                        <img
-                          src={cat.image}
-                          alt={cat.name}
-                          className="w-10 h-10 rounded-lg object-cover group-hover:scale-105 transition-transform"
-                          loading="lazy"
-                        />
-                        <div>
-                          <span className="font-body text-sm">{cat.name}</span>
-                          <p className="text-xs text-muted-foreground">{cat.count} items</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Featured */}
-                <div className="col-span-2">
-                  <h3 className="font-display text-lg mb-3 text-foreground">Featured</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Link
-                      to="/collections/bridal-heritage"
-                      className="relative overflow-hidden rounded-lg aspect-[4/3] group"
-                      onClick={() => setIsMegaMenuOpen(false)}
-                    >
-                      <img
-                        src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=400&h=300&fit=crop"
-                        alt="Bridal Collection"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-3">
-                        <span className="text-background font-display text-sm">Bridal Heritage</span>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/shop?tag=new"
-                      className="relative overflow-hidden rounded-lg aspect-[4/3] group"
-                      onClick={() => setIsMegaMenuOpen(false)}
-                    >
-                      <img
-                        src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=300&fit=crop"
-                        alt="New Arrivals"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent flex items-end p-3">
-                        <span className="text-background font-display text-sm">New Arrivals</span>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (

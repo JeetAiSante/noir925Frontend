@@ -13,6 +13,8 @@ interface FestivalTheme {
   logo_overlay: string | null;
   discount_percent: number | null;
   special_offer: string | null;
+  start_date: string | null;
+  end_date: string | null;
   is_active: boolean;
 }
 
