@@ -31,21 +31,21 @@ export const FestivalThemeProvider = ({ children }: { children: ReactNode }) => 
     const fetchActiveTheme = async () => {
       try {
         const now = new Date().toISOString();
-        const { data, error } = await supabase
+
+        const { data } = await supabase
           .from('festival_themes')
           .select('*')
           .eq('is_active', true)
           .or(`start_date.is.null,start_date.lte.${now}`)
           .or(`end_date.is.null,end_date.gte.${now}`)
-          .limit(1)
-          .maybeSingle();
+          .order('updated_at', { ascending: false })
+          .limit(1);
 
-        if (!error && data) {
-          setActiveTheme(data);
-          applyThemeColors(data);
+        const theme = data?.[0] ?? null;
+        if (theme) {
+          setActiveTheme(theme);
+          applyThemeColors(theme);
         }
-      } catch (error) {
-        // Silently handle - no active theme is fine
       } finally {
         setIsLoading(false);
       }
