@@ -231,7 +231,7 @@ const AdminHomepageSections = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 lg:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Homepage Sections</h1>

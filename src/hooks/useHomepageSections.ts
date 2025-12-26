@@ -20,7 +20,6 @@ export const useHomepageSections = () => {
         const { data, error } = await supabase
           .from('homepage_sections')
           .select('*')
-          .eq('is_visible', true)
           .order('sort_order', { ascending: true });
 
         if (error) throw error;
@@ -31,7 +30,6 @@ export const useHomepageSections = () => {
         })));
       } catch (error) {
         console.error('Error fetching homepage sections:', error);
-        // Return default visible sections
         setSections([]);
       } finally {
         setLoading(false);
@@ -61,7 +59,7 @@ export const useHomepageSections = () => {
     // If no sections loaded yet, show all by default
     if (sections.length === 0) return true;
     const section = sections.find(s => s.section_key === key);
-    return section?.is_visible ?? false;
+    return section?.is_visible ?? true;
   };
 
   const getSectionSettings = (key: string): Record<string, any> | null => {
@@ -70,7 +68,11 @@ export const useHomepageSections = () => {
   };
 
   const getSortedSections = () => {
-    return sections.sort((a, b) => a.sort_order - b.sort_order);
+    return [...sections].sort((a, b) => a.sort_order - b.sort_order);
+  };
+
+  const getVisibleSections = () => {
+    return sections.filter(s => s.is_visible).sort((a, b) => a.sort_order - b.sort_order);
   };
 
   return {
@@ -78,6 +80,7 @@ export const useHomepageSections = () => {
     loading,
     isSectionVisible,
     getSectionSettings,
-    getSortedSections
+    getSortedSections,
+    getVisibleSections
   };
 };
