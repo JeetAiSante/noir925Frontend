@@ -48,36 +48,69 @@ const SectionLoader = memo(() => (
 ));
 SectionLoader.displayName = 'SectionLoader';
 
-// Section component mapping
+// Section component mapping - keys match database section_key values
 const sectionComponents: Record<string, React.LazyExoticComponent<React.ComponentType<any>> | React.ComponentType<any>> = {
+  // Critical sections
+  video_hero: LuxuryHeroSection,
   hero: LuxuryHeroSection,
+  countdown_banner: CountdownBanner,
   countdown: CountdownBanner,
+  festival_banner: FestivalBanner,
   festival: FestivalBanner,
   trust_strip: TrustStrip,
+  
+  // Categories and products
+  categories_carousel: CategoriesCarousel,
   categories: CategoriesCarousel,
   bestsellers: BestsellersGrid,
+  bestsellers_grid: BestsellersGrid,
   price_based: PriceBasedProducts,
+  price_based_products: PriceBasedProducts,
   gender_shop: GenderShopSection,
+  wedding_collection: WeddingCollectionShowcase,
   wedding: WeddingCollectionShowcase,
   gift_box: GiftBoxCategories,
+  
+  // Banners
+  parallax_banner: ParallaxBanner,
   parallax: ParallaxBanner,
+  seasonal_banner: SeasonalBanner,
+  seasonal: SeasonalBanner,
+  promo_banners: PromoBanners,
+  promo: PromoBanners,
+  
+  // Product sections
   new_arrivals: NewArrivalsGrid,
+  trending_slider: TrendingSlider,
   trending: TrendingSlider,
   dailywear: DailywearSection,
-  reviews_carousel: RandomReviewsCarousel,
+  
+  // Editorial and showcase
+  editorial_section: LuxuryEditorialSection,
   editorial: LuxuryEditorialSection,
   video_showcase: VideoShowcase,
   featured_categories: FeaturedCategories,
-  seasonal: SeasonalBanner,
-  promo: PromoBanners,
+  
+  // Story and brand
   brand_story: BrandStorySection,
+  collections_story: CollectionsStory,
   collections: CollectionsStory,
+  shop_by_occasion: ShopByOccasion,
   occasion: ShopByOccasion,
   silver_care: SilverCareSection,
+  brand_partners: BrandPartners,
   partners: BrandPartners,
+  
+  // Reviews
   reviews: PremiumReviewsSection,
+  reviews_carousel: RandomReviewsCarousel,
+  
+  // Social and newsletter
+  instagram_feed: InstagramFeed,
   instagram: InstagramFeed,
   newsletter: NewsletterSection,
+  
+  // Other
   recently_viewed: RecentlyViewed,
   final_cta: FinalCTA,
 };
@@ -87,11 +120,11 @@ const Index = memo(() => {
 
   // Default section order when DB not loaded yet
   const defaultOrder = [
-    'hero', 'countdown', 'festival', 'trust_strip', 'categories', 'bestsellers',
-    'price_based', 'gender_shop', 'wedding', 'gift_box', 'parallax', 'new_arrivals',
-    'trending', 'dailywear', 'reviews_carousel', 'editorial', 'video_showcase',
-    'featured_categories', 'seasonal', 'promo', 'brand_story', 'collections',
-    'occasion', 'silver_care', 'partners', 'reviews', 'instagram', 'newsletter',
+    'video_hero', 'countdown_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
+    'gender_shop', 'wedding_collection', 'parallax_banner', 'new_arrivals',
+    'trending_slider', 'editorial_section', 'video_showcase',
+    'featured_categories', 'seasonal_banner', 'promo_banners', 'brand_story', 'collections_story',
+    'shop_by_occasion', 'silver_care', 'brand_partners', 'reviews', 'instagram_feed', 'newsletter',
     'recently_viewed', 'final_cta'
   ];
 
@@ -126,7 +159,7 @@ const Index = memo(() => {
             if (!Component) return null;
 
             // Critical sections don't need Suspense wrapper
-            if (['hero', 'countdown', 'festival', 'trust_strip'].includes(sectionKey)) {
+            if (['video_hero', 'hero', 'countdown_banner', 'countdown', 'festival_banner', 'festival', 'trust_strip'].includes(sectionKey)) {
               return <Component key={sectionKey} />;
             }
 
