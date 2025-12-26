@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -5,13 +6,14 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Gift, Calendar, Percent, Star, ShoppingBag, Heart } from 'lucide-react';
+import { ArrowRight, Sparkles, Gift, Percent, Star, ShoppingBag, Clock, Filter } from 'lucide-react';
 import { formatPrice, Product } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
+import OptimizedImage from '@/components/ui/optimized-image';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface FestivalTheme {
   id: string;
@@ -49,6 +51,13 @@ interface DBProduct {
   weight: string | null;
 }
 
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
 // Festival Event Schema Component
 const FestivalEventSchema = ({ theme }: { theme: FestivalTheme }) => {
   const schemaData = {
@@ -70,10 +79,13 @@ const FestivalEventSchema = ({ theme }: { theme: FestivalTheme }) => {
       "url": "https://noir925.com"
     },
     "offers": {
-      "@type": "Offer",
+      "@type": "AggregateOffer",
       "url": `https://noir925.com/festival/${theme.slug}`,
       "priceCurrency": "INR",
       "availability": "https://schema.org/InStock",
+      "lowPrice": "499",
+      "highPrice": "50000",
+      "offerCount": "100+",
       "validFrom": theme.start_date || new Date().toISOString()
     },
     "image": theme.banner_image || "https://noir925.com/festival-banner.jpg"
@@ -116,14 +128,48 @@ const SaleEventSchema = ({ theme }: { theme: FestivalTheme }) => {
   );
 };
 
+// Product List Schema for SEO
+const ProductListSchema = ({ products, theme }: { products: Product[]; theme: FestivalTheme }) => {
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": `${theme.name} Collection - NOIR925`,
+    "description": `Festival sale products with ${theme.discount_percent}% off`,
+    "numberOfItems": products.length,
+    "itemListElement": products.slice(0, 10).map((product, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "item": {
+        "@type": "Product",
+        "name": product.name,
+        "image": product.image,
+        "offers": {
+          "@type": "Offer",
+          "price": product.price,
+          "priceCurrency": "INR",
+          "availability": "https://schema.org/InStock"
+        }
+      }
+    }))
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+    />
+  );
+};
+
 const FestivalPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [sortBy, setSortBy] = useState<string>('featured');
+  const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   // Fetch festival theme
   const { data: theme, isLoading: themeLoading } = useQuery({
     queryKey: ['festival-theme', slug],
     queryFn: async () => {
-      // If no slug, get active theme
       let query = supabase.from('festival_themes').select('*');
       
       if (slug) {
@@ -139,20 +185,38 @@ const FestivalPage = () => {
     retry: false,
   });
 
-  // Fetch featured products and transform to Product type
+  // Fetch ONLY products with discount (festival sale products)
   const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['festival-products', theme?.id],
+    queryKey: ['festival-products', theme?.id, theme?.discount_percent, sortBy],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('products')
         .select('*')
         .eq('is_active', true)
-        .order('is_bestseller', { ascending: false })
-        .limit(12);
-      
+        .gt('discount_percent', 0); // Only products with discount
+
+      // Apply sorting
+      switch (sortBy) {
+        case 'price-low':
+          query = query.order('price', { ascending: true });
+          break;
+        case 'price-high':
+          query = query.order('price', { ascending: false });
+          break;
+        case 'discount':
+          query = query.order('discount_percent', { ascending: false });
+          break;
+        case 'newest':
+          query = query.order('created_at', { ascending: false });
+          break;
+        default:
+          query = query.order('is_bestseller', { ascending: false });
+      }
+
+      const { data, error } = await query.limit(24);
       if (error) throw error;
       
-      // Transform DB products to match the Product interface expected by ProductCard
+      // Transform DB products to match the Product interface
       return data.map((p: DBProduct): Product => {
         const images = Array.isArray(p.images) ? p.images : [];
         return {
@@ -179,19 +243,31 @@ const FestivalPage = () => {
     enabled: !!theme,
   });
 
-  // Fetch all festival themes for navigation
-  const { data: allThemes } = useQuery({
-    queryKey: ['all-festival-themes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('festival_themes')
-        .select('id, name, slug, is_active, discount_percent, banner_image')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Countdown timer effect
+  useEffect(() => {
+    if (!theme?.end_date) return;
+
+    const calculateTimeLeft = () => {
+      const endDate = new Date(theme.end_date!).getTime();
+      const now = new Date().getTime();
+      const difference = endDate - now;
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000),
+        });
+      } else {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    return () => clearInterval(timer);
+  }, [theme?.end_date]);
 
   if (themeLoading) {
     return (
@@ -234,33 +310,27 @@ const FestivalPage = () => {
     );
   }
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  };
+  const hasTimeLeft = timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0;
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={`${theme.name} Sale - Premium Silver Jewellery | NOIR925`}
-        description={theme.special_offer || `Shop exclusive ${theme.name} collection. Get up to ${theme.discount_percent || 20}% off on premium 925 sterling silver jewellery. Limited time offer!`}
-        keywords={`${theme.name.toLowerCase()}, festival jewellery, silver jewellery sale, ${theme.name.toLowerCase()} offers, NOIR925 sale`}
+        title={`${theme.name} Sale - Up to ${theme.discount_percent || 20}% Off | NOIR925`}
+        description={`${theme.special_offer || `Shop exclusive ${theme.name} collection`}. Get up to ${theme.discount_percent || 20}% off on premium 925 sterling silver jewellery. Limited time festival offer!`}
+        keywords={`${theme.name.toLowerCase()}, festival jewellery sale, silver jewellery offers, ${theme.name.toLowerCase()} discounts, NOIR925 festival sale, buy silver jewellery online India, ${theme.name.toLowerCase()} silver collection`}
         canonicalUrl={`https://noir925.com/festival/${theme.slug}`}
         ogType="website"
       />
       <FestivalEventSchema theme={theme} />
       <SaleEventSchema theme={theme} />
+      {products && products.length > 0 && <ProductListSchema products={products} theme={theme} />}
 
       <Header />
 
       <main>
         {/* Hero Banner */}
         <section 
-          className="relative min-h-[50vh] md:min-h-[60vh] flex items-center justify-center overflow-hidden"
+          className="relative min-h-[40vh] md:min-h-[50vh] flex items-center justify-center overflow-hidden"
           style={{ 
             background: `linear-gradient(135deg, ${theme.background_color}, ${theme.secondary_color})` 
           }}
@@ -268,36 +338,37 @@ const FestivalPage = () => {
           {/* Background Image */}
           {theme.banner_image && (
             <div className="absolute inset-0">
-              <img 
+              <OptimizedImage 
                 src={theme.banner_image} 
                 alt={`${theme.name} celebration banner featuring silver jewellery`}
-                className="w-full h-full object-cover opacity-30"
-                loading="eager"
+                className="w-full h-full object-cover opacity-40"
+                priority
+                fallback="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
             </div>
           )}
 
           {/* Animated Particles */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(15)].map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute rounded-full"
                 style={{ 
                   background: i % 2 === 0 ? theme.primary_color : theme.accent_color,
-                  width: Math.random() * 8 + 4,
-                  height: Math.random() * 8 + 4,
+                  width: Math.random() * 6 + 3,
+                  height: Math.random() * 6 + 3,
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
                 }}
                 animate={{
-                  y: [-30, 30, -30],
-                  opacity: [0.2, 0.6, 0.2],
-                  scale: [1, 1.3, 1],
+                  y: [-20, 20, -20],
+                  opacity: [0.2, 0.5, 0.2],
+                  scale: [1, 1.2, 1],
                 }}
                 transition={{
-                  duration: 4 + Math.random() * 3,
+                  duration: 4 + Math.random() * 2,
                   repeat: Infinity,
                   delay: Math.random() * 2,
                 }}
@@ -305,28 +376,28 @@ const FestivalPage = () => {
             ))}
           </div>
 
-          <div className="container mx-auto px-4 relative z-10 text-center py-12">
+          <div className="container mx-auto px-4 relative z-10 text-center py-8 md:py-12">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.5 }}
             >
               {/* Festival Badge */}
               <Badge 
-                className="mb-6 px-4 py-2 text-sm"
+                className="mb-4 px-3 py-1.5 text-xs md:text-sm"
                 style={{ 
                   background: `${theme.primary_color}20`,
                   color: theme.primary_color,
                   borderColor: theme.primary_color
                 }}
               >
-                <Sparkles className="w-4 h-4 mr-2" aria-hidden="true" />
+                <Sparkles className="w-3 h-3 md:w-4 md:h-4 mr-1.5" aria-hidden="true" />
                 Limited Time Festival Offer
               </Badge>
 
               {/* Title */}
               <h1 
-                className="font-display text-4xl md:text-6xl lg:text-7xl mb-4"
+                className="font-display text-3xl md:text-5xl lg:text-6xl mb-3"
                 style={{ color: theme.primary_color }}
               >
                 {theme.name}
@@ -334,7 +405,7 @@ const FestivalPage = () => {
 
               {/* Special Offer */}
               {theme.special_offer && (
-                <p className="text-xl md:text-2xl text-foreground/80 mb-6 max-w-2xl mx-auto">
+                <p className="text-lg md:text-xl text-foreground/80 mb-4 max-w-xl mx-auto">
                   {theme.special_offer}
                 </p>
               )}
@@ -344,151 +415,155 @@ const FestivalPage = () => {
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.3, type: 'spring' }}
-                  className="inline-flex items-center gap-3 px-6 py-3 rounded-full mb-8"
+                  transition={{ delay: 0.2, type: 'spring' }}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full mb-6"
                   style={{ 
                     background: `linear-gradient(135deg, ${theme.primary_color}, ${theme.accent_color})`,
-                    boxShadow: `0 10px 40px ${theme.primary_color}40`
+                    boxShadow: `0 8px 30px ${theme.primary_color}35`
                   }}
                 >
-                  <Percent className="w-6 h-6 text-white" aria-hidden="true" />
-                  <span className="text-2xl md:text-3xl font-display font-bold text-white">
+                  <Percent className="w-5 h-5 text-white" aria-hidden="true" />
+                  <span className="text-xl md:text-2xl font-display font-bold text-white">
                     Up to {theme.discount_percent}% OFF
                   </span>
                 </motion.div>
               )}
 
-              {/* Date Range */}
-              {(theme.start_date || theme.end_date) && (
-                <div className="flex items-center justify-center gap-2 text-muted-foreground mb-8">
-                  <Calendar className="w-4 h-4" aria-hidden="true" />
-                  <span>
-                    {formatDate(theme.start_date)} - {formatDate(theme.end_date)}
-                  </span>
-                </div>
-              )}
-
-              {/* CTA */}
-              <Link to="/shop">
-                <Button 
-                  size="lg"
-                  className="group gap-2 px-8 py-6 text-lg shadow-xl hover:shadow-2xl transition-all duration-300"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${theme.primary_color}, ${theme.accent_color})`,
-                    color: 'white'
-                  }}
+              {/* Countdown Timer */}
+              {hasTimeLeft && theme.end_date && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-6"
                 >
-                  <Gift className="w-5 h-5" aria-hidden="true" />
-                  <span className="font-display">Shop {theme.name} Collection</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                </Button>
-              </Link>
+                  <div className="flex items-center justify-center gap-1.5 text-muted-foreground text-sm mb-3">
+                    <Clock className="w-4 h-4" style={{ color: theme.primary_color }} />
+                    <span>Sale ends in</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 md:gap-3">
+                    {[
+                      { value: timeLeft.days, label: 'Days' },
+                      { value: timeLeft.hours, label: 'Hours' },
+                      { value: timeLeft.minutes, label: 'Mins' },
+                      { value: timeLeft.seconds, label: 'Secs' },
+                    ].map((item, index) => (
+                      <div key={index} className="text-center">
+                        <div 
+                          className="w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center text-lg md:text-2xl font-bold shadow-lg mb-1"
+                          style={{ 
+                            background: `linear-gradient(145deg, ${theme.primary_color}25, ${theme.accent_color}20)`,
+                            border: `1px solid ${theme.primary_color}30`,
+                            color: theme.primary_color
+                          }}
+                        >
+                          {String(item.value).padStart(2, '0')}
+                        </div>
+                        <span className="text-[10px] md:text-xs text-muted-foreground">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </motion.div>
           </div>
         </section>
 
-        {/* Other Festival Themes */}
-        {allThemes && allThemes.length > 1 && (
-          <section className="py-12 bg-muted/30">
-            <div className="container mx-auto px-4">
-              <h2 className="font-display text-2xl md:text-3xl text-center mb-8">
-                Explore Festival Collections
-              </h2>
-              <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide">
-                {allThemes.map((t) => (
-                  <Link
-                    key={t.id}
-                    to={`/festival/${t.slug}`}
-                    className={`flex-shrink-0 w-64 rounded-xl overflow-hidden transition-all duration-300 ${
-                      t.slug === theme.slug ? 'ring-2 ring-primary scale-105' : 'hover:scale-105'
-                    }`}
-                  >
-                    <Card className="h-full">
-                      <div className="h-32 bg-gradient-to-br from-primary/20 to-accent/20 relative">
-                        {t.banner_image && (
-                          <img 
-                            src={t.banner_image} 
-                            alt={`${t.name} collection preview`}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        )}
-                        {t.is_active && (
-                          <Badge className="absolute top-2 right-2 bg-green-500">Active</Badge>
-                        )}
-                      </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-display text-lg">{t.name}</h3>
-                        {t.discount_percent && (
-                          <p className="text-sm text-primary">Up to {t.discount_percent}% OFF</p>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+        {/* Products Section */}
+        <section className="py-10 md:py-16">
+          <div className="container mx-auto px-4">
+            {/* Header with Sort */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div>
+                <h2 className="font-display text-2xl md:text-3xl mb-1">
+                  {theme.name} Sale Products
+                </h2>
+                <p className="text-muted-foreground text-sm md:text-base">
+                  {products?.length || 0} products on sale with exclusive discounts
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-40 md:w-48">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="featured">Featured</SelectItem>
+                    <SelectItem value="discount">Highest Discount</SelectItem>
+                    <SelectItem value="price-low">Price: Low to High</SelectItem>
+                    <SelectItem value="price-high">Price: High to Low</SelectItem>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          </section>
-        )}
-
-        {/* Featured Products */}
-        <section className="py-16 md:py-24">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="font-display text-3xl md:text-4xl mb-4">
-                Featured {theme.name} Collection
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Discover our handpicked selection of premium 925 sterling silver jewellery, 
-                perfect for celebrating this festive season.
-              </p>
-            </motion.div>
 
             {productsLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
                 {[...Array(8)].map((_, i) => (
                   <Skeleton key={i} className="aspect-square rounded-lg" />
                 ))}
               </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                {products?.map((product, index) => (
+            ) : products && products.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+                {products.map((product, index) => (
                   <motion.div
                     key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.03 }}
                   >
                     <ProductCard product={product} />
                   </motion.div>
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-16">
+                <Gift className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-display text-xl mb-2">No Sale Products Yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Products with discounts will appear here during the festival sale.
+                </p>
+                <Link to="/shop">
+                  <Button variant="outline">
+                    <ShoppingBag className="w-4 h-4 mr-2" />
+                    Browse All Products
+                  </Button>
+                </Link>
+              </div>
             )}
 
-            <div className="text-center mt-12">
-              <Link to="/shop">
-                <Button variant="outline" size="lg" className="gap-2">
-                  View All Products
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            </div>
+            {products && products.length > 0 && (
+              <div className="text-center mt-10">
+                <Link to="/shop">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="gap-2"
+                    style={{ borderColor: theme.primary_color, color: theme.primary_color }}
+                  >
+                    View All Products
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </div>
+            )}
           </div>
         </section>
 
-        {/* Why Shop During Festival */}
-        <section className="py-16 bg-muted/30">
+        {/* Why Shop Section */}
+        <section 
+          className="py-12 md:py-16"
+          style={{ background: `${theme.primary_color}08` }}
+        >
           <div className="container mx-auto px-4">
-            <h2 className="font-display text-3xl text-center mb-12">
+            <h2 className="font-display text-2xl md:text-3xl text-center mb-8 md:mb-10">
               Why Shop During {theme.name}?
             </h2>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-5 md:gap-6">
               {[
                 {
                   icon: Percent,
@@ -508,21 +583,20 @@ const FestivalPage = () => {
               ].map((item, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
+                  className="bg-card rounded-xl p-5 md:p-6 text-center shadow-sm hover:shadow-md transition-shadow"
                 >
-                  <Card className="h-full text-center p-6 hover:shadow-lg transition-shadow">
-                    <div 
-                      className="w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4"
-                      style={{ background: `${theme.primary_color}20` }}
-                    >
-                      <item.icon className="w-8 h-8" style={{ color: theme.primary_color }} />
-                    </div>
-                    <h3 className="font-display text-xl mb-2">{item.title}</h3>
-                    <p className="text-muted-foreground">{item.description}</p>
-                  </Card>
+                  <div 
+                    className="w-12 h-12 md:w-14 md:h-14 mx-auto rounded-full flex items-center justify-center mb-3"
+                    style={{ background: `${theme.primary_color}15` }}
+                  >
+                    <item.icon className="w-6 h-6 md:w-7 md:h-7" style={{ color: theme.primary_color }} />
+                  </div>
+                  <h3 className="font-display text-lg mb-1.5">{item.title}</h3>
+                  <p className="text-muted-foreground text-sm">{item.description}</p>
                 </motion.div>
               ))}
             </div>
