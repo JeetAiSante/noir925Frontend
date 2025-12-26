@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { FestivalThemeProvider } from "@/context/FestivalThemeContext";
 import PwaManifestLink from "@/components/pwa/PwaManifestLink";
 
 // Eagerly loaded components for critical path
@@ -34,7 +33,6 @@ const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy"));
 const ReturnsPolicy = lazy(() => import("./pages/ReturnsPolicy"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const Gifting = lazy(() => import("./pages/Gifting"));
-const FestivalPage = lazy(() => import("./pages/FestivalPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages - lazy loaded
@@ -50,7 +48,6 @@ const AdminCustomers = lazy(() => import("./pages/admin/AdminCustomers"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
-const AdminFestivalThemes = lazy(() => import("./pages/admin/AdminFestivalThemes"));
 const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
 const AdminInventory = lazy(() => import("./pages/admin/AdminInventory"));
 const AdminLoyalty = lazy(() => import("./pages/admin/AdminLoyalty"));
@@ -91,8 +88,7 @@ const App = memo(() => (
     <PwaManifestLink />
     <TooltipProvider delayDuration={0}>
       <AuthProvider>
-        <FestivalThemeProvider>
-          <CartProvider>
+        <CartProvider>
             <Suspense fallback={null}>
               <LuxuryCursor />
               <InstallPWAPrompt />
@@ -132,8 +128,6 @@ const App = memo(() => (
                   <Route path="/returns-policy" element={<ReturnsPolicy />} />
                   <Route path="/track-order" element={<TrackOrder />} />
                   <Route path="/gifting" element={<Gifting />} />
-                  <Route path="/festival" element={<FestivalPage />} />
-                  <Route path="/festival/:slug" element={<FestivalPage />} />
                   
                   {/* Admin Routes */}
                   <Route path="/admin-login" element={<AdminLogin />} />
@@ -144,7 +138,6 @@ const App = memo(() => (
                     <Route path="sales" element={<AdminSales />} />
                     <Route path="banners" element={<AdminBanners />} />
                     <Route path="timers" element={<AdminTimers />} />
-                    <Route path="themes" element={<AdminFestivalThemes />} />
                     <Route path="spin-wheel" element={<AdminSpinWheel />} />
                     <Route path="inventory" element={<AdminInventory />} />
                     <Route path="loyalty" element={<AdminLoyalty />} />
@@ -163,8 +156,7 @@ const App = memo(() => (
                 </Routes>
               </Suspense>
             </BrowserRouter>
-          </CartProvider>
-        </FestivalThemeProvider>
+        </CartProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
