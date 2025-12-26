@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, Play, Pause } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
+import { useFestivalTheme } from '@/context/FestivalThemeContext';
 
 interface Banner {
   id: string;
@@ -24,6 +24,7 @@ const DynamicHeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { activeTheme } = useFestivalTheme();
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -136,20 +137,34 @@ const DynamicHeroSection = () => {
           <div 
             className="absolute inset-0" 
             style={{ 
-              background: 'linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.5), transparent)'
+              background: activeTheme 
+                ? `linear-gradient(to right, ${activeTheme.background_color}cc, ${activeTheme.background_color}80, transparent)`
+                : 'linear-gradient(to right, rgba(0,0,0,0.8), rgba(0,0,0,0.5), transparent)'
             }} 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30" />
         </div>
       ))}
 
+      {/* Festival Theme Overlay */}
+      {activeTheme && (
+        <div 
+          className="absolute inset-0 pointer-events-none z-[1] opacity-20"
+          style={{
+            background: `radial-gradient(ellipse at center, ${activeTheme.primary_color}40, transparent 70%)`
+          }}
+        />
+      )}
+
       {/* Floating Decorative Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-[1]">
         <div 
-          className="absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl animate-float bg-accent/10"
+          className="absolute top-20 right-20 w-64 h-64 rounded-full blur-3xl animate-float"
+          style={{ backgroundColor: activeTheme ? `${activeTheme.accent_color}20` : 'hsl(var(--accent) / 0.1)' }}
         />
         <div 
-          className="absolute bottom-40 left-20 w-48 h-48 rounded-full blur-3xl animate-float delay-300 bg-secondary/10"
+          className="absolute bottom-40 left-20 w-48 h-48 rounded-full blur-3xl animate-float delay-300"
+          style={{ backgroundColor: activeTheme ? `${activeTheme.secondary_color}20` : 'hsl(var(--secondary) / 0.1)' }}
         />
       </div>
 
@@ -167,11 +182,14 @@ const DynamicHeroSection = () => {
             >
               <div className="space-y-5">
                 <p className="font-accent text-base md:text-lg text-white/70 tracking-[0.2em] uppercase">
-                  NOIR925 Presents
+                  {activeTheme?.special_offer || 'NOIR925 Presents'}
                 </p>
                 <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1]">
                   {banner.title}
-                  <span className="block mt-2 text-accent">
+                  <span 
+                    className="block mt-2"
+                    style={{ color: activeTheme?.primary_color || 'hsl(var(--accent))' }}
+                  >
                     {banner.subtitle}
                   </span>
                 </h1>
@@ -183,7 +201,11 @@ const DynamicHeroSection = () => {
                     <Button 
                       variant="default" 
                       size="lg"
-                      className="font-semibold px-8 bg-white text-black hover:bg-white/90"
+                      className="font-semibold px-8"
+                      style={{
+                        backgroundColor: activeTheme?.primary_color || 'white',
+                        color: activeTheme ? '#000' : '#000'
+                      }}
                     >
                       {banner.button_text || 'Shop Now'}
                     </Button>
@@ -214,9 +236,13 @@ const DynamicHeroSection = () => {
                 setCurrentSlide(index);
                 setIsPlaying(false);
               }}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                index === currentSlide ? 'w-12 bg-white' : 'w-4 bg-white/40'
-              }`}
+              className="h-1 rounded-full transition-all duration-500"
+              style={{
+                width: index === currentSlide ? '48px' : '16px',
+                backgroundColor: index === currentSlide 
+                  ? (activeTheme?.primary_color || 'white') 
+                  : 'rgba(255,255,255,0.4)'
+              }}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
