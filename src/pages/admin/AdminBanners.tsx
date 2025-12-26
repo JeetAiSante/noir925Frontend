@@ -9,7 +9,9 @@ import {
   EyeOff,
   Loader2,
   Video,
-  Upload
+  Upload,
+  Calendar,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,6 +35,20 @@ const positionLabels: Record<string, string> = {
   promo: 'Promotional',
   category: 'Category Banner',
   sale: 'Sale Banner',
+  seasonal: 'Seasonal Banner',
+};
+
+// Helper to check if banner is currently scheduled
+const isBannerScheduled = (banner: Banner): 'active' | 'scheduled' | 'expired' | 'inactive' => {
+  if (!banner.is_active) return 'inactive';
+  
+  const now = new Date();
+  const startDate = banner.start_date ? new Date(banner.start_date) : null;
+  const endDate = banner.end_date ? new Date(banner.end_date) : null;
+  
+  if (startDate && startDate > now) return 'scheduled';
+  if (endDate && endDate < now) return 'expired';
+  return 'active';
 };
 
 const AdminBanners = () => {
@@ -56,6 +72,8 @@ const AdminBanners = () => {
     position: 'promo',
     is_active: true,
     sort_order: 0,
+    start_date: '',
+    end_date: '',
   });
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +170,9 @@ const AdminBanners = () => {
 
     const dataToSubmit = {
       ...formData,
-      image_url: formData.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop'
+      image_url: formData.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop',
+      start_date: formData.start_date || null,
+      end_date: formData.end_date || null,
     };
 
     if (editingBanner) {
@@ -182,6 +202,8 @@ const AdminBanners = () => {
       position: 'promo',
       is_active: true,
       sort_order: 0,
+      start_date: '',
+      end_date: '',
     });
   };
 
@@ -199,6 +221,8 @@ const AdminBanners = () => {
       position: banner.position,
       is_active: banner.is_active,
       sort_order: banner.sort_order,
+      start_date: banner.start_date?.split('T')[0] || '',
+      end_date: banner.end_date?.split('T')[0] || '',
     });
     setIsDialogOpen(true);
   };
@@ -283,20 +307,43 @@ const AdminBanners = () => {
                           <Video className="w-3 h-3" /> Video
                         </span>
                       )}
-                      {banner.is_active ? (
-                        <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded text-xs flex items-center gap-1">
-                          <Eye className="w-3 h-3" /> Visible
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-xs flex items-center gap-1">
-                          <EyeOff className="w-3 h-3" /> Hidden
-                        </span>
-                      )}
+                      {/* Scheduling status badge */}
+                      {(() => {
+                        const status = isBannerScheduled(banner);
+                        if (status === 'active') return (
+                          <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded text-xs flex items-center gap-1">
+                            <Eye className="w-3 h-3" /> Live
+                          </span>
+                        );
+                        if (status === 'scheduled') return (
+                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 rounded text-xs flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Scheduled
+                          </span>
+                        );
+                        if (status === 'expired') return (
+                          <span className="px-2 py-0.5 bg-orange-500/10 text-orange-500 rounded text-xs flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> Expired
+                          </span>
+                        );
+                        return (
+                          <span className="px-2 py-0.5 bg-muted text-muted-foreground rounded text-xs flex items-center gap-1">
+                            <EyeOff className="w-3 h-3" /> Hidden
+                          </span>
+                        );
+                      })()}
                     </div>
                     <h3 className="font-display text-lg">{banner.title}</h3>
                     <p className="text-sm text-muted-foreground mt-1">{banner.subtitle}</p>
+                    {(banner.start_date || banner.end_date) && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                        <Calendar className="w-3 h-3" />
+                        {banner.start_date && new Date(banner.start_date).toLocaleDateString()}
+                        {banner.start_date && banner.end_date && ' - '}
+                        {banner.end_date && new Date(banner.end_date).toLocaleDateString()}
+                      </div>
+                    )}
                     {banner.link && (
-                      <div className="flex items-center gap-1 text-xs text-primary mt-2">
+                      <div className="flex items-center gap-1 text-xs text-primary mt-1">
                         <LinkIcon className="w-3 h-3" />
                         {banner.link}
                       </div>
@@ -534,6 +581,37 @@ const AdminBanners = () => {
                   <option key={key} value={key}>{label}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Scheduling */}
+            <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Start Date (optional)
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.start_date}
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  End Date (optional)
+                </Label>
+                <Input
+                  type="date"
+                  value={formData.end_date}
+                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <p className="col-span-2 text-xs text-muted-foreground">
+                Leave empty to show banner immediately without expiration. Banners auto-activate/deactivate based on dates.
+              </p>
             </div>
             
             <div className="flex items-center gap-2">

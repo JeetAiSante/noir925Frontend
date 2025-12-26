@@ -7,6 +7,7 @@ import { Product, formatPrice } from '@/data/products';
 import ProductQuickView from './ProductQuickView';
 import { ProductSkeleton } from '@/components/ui/product-skeleton';
 import { motion } from 'framer-motion';
+import OptimizedImage from '@/components/ui/optimized-image';
 
 interface ProductCardProps {
   product: Product;
@@ -33,8 +34,6 @@ const alternateImages: Record<string, string> = {
 const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [altImageLoaded, setAltImageLoaded] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
 
   const alternateImage = alternateImages[product.id] || product.image;
@@ -98,36 +97,26 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
         <Link to={`/product/${product.id}`} className="block" aria-label={`View ${product.name} - ${formatPrice(product.price)}`}>
           {/* Image Container - Compact aspect ratio */}
           <div className="relative overflow-hidden aspect-square bg-muted">
-            {/* Skeleton loader while image loads */}
-            {!imageLoaded && (
-              <div className="absolute inset-0 shimmer-skeleton" />
-            )}
-            
-            {/* Primary Image */}
-            <img
+            {/* Primary Image with OptimizedImage */}
+            <OptimizedImage
               src={product.image}
               alt={`${product.name} - ${product.category} in 925 Sterling Silver | NOIR925`}
-              loading="lazy"
-              decoding="async"
-              width={600}
-              height={600}
-              itemProp="image"
-              onLoad={() => setImageLoaded(true)}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+              aspectRatio="square"
+              priority={false}
+              blurPlaceholder={true}
+              className={`absolute inset-0 transition-all duration-700 ${
                 isHovered ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
-              } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              }`}
             />
             
             {/* Alternate Image (shown on hover) */}
-            <img
+            <OptimizedImage
               src={alternateImage}
               alt={`${product.name} - alternate view showing different angle`}
-              loading="lazy"
-              decoding="async"
-              width={600}
-              height={600}
-              onLoad={() => setAltImageLoaded(true)}
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${
+              aspectRatio="square"
+              priority={false}
+              blurPlaceholder={false}
+              className={`absolute inset-0 transition-all duration-700 ${
                 isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
               }`}
             />
