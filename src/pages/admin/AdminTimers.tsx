@@ -7,7 +7,12 @@ import {
   Calendar,
   Clock,
   Zap,
-  Loader2
+  Loader2,
+  Palette,
+  Gift,
+  Percent,
+  Star,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,11 +29,35 @@ import {
 import { toast } from 'sonner';
 import { useCountdownTimers, useCreateTimer, useUpdateTimer, useDeleteTimer, CountdownTimer } from '@/hooks/useAdminData';
 
+interface ExtendedTimer extends CountdownTimer {
+  bg_color?: string;
+  text_color?: string;
+  accent_color?: string;
+  button_text?: string;
+  icon_type?: string;
+}
+
 const typeConfig: Record<string, { label: string; icon: any; color: string }> = {
-  sale: { label: 'Sale', icon: Zap, color: 'bg-red-500/10 text-red-500' },
   banner: { label: 'Banner', icon: Timer, color: 'bg-blue-500/10 text-blue-500' },
+  sale: { label: 'Sale', icon: Zap, color: 'bg-red-500/10 text-red-500' },
   event: { label: 'Event', icon: Calendar, color: 'bg-purple-500/10 text-purple-500' },
 };
+
+const iconOptions = [
+  { value: 'percent', label: 'Percent', icon: Percent },
+  { value: 'gift', label: 'Gift', icon: Gift },
+  { value: 'zap', label: 'Lightning', icon: Zap },
+  { value: 'star', label: 'Star', icon: Star },
+];
+
+const colorPresets = [
+  { name: 'Forest Green', bg: '#1a472a', text: '#ffffff', accent: '#c9a962' },
+  { name: 'Royal Purple', bg: '#4a1a6b', text: '#ffffff', accent: '#ffd700' },
+  { name: 'Ocean Blue', bg: '#1a3a5c', text: '#ffffff', accent: '#00d4ff' },
+  { name: 'Sunset Orange', bg: '#7a2e00', text: '#ffffff', accent: '#ffcc00' },
+  { name: 'Midnight Black', bg: '#1a1a1a', text: '#ffffff', accent: '#ff4081' },
+  { name: 'Rose Gold', bg: '#b76e79', text: '#ffffff', accent: '#ffd700' },
+];
 
 const AdminTimers = () => {
   const { data: timers, isLoading } = useCountdownTimers();
@@ -37,7 +66,8 @@ const AdminTimers = () => {
   const deleteTimer = useDeleteTimer();
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTimer, setEditingTimer] = useState<CountdownTimer | null>(null);
+  const [editingTimer, setEditingTimer] = useState<ExtendedTimer | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -45,6 +75,11 @@ const AdminTimers = () => {
     link: '',
     position: 'banner',
     is_active: true,
+    bg_color: '#1a472a',
+    text_color: '#ffffff',
+    accent_color: '#c9a962',
+    button_text: 'Shop Sale',
+    icon_type: 'percent',
   });
 
   const calculateTimeLeft = (endTime: string) => {
@@ -82,6 +117,7 @@ const AdminTimers = () => {
   const closeDialog = () => {
     setIsDialogOpen(false);
     setEditingTimer(null);
+    setShowPreview(false);
     setFormData({
       title: '',
       subtitle: '',
@@ -89,31 +125,52 @@ const AdminTimers = () => {
       link: '',
       position: 'banner',
       is_active: true,
+      bg_color: '#1a472a',
+      text_color: '#ffffff',
+      accent_color: '#c9a962',
+      button_text: 'Shop Sale',
+      icon_type: 'percent',
     });
   };
 
-  const handleEdit = (timer: CountdownTimer) => {
+  const handleEdit = (timer: ExtendedTimer) => {
     setEditingTimer(timer);
     setFormData({
       title: timer.title,
       subtitle: timer.subtitle || '',
-      end_time: timer.end_time.slice(0, 16), // Format for datetime-local input
+      end_time: timer.end_time.slice(0, 16),
       link: timer.link || '',
       position: timer.position,
       is_active: timer.is_active,
+      bg_color: timer.bg_color || '#1a472a',
+      text_color: timer.text_color || '#ffffff',
+      accent_color: timer.accent_color || '#c9a962',
+      button_text: timer.button_text || 'Shop Sale',
+      icon_type: timer.icon_type || 'percent',
     });
     setIsDialogOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    deleteTimer.mutate(id);
+    if (confirm('Are you sure you want to delete this timer?')) {
+      deleteTimer.mutate(id);
+    }
   };
 
-  const toggleActive = (timer: CountdownTimer) => {
+  const toggleActive = (timer: ExtendedTimer) => {
     updateTimer.mutate({ 
       id: timer.id, 
       data: { is_active: !timer.is_active } 
     });
+  };
+
+  const applyColorPreset = (preset: typeof colorPresets[0]) => {
+    setFormData(prev => ({
+      ...prev,
+      bg_color: preset.bg,
+      text_color: preset.text,
+      accent_color: preset.accent,
+    }));
   };
 
   if (isLoading) {
@@ -124,13 +181,15 @@ const AdminTimers = () => {
     );
   }
 
+  const SelectedIcon = iconOptions.find(i => i.value === formData.icon_type)?.icon || Percent;
+
   return (
     <div className="p-6 lg:p-8 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl lg:text-4xl mb-2">Countdown Timers</h1>
-          <p className="text-muted-foreground">Manage sale countdowns and launch timers</p>
+          <p className="text-muted-foreground">Manage sale countdowns with custom colors and styling</p>
         </div>
         <Button className="gap-2" onClick={() => setIsDialogOpen(true)}>
           <Plus className="w-4 h-4" />
@@ -140,12 +199,17 @@ const AdminTimers = () => {
 
       {/* Timers Grid */}
       <div className="grid gap-4 md:grid-cols-2">
-        {timers?.map((timer) => {
+        {(timers as ExtendedTimer[])?.map((timer) => {
           const config = typeConfig[timer.position] || typeConfig.banner;
           const timeLeft = calculateTimeLeft(timer.end_time);
           
           return (
-            <Card key={timer.id} className={`border-border/50 ${!timer.is_active && 'opacity-60'}`}>
+            <Card key={timer.id} className={`border-border/50 overflow-hidden ${!timer.is_active && 'opacity-60'}`}>
+              {/* Color Preview Bar */}
+              <div 
+                className="h-2"
+                style={{ backgroundColor: timer.bg_color || '#1a472a' }}
+              />
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -167,9 +231,7 @@ const AdminTimers = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground">{timer.subtitle}</p>
-                  </div>
+                  <p className="text-sm text-muted-foreground">{timer.subtitle}</p>
                   
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
@@ -180,6 +242,26 @@ const AdminTimers = () => {
                       <Clock className="w-4 h-4" />
                       {new Date(timer.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
+                  </div>
+
+                  {/* Color swatches */}
+                  <div className="flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-muted-foreground" />
+                    <div 
+                      className="w-5 h-5 rounded-full border border-border" 
+                      style={{ backgroundColor: timer.bg_color || '#1a472a' }}
+                      title="Background"
+                    />
+                    <div 
+                      className="w-5 h-5 rounded-full border border-border" 
+                      style={{ backgroundColor: timer.text_color || '#ffffff' }}
+                      title="Text"
+                    />
+                    <div 
+                      className="w-5 h-5 rounded-full border border-border" 
+                      style={{ backgroundColor: timer.accent_color || '#c9a962' }}
+                      title="Accent"
+                    />
                   </div>
                   
                   <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${
@@ -220,64 +302,224 @@ const AdminTimers = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-xl">
               {editingTimer ? 'Edit Timer' : 'Add New Timer'}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div>
-              <Label>Title</Label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g., Festive Sale - Up to 50% Off"
-              />
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Left Column - Basic Info */}
+            <div className="space-y-4">
+              <div>
+                <Label>Title *</Label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Festive Sale - Up to 50% Off"
+                />
+              </div>
+              <div>
+                <Label>Subtitle</Label>
+                <Input
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
+                  placeholder="Limited Time Offer"
+                />
+              </div>
+              <div>
+                <Label>End Date & Time *</Label>
+                <Input
+                  type="datetime-local"
+                  value={formData.end_time}
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Link</Label>
+                <Input
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  placeholder="/shop?sale=festive"
+                />
+              </div>
+              <div>
+                <Label>Button Text</Label>
+                <Input
+                  value={formData.button_text}
+                  onChange={(e) => setFormData({ ...formData, button_text: e.target.value })}
+                  placeholder="Shop Sale"
+                />
+              </div>
+              <div>
+                <Label>Timer Type</Label>
+                <select 
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                >
+                  {Object.entries(typeConfig).map(([key, config]) => (
+                    <option key={key} value={key}>{config.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <Label>Subtitle</Label>
-              <Input
-                value={formData.subtitle}
-                onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                placeholder="e.g., Limited Time Offer"
-              />
-            </div>
-            <div>
-              <Label>Timer Type</Label>
-              <select 
-                className="w-full h-10 px-3 rounded-md border border-input bg-background"
-                value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-              >
-                {Object.entries(typeConfig).map(([key, config]) => (
-                  <option key={key} value={key}>{config.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label>End Date & Time</Label>
-              <Input
-                type="datetime-local"
-                value={formData.end_time}
-                onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Link (optional)</Label>
-              <Input
-                value={formData.link}
-                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                placeholder="/shop?sale=festive"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch 
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-              />
-              <Label>Active</Label>
+
+            {/* Right Column - Styling */}
+            <div className="space-y-4">
+              <div>
+                <Label>Icon</Label>
+                <div className="flex gap-2 mt-2">
+                  {iconOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, icon_type: opt.value })}
+                      className={`p-3 rounded-lg border-2 transition-all ${
+                        formData.icon_type === opt.value 
+                          ? 'border-primary bg-primary/10' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      title={opt.label}
+                    >
+                      <opt.icon className="w-5 h-5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Color Presets</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {colorPresets.map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => applyColorPreset(preset)}
+                      className="flex items-center gap-1 px-2 py-1 rounded border border-border hover:border-primary/50 transition-all text-xs"
+                    >
+                      <div 
+                        className="w-4 h-4 rounded-full" 
+                        style={{ backgroundColor: preset.bg }}
+                      />
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs">Background</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={formData.bg_color}
+                      onChange={(e) => setFormData({ ...formData, bg_color: e.target.value })}
+                      className="w-10 h-10 rounded cursor-pointer border-0"
+                    />
+                    <Input
+                      value={formData.bg_color}
+                      onChange={(e) => setFormData({ ...formData, bg_color: e.target.value })}
+                      className="text-xs h-8"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Text</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={formData.text_color}
+                      onChange={(e) => setFormData({ ...formData, text_color: e.target.value })}
+                      className="w-10 h-10 rounded cursor-pointer border-0"
+                    />
+                    <Input
+                      value={formData.text_color}
+                      onChange={(e) => setFormData({ ...formData, text_color: e.target.value })}
+                      className="text-xs h-8"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">Accent</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      type="color"
+                      value={formData.accent_color}
+                      onChange={(e) => setFormData({ ...formData, accent_color: e.target.value })}
+                      className="w-10 h-10 rounded cursor-pointer border-0"
+                    />
+                    <Input
+                      value={formData.accent_color}
+                      onChange={(e) => setFormData({ ...formData, accent_color: e.target.value })}
+                      className="text-xs h-8"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch 
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                />
+                <Label>Active</Label>
+              </div>
+
+              {/* Live Preview */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Preview</Label>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowPreview(!showPreview)}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    {showPreview ? 'Hide' : 'Show'}
+                  </Button>
+                </div>
+                {showPreview && (
+                  <div 
+                    className="rounded-lg p-4 flex items-center justify-between"
+                    style={{ backgroundColor: formData.bg_color }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: `${formData.text_color}20` }}
+                      >
+                        <SelectedIcon className="w-5 h-5" style={{ color: formData.text_color }} />
+                      </div>
+                      <div>
+                        <p 
+                          className="text-xs uppercase tracking-wide"
+                          style={{ color: `${formData.text_color}cc` }}
+                        >
+                          {formData.subtitle || 'Limited Time'}
+                        </p>
+                        <p 
+                          className="font-display"
+                          style={{ color: formData.text_color }}
+                        >
+                          {formData.title || 'Timer Title'}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      className="px-4 py-2 rounded-lg font-medium text-sm"
+                      style={{ 
+                        backgroundColor: formData.text_color,
+                        color: formData.bg_color
+                      }}
+                    >
+                      {formData.button_text || 'Shop Sale'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
