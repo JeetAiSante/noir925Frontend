@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,13 @@ const formValidationSchema = z.object({
   message: z.string().min(10, 'Message must be at least 10 characters').max(1000),
 });
 
+interface ContactSettings {
+  email: string;
+  phone: string;
+  address: string;
+  businessHours: string;
+}
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -28,6 +35,49 @@ const Contact = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contactSettings, setContactSettings] = useState<ContactSettings>({
+    email: 'hello@noir925.com',
+    phone: '+91 98765 43210',
+    address: 'Mumbai, Maharashtra',
+    businessHours: '10:00 AM - 7:00 PM'
+  });
+
+  useEffect(() => {
+    const fetchContactSettings = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('key, value')
+          .in('key', ['contact_email', 'contact_phone', 'contact_address', 'business_hours']);
+
+        if (data) {
+          const settings: Partial<ContactSettings> = {};
+          data.forEach((item) => {
+            const value = typeof item.value === 'string' ? item.value : String(item.value);
+            switch (item.key) {
+              case 'contact_email':
+                settings.email = value;
+                break;
+              case 'contact_phone':
+                settings.phone = value;
+                break;
+              case 'contact_address':
+                settings.address = value;
+                break;
+              case 'business_hours':
+                settings.businessHours = value;
+                break;
+            }
+          });
+          setContactSettings(prev => ({ ...prev, ...settings }));
+        }
+      } catch (error) {
+        console.error('Error fetching contact settings:', error);
+      }
+    };
+
+    fetchContactSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,25 +136,25 @@ const Contact = () => {
     {
       icon: Mail,
       title: 'Email Us',
-      value: 'hello@noir925.com',
+      value: contactSettings.email,
       description: 'For general inquiries'
     },
     {
       icon: Phone,
       title: 'Call Us',
-      value: '+91 98765 43210',
+      value: contactSettings.phone,
       description: 'Mon-Sat, 10AM - 7PM'
     },
     {
       icon: MapPin,
       title: 'Visit Us',
-      value: 'Mumbai, Maharashtra',
+      value: contactSettings.address,
       description: 'By appointment only'
     },
     {
       icon: Clock,
       title: 'Business Hours',
-      value: '10:00 AM - 7:00 PM',
+      value: contactSettings.businessHours,
       description: 'Monday to Saturday'
     }
   ];
@@ -119,12 +169,12 @@ const Contact = () => {
     "mainEntity": {
       "@type": "Organization",
       "name": "NOIR925",
-      "telephone": "+91-98765-43210",
-      "email": "hello@noir925.com",
+      "telephone": contactSettings.phone,
+      "email": contactSettings.email,
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": "Mumbai",
-        "addressRegion": "Maharashtra",
+        "addressLocality": contactSettings.address.split(',')[0]?.trim() || "Mumbai",
+        "addressRegion": contactSettings.address.split(',')[1]?.trim() || "Maharashtra",
         "addressCountry": "IN"
       },
       "openingHoursSpecification": {
@@ -135,7 +185,6 @@ const Contact = () => {
       }
     }
   };
-
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
