@@ -130,7 +130,7 @@ const FestivalBanner = () => {
 
           {/* Right: CTA */}
           <div className="flex items-center gap-4">
-            <Link to="/shop">
+            <Link to={`/festival/${activeTheme.slug}`}>
               <Button 
                 size="lg"
                 className="group gap-2 px-6 shadow-lg hover:shadow-xl transition-all duration-300"
@@ -139,9 +139,9 @@ const FestivalBanner = () => {
                   color: 'white'
                 }}
               >
-                <Gift className="w-4 h-4" />
-                <span className="font-display">Shop Now</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <Gift className="w-4 h-4" aria-hidden="true" />
+                <span className="font-display">Explore Collection</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Button>
             </Link>
           </div>
