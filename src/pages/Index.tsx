@@ -18,7 +18,6 @@ const BestsellersGrid = lazy(() => import('@/components/home/BestsellersGrid'));
 const PriceBasedProducts = lazy(() => import('@/components/home/PriceBasedProducts'));
 const GenderShopSection = lazy(() => import('@/components/home/GenderShopSection'));
 const WeddingCollectionShowcase = lazy(() => import('@/components/home/WeddingCollectionShowcase'));
-const GiftBoxCategories = lazy(() => import('@/components/home/GiftBoxCategories'));
 const ParallaxBanner = lazy(() => import('@/components/home/ParallaxBanner'));
 const NewArrivalsGrid = lazy(() => import('@/components/home/NewArrivalsGrid'));
 const TrendingSlider = lazy(() => import('@/components/home/TrendingSlider'));
@@ -27,7 +26,6 @@ const RandomReviewsCarousel = lazy(() => import('@/components/home/RandomReviews
 const LuxuryEditorialSection = lazy(() => import('@/components/home/LuxuryEditorialSection'));
 const VideoShowcase = lazy(() => import('@/components/home/VideoShowcase'));
 const FeaturedCategories = lazy(() => import('@/components/home/FeaturedCategories'));
-const SeasonalBanner = lazy(() => import('@/components/home/SeasonalBanner'));
 const PromoBanners = lazy(() => import('@/components/home/PromoBanners'));
 const BrandStorySection = lazy(() => import('@/components/home/BrandStorySection'));
 const CollectionsStory = lazy(() => import('@/components/home/CollectionsStory'));
@@ -69,13 +67,10 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   gender_shop: GenderShopSection,
   wedding_collection: WeddingCollectionShowcase,
   wedding: WeddingCollectionShowcase,
-  gift_box: GiftBoxCategories,
   
   // Banners
   parallax_banner: ParallaxBanner,
   parallax: ParallaxBanner,
-  seasonal_banner: SeasonalBanner,
-  seasonal: SeasonalBanner,
   promo_banners: PromoBanners,
   promo: PromoBanners,
   
@@ -123,7 +118,7 @@ const Index = memo(() => {
     'video_hero', 'countdown_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
     'gender_shop', 'wedding_collection', 'parallax_banner', 'new_arrivals',
     'trending_slider', 'editorial_section', 'video_showcase',
-    'featured_categories', 'seasonal_banner', 'promo_banners', 'brand_story', 'collections_story',
+    'featured_categories', 'promo_banners', 'brand_story', 'collections_story',
     'shop_by_occasion', 'silver_care', 'brand_partners', 'reviews', 'instagram_feed', 'newsletter',
     'recently_viewed', 'final_cta'
   ];
