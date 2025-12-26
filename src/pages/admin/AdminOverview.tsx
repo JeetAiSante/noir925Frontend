@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/data/products';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { toast } from 'sonner';
+import SchedulingWidget from '@/components/admin/SchedulingWidget';
 
 const AdminOverview = () => {
   const [stats, setStats] = useState({
@@ -200,9 +201,9 @@ const AdminOverview = () => {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales Chart */}
-        <Card className="border-border/50">
+        <Card className="border-border/50 lg:col-span-2">
           <CardHeader>
             <CardTitle className="font-display text-xl">Sales Overview (Last 7 Days)</CardTitle>
           </CardHeader>
@@ -240,6 +241,12 @@ const AdminOverview = () => {
           </CardContent>
         </Card>
 
+        {/* Scheduling Widget */}
+        <SchedulingWidget />
+      </div>
+
+      {/* Orders Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Orders Chart */}
         <Card className="border-border/50">
           <CardHeader>
@@ -271,10 +278,9 @@ const AdminOverview = () => {
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Recent Orders */}
-      <Card className="border-border/50">
+        {/* Recent Orders */}
+        <Card className="border-border/50">
         <CardHeader>
           <CardTitle className="font-display text-xl">Recent Orders</CardTitle>
         </CardHeader>
@@ -311,7 +317,8 @@ const AdminOverview = () => {
             </div>
           )}
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };
