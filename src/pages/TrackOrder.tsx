@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 interface OrderItem {
   id: string;
@@ -35,6 +36,25 @@ const TrackOrder = () => {
   const [orderDetails, setOrderDetails] = useState<Order | null>(null);
   const [error, setError] = useState('');
   const { user } = useAuth();
+
+  const trackOrderSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Track Your Order - NOIR925",
+    "description": "Track your NOIR925 silver jewellery order. Get real-time updates on your shipment status.",
+    "url": "https://noir925.com/track-order",
+    "mainEntity": {
+      "@type": "WebApplication",
+      "name": "NOIR925 Order Tracking",
+      "applicationCategory": "ShoppingApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      }
+    }
+  };
 
   useEffect(() => {
     const orderFromUrl = searchParams.get('order');
@@ -126,6 +146,14 @@ const TrackOrder = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="Track Your Order - NOIR925 Silver Jewellery"
+        description="Track your NOIR925 order status. Get real-time updates on your premium 925 sterling silver jewellery shipment."
+        keywords="track order, order status, NOIR925 order tracking, silver jewellery delivery, shipment tracking India"
+        canonicalUrl="https://noir925.com/track-order"
+        noIndex={false}
+        structuredData={trackOrderSchema}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-16">
@@ -249,7 +277,7 @@ const TrackOrder = () => {
                   </div>
                 </div>
 
-                {/* Shipping Address */}
+                {/* Shipping Address - Masked for privacy */}
                 {orderDetails.shipping_address && (
                   <div className="p-4 bg-muted/50 rounded-lg">
                     <h4 className="font-medium mb-2 flex items-center gap-2">
@@ -258,9 +286,8 @@ const TrackOrder = () => {
                     </h4>
                     <p className="text-sm text-muted-foreground">
                       {orderDetails.shipping_address.full_name}<br />
-                      {orderDetails.shipping_address.address_line1}<br />
-                      {orderDetails.shipping_address.address_line2 && <>{orderDetails.shipping_address.address_line2}<br /></>}
-                      {orderDetails.shipping_address.city}, {orderDetails.shipping_address.state} {orderDetails.shipping_address.postal_code}
+                      {orderDetails.shipping_address.address_line1?.substring(0, 10)}***<br />
+                      {orderDetails.shipping_address.city}, {orderDetails.shipping_address.state} {orderDetails.shipping_address.postal_code?.substring(0, 3)}***
                     </p>
                   </div>
                 )}

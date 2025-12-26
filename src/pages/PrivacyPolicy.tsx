@@ -1,9 +1,49 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const PrivacyPolicy = () => {
+  const privacyPolicySchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Privacy Policy - NOIR925",
+    "description": "Learn how NOIR925 collects, uses, and protects your personal information when shopping for silver jewellery.",
+    "url": "https://noir925.com/privacy-policy",
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://noir925.com/privacy-policy#article",
+      "headline": "NOIR925 Privacy Policy",
+      "datePublished": "2024-01-01",
+      "dateModified": "2024-12-01",
+      "author": {
+        "@type": "Organization",
+        "name": "NOIR925"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "NOIR925",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://noir925.com/logo.png"
+        }
+      }
+    },
+    "speakable": {
+      "@type": "SpeakableSpecification",
+      "cssSelector": ["h1", "h2", "p"]
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="Privacy Policy - NOIR925 Silver Jewellery"
+        description="Read NOIR925's privacy policy. Learn how we collect, use, and protect your personal data when you shop for premium 925 sterling silver jewellery."
+        keywords="NOIR925 privacy policy, data protection, personal information, customer privacy, silver jewellery India"
+        canonicalUrl="https://noir925.com/privacy-policy"
+        noIndex={false}
+        structuredData={privacyPolicySchema}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-16">
