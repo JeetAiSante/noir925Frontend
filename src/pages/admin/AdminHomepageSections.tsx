@@ -320,38 +320,165 @@ const AdminHomepageSections = () => {
       </Card>
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedSection?.section_name} Settings
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            {selectedSection?.section_key === 'hero' && (
-              <div className="flex items-center justify-between">
-                <Label>Show Video Background</Label>
-                <Switch
-                  checked={selectedSection.settings?.showVideo ?? true}
-                  onCheckedChange={(v) => updateSectionSettings('showVideo', v)}
-                />
-              </div>
-            )}
-            {['bestsellers', 'new_arrivals', 'categories'].includes(selectedSection?.section_key || '') && (
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+            {/* Universal settings for all sections */}
+            <div className="space-y-4 border-b pb-4">
+              <h4 className="font-medium text-sm text-muted-foreground">Display Settings</h4>
               <div className="space-y-2">
-                <Label>Items to Display</Label>
+                <Label>Custom Title (optional)</Label>
                 <Input
-                  type="number"
-                  min={4}
-                  max={20}
-                  value={selectedSection?.settings?.limit ?? 8}
-                  onChange={(e) => updateSectionSettings('limit', parseInt(e.target.value))}
+                  placeholder="Leave empty for default"
+                  value={selectedSection?.settings?.customTitle ?? ''}
+                  onChange={(e) => updateSectionSettings('customTitle', e.target.value)}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Custom Subtitle (optional)</Label>
+                <Input
+                  placeholder="Leave empty for default"
+                  value={selectedSection?.settings?.customSubtitle ?? ''}
+                  onChange={(e) => updateSectionSettings('customSubtitle', e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Background Color</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    className="w-12 h-10 p-1 cursor-pointer"
+                    value={selectedSection?.settings?.bgColor ?? '#ffffff'}
+                    onChange={(e) => updateSectionSettings('bgColor', e.target.value)}
+                  />
+                  <Input
+                    placeholder="#ffffff or transparent"
+                    value={selectedSection?.settings?.bgColor ?? ''}
+                    onChange={(e) => updateSectionSettings('bgColor', e.target.value)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => updateSectionSettings('bgColor', '')}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Text Color</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    className="w-12 h-10 p-1 cursor-pointer"
+                    value={selectedSection?.settings?.textColor ?? '#000000'}
+                    onChange={(e) => updateSectionSettings('textColor', e.target.value)}
+                  />
+                  <Input
+                    placeholder="#000000"
+                    value={selectedSection?.settings?.textColor ?? ''}
+                    onChange={(e) => updateSectionSettings('textColor', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Full Width Layout</Label>
+                <Switch
+                  checked={selectedSection?.settings?.fullWidth ?? false}
+                  onCheckedChange={(v) => updateSectionSettings('fullWidth', v)}
+                />
+              </div>
+            </div>
+
+            {/* Section-specific settings */}
+            {selectedSection?.section_key === 'hero' && (
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Hero Settings</h4>
+                <div className="flex items-center justify-between">
+                  <Label>Show Video Background</Label>
+                  <Switch
+                    checked={selectedSection.settings?.showVideo ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('showVideo', v)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Show Overlay Text</Label>
+                  <Switch
+                    checked={selectedSection.settings?.showOverlay ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('showOverlay', v)}
+                  />
+                </div>
+              </div>
             )}
-            {!['hero', 'bestsellers', 'new_arrivals', 'categories'].includes(selectedSection?.section_key || '') && (
-              <p className="text-muted-foreground text-sm">
-                No additional settings available for this section.
-              </p>
+
+            {['bestsellers', 'new_arrivals', 'categories', 'trending'].includes(selectedSection?.section_key || '') && (
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Product Display</h4>
+                <div className="space-y-2">
+                  <Label>Items to Display</Label>
+                  <Input
+                    type="number"
+                    min={4}
+                    max={24}
+                    value={selectedSection?.settings?.limit ?? 8}
+                    onChange={(e) => updateSectionSettings('limit', parseInt(e.target.value))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Show View All Button</Label>
+                  <Switch
+                    checked={selectedSection?.settings?.showViewAll ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('showViewAll', v)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {['countdown', 'festival', 'parallax', 'seasonal', 'promo'].includes(selectedSection?.section_key || '') && (
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Banner Settings</h4>
+                <div className="flex items-center justify-between">
+                  <Label>Auto-hide when expired</Label>
+                  <Switch
+                    checked={selectedSection?.settings?.autoHide ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('autoHide', v)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {selectedSection?.section_key === 'instagram' && (
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Instagram Settings</h4>
+                <div className="space-y-2">
+                  <Label>Posts to Display</Label>
+                  <Input
+                    type="number"
+                    min={3}
+                    max={12}
+                    value={selectedSection?.settings?.postsCount ?? 6}
+                    onChange={(e) => updateSectionSettings('postsCount', parseInt(e.target.value))}
+                  />
+                </div>
+              </div>
+            )}
+
+            {selectedSection?.section_key === 'newsletter' && (
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Newsletter Settings</h4>
+                <div className="space-y-2">
+                  <Label>Discount Offer Text</Label>
+                  <Input
+                    placeholder="e.g., Get 10% OFF"
+                    value={selectedSection?.settings?.discountText ?? ''}
+                    onChange={(e) => updateSectionSettings('discountText', e.target.value)}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </DialogContent>
