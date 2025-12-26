@@ -10,7 +10,6 @@ import FirstTimePopup from '@/components/popups/FirstTimePopup';
 import LuxuryHeroSection from '@/components/home/LuxuryHeroSection';
 import TrustStrip from '@/components/home/TrustStrip';
 import CountdownBanner from '@/components/home/CountdownBanner';
-import FestivalBanner from '@/components/home/FestivalBanner';
 
 // Lazy loaded sections for performance
 const CategoriesCarousel = lazy(() => import('@/components/home/CategoriesCarousel'));
@@ -52,8 +51,6 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   hero: LuxuryHeroSection,
   countdown_banner: CountdownBanner,
   countdown: CountdownBanner,
-  festival_banner: FestivalBanner,
-  festival: FestivalBanner,
   trust_strip: TrustStrip,
   
   // Categories and products
@@ -112,7 +109,7 @@ const Index = memo(() => {
 
   // Default section order when DB not loaded yet
   const defaultOrder = [
-    'video_hero', 'countdown_banner', 'festival_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
+    'video_hero', 'countdown_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
     'gender_shop', 'wedding_collection', 'parallax_banner', 'new_arrivals',
     'trending_slider', 'editorial_section', 'video_showcase',
     'featured_categories', 'brand_story', 'collections_story',
@@ -151,7 +148,7 @@ const Index = memo(() => {
             if (!Component) return null;
 
             // Critical sections don't need Suspense wrapper
-            if (['video_hero', 'hero', 'countdown_banner', 'countdown', 'festival_banner', 'festival', 'trust_strip'].includes(sectionKey)) {
+            if (['video_hero', 'hero', 'countdown_banner', 'countdown', 'trust_strip'].includes(sectionKey)) {
               return <Component key={sectionKey} />;
             }
 
