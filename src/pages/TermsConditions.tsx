@@ -1,9 +1,45 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const TermsConditions = () => {
+  const termsSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Terms & Conditions - NOIR925",
+    "description": "Read the terms and conditions for using NOIR925's website and purchasing silver jewellery.",
+    "url": "https://noir925.com/terms-conditions",
+    "mainEntity": {
+      "@type": "Article",
+      "@id": "https://noir925.com/terms-conditions#article",
+      "headline": "NOIR925 Terms and Conditions",
+      "datePublished": "2024-01-01",
+      "dateModified": "2024-12-01",
+      "author": {
+        "@type": "Organization",
+        "name": "NOIR925"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "NOIR925",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://noir925.com/logo.png"
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="Terms & Conditions - NOIR925 Silver Jewellery"
+        description="Read NOIR925's terms and conditions. Understand the rules governing your use of our website and purchase of 925 sterling silver jewellery."
+        keywords="NOIR925 terms conditions, terms of service, purchase agreement, silver jewellery terms India"
+        canonicalUrl="https://noir925.com/terms-conditions"
+        noIndex={false}
+        structuredData={termsSchema}
+      />
       <Header />
       
       <main className="container mx-auto px-4 py-8 md:py-16">

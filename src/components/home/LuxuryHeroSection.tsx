@@ -446,14 +446,14 @@ const LuxuryHeroSection = memo(() => {
         </div>
       </div>
 
-      {/* Mobile Category Pills */}
-      <div className="lg:hidden absolute bottom-20 left-0 right-0 px-4">
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+      {/* Mobile Category Pills - Hidden to prevent overlap */}
+      <div className="hidden sm:flex lg:hidden absolute bottom-24 left-0 right-0 px-4 z-10">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2 w-full justify-center">
           {sidebarCategories.slice(0, 4).map((item) => (
             <Link
               key={item.name}
               to={item.link}
-              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full bg-card/80 border border-border text-muted-foreground text-xs hover:bg-accent/20 hover:border-accent transition-all"
+              className="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 backdrop-blur-sm border border-border text-muted-foreground text-xs hover:bg-accent/20 hover:border-accent transition-all shadow-sm"
             >
               <span>{item.icon}</span>
               <span>{item.name}</span>
