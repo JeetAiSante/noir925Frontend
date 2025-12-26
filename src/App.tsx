@@ -33,6 +33,7 @@ const ShippingPolicy = lazy(() => import("./pages/ShippingPolicy"));
 const ReturnsPolicy = lazy(() => import("./pages/ReturnsPolicy"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const Gifting = lazy(() => import("./pages/Gifting"));
+const FestivalPage = lazy(() => import("./pages/FestivalPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages - lazy loaded
@@ -128,6 +129,8 @@ const App = memo(() => (
                   <Route path="/returns-policy" element={<ReturnsPolicy />} />
                   <Route path="/track-order" element={<TrackOrder />} />
                   <Route path="/gifting" element={<Gifting />} />
+                  <Route path="/festival" element={<FestivalPage />} />
+                  <Route path="/festival/:slug" element={<FestivalPage />} />
                   
                   {/* Admin Routes */}
                   <Route path="/admin-login" element={<AdminLogin />} />
