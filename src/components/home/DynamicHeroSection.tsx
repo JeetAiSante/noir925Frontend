@@ -15,6 +15,8 @@ interface Banner {
   link: string | null;
   position: string;
   is_active: boolean;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 const DynamicHeroSection = () => {
@@ -34,7 +36,34 @@ const DynamicHeroSection = () => {
         .order('sort_order', { ascending: true });
 
       if (!error && data && data.length > 0) {
-        setBanners(data);
+        // Filter by date scheduling
+        const now = new Date();
+        const validBanners = data.filter((banner: Banner) => {
+          const startOk = !banner.start_date || new Date(banner.start_date) <= now;
+          const endOk = !banner.end_date || new Date(banner.end_date) >= now;
+          return startOk && endOk;
+        });
+        
+        if (validBanners.length > 0) {
+          setBanners(validBanners);
+        } else {
+          // Fallback if no scheduled banners
+          setBanners([
+            {
+              id: '1',
+              title: 'Timeless Elegance',
+              subtitle: 'in Pure Silver',
+              description: 'Discover our curated collection of hallmarked 925 sterling silver jewellery.',
+              image_url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop',
+              button_text: 'Shop Collection',
+              link: '/shop',
+              position: 'hero',
+              is_active: true,
+              start_date: null,
+              end_date: null,
+            },
+          ]);
+        }
       } else {
         // Fallback banners
         setBanners([
@@ -42,23 +71,14 @@ const DynamicHeroSection = () => {
             id: '1',
             title: 'Timeless Elegance',
             subtitle: 'in Pure Silver',
-            description: 'Discover our curated collection of hallmarked 925 sterling silver jewellery, crafted for moments that matter.',
+            description: 'Discover our curated collection of hallmarked 925 sterling silver jewellery.',
             image_url: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop',
             button_text: 'Shop Collection',
             link: '/shop',
             position: 'hero',
             is_active: true,
-          },
-          {
-            id: '2',
-            title: 'Bridal Heritage',
-            subtitle: 'Collection 2024',
-            description: 'Embrace tradition with contemporary grace. Our bridal pieces celebrate your journey of love.',
-            image_url: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=1920&h=1080&fit=crop',
-            button_text: 'Explore Bridal',
-            link: '/collections/bridal-heritage',
-            position: 'hero',
-            is_active: true,
+            start_date: null,
+            end_date: null,
           },
         ]);
       }

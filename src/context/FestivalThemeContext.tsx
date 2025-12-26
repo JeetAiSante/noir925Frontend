@@ -30,22 +30,29 @@ export const FestivalThemeProvider = ({ children }: { children: ReactNode }) => 
   useEffect(() => {
     const fetchActiveTheme = async () => {
       try {
-        const now = new Date().toISOString();
-
+        // Fetch all active themes and filter by date in code for reliability
         const { data } = await supabase
           .from('festival_themes')
           .select('*')
           .eq('is_active', true)
-          .or(`start_date.is.null,start_date.lte.${now}`)
-          .or(`end_date.is.null,end_date.gte.${now}`)
-          .order('updated_at', { ascending: false })
-          .limit(1);
+          .order('updated_at', { ascending: false });
 
-        const theme = data?.[0] ?? null;
-        if (theme) {
-          setActiveTheme(theme);
-          applyThemeColors(theme);
+        if (data && data.length > 0) {
+          const now = new Date();
+          // Find first theme that matches date range (or has no dates set)
+          const validTheme = data.find(theme => {
+            const startOk = !theme.start_date || new Date(theme.start_date) <= now;
+            const endOk = !theme.end_date || new Date(theme.end_date) >= now;
+            return startOk && endOk;
+          });
+
+          if (validTheme) {
+            setActiveTheme(validTheme);
+            applyThemeColors(validTheme);
+          }
         }
+      } catch (error) {
+        console.error('Failed to fetch festival theme:', error);
       } finally {
         setIsLoading(false);
       }

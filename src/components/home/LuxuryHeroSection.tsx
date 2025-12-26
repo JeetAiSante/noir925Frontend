@@ -5,6 +5,7 @@ import { ChevronDown, Sparkles, Award, Star, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useCategories, useProducts } from '@/hooks/useProducts';
+import OptimizedImage from '@/components/ui/optimized-image';
 
 interface Banner {
   id: string;
@@ -49,26 +50,35 @@ const LuxuryHeroSection = memo(() => {
   const { data: categories = [] } = useCategories();
   const { data: bestsellers = [] } = useProducts({ bestseller: true, limit: 6 });
 
-  // Fetch banners from database
+  // Fetch banners from database with date scheduling
   useEffect(() => {
     const fetchBanners = async () => {
       const { data, error } = await supabase
         .from('banners')
-        .select('id, title, subtitle, description, image_url, video_url, is_video, link, button_text')
+        .select('id, title, subtitle, description, image_url, video_url, is_video, link, button_text, start_date, end_date')
         .eq('position', 'hero')
         .eq('is_active', true)
-        .order('sort_order', { ascending: true })
-        .limit(1);
+        .order('sort_order', { ascending: true });
 
       if (!error && data?.length) {
-        setBanners(data);
+        // Filter by date scheduling
+        const now = new Date();
+        const validBanners = data.filter(banner => {
+          const startOk = !banner.start_date || new Date(banner.start_date) <= now;
+          const endOk = !banner.end_date || new Date(banner.end_date) >= now;
+          return startOk && endOk;
+        });
+        
+        if (validBanners.length > 0) {
+          setBanners(validBanners.slice(0, 3)); // Show up to 3 hero banners
+        }
       }
     };
 
     fetchBanners();
 
     const channel = supabase
-      .channel('hero-banners')
+      .channel('hero-banners-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, fetchBanners)
       .subscribe();
 

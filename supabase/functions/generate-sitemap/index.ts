@@ -47,6 +47,10 @@ Deno.serve(async (req) => {
     <loc>${SITE_URL}/api/sitemap?type=collections</loc>
     <lastmod>${today}</lastmod>
   </sitemap>
+  <sitemap>
+    <loc>${SITE_URL}/api/sitemap?type=festivals</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
 </sitemapindex>`
 
       return new Response(sitemapIndex, {
@@ -269,6 +273,49 @@ Deno.serve(async (req) => {
             sitemap += `    <image:image>
       <image:loc>${collection.image_url}</image:loc>
       <image:title>${collection.name} Collection - NOIR925</image:title>
+    </image:image>
+`
+          }
+          sitemap += `  </url>
+`
+        }
+      }
+      sitemap += `</urlset>`
+
+      return new Response(sitemap, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/xml',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      })
+    }
+
+    if (type === 'festivals') {
+      // Festival themes sitemap
+      const { data: festivals, error } = await supabase
+        .from('festival_themes')
+        .select('slug, updated_at, banner_image, name')
+
+      if (error) throw error
+
+      let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+`
+      if (festivals) {
+        for (const festival of festivals) {
+          const lastmod = festival.updated_at ? festival.updated_at.split('T')[0] : today
+          sitemap += `  <url>
+    <loc>${SITE_URL}/festival/${festival.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+`
+          if (festival.banner_image) {
+            sitemap += `    <image:image>
+      <image:loc>${festival.banner_image}</image:loc>
+      <image:title>${festival.name} Sale - NOIR925</image:title>
     </image:image>
 `
           }
