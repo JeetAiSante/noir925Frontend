@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { MapPin, ChevronDown, Navigation, Search } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { MapPin, ChevronDown, Navigation, Search, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const cities = [
   'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata', 
@@ -22,23 +23,60 @@ const LocationDropdown = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('noir925_location');
-    if (saved) setLocation(saved);
+    if (saved) {
+      setLocation(saved);
+    } else {
+      // Check if geolocation permission was previously granted
+      checkGeolocationPermission();
+    }
   }, []);
+
+  const checkGeolocationPermission = async () => {
+    if (!navigator.permissions) return;
+    
+    try {
+      const result = await navigator.permissions.query({ name: 'geolocation' });
+      setHasPermission(result.state === 'granted');
+      
+      // If permission was already granted, auto-detect location
+      if (result.state === 'granted' && !localStorage.getItem('noir925_location')) {
+        detectLocation();
+      }
+      
+      // Listen for permission changes
+      result.onchange = () => {
+        setHasPermission(result.state === 'granted');
+        if (result.state === 'granted' && !location) {
+          detectLocation();
+        }
+      };
+    } catch (error) {
+      console.error('Permission check failed:', error);
+    }
+  };
 
   const filteredCities = cities.filter(city => 
     city.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const detectLocation = async () => {
+  const detectLocation = useCallback(async () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+
     setIsDetecting(true);
+    
     try {
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { 
-          timeout: 10000,
-          enableHighAccuracy: true 
+          timeout: 15000,
+          enableHighAccuracy: true,
+          maximumAge: 300000 // 5 minutes cache
         });
       });
       
@@ -60,23 +98,40 @@ const LocationDropdown = () => {
         
         if (matchedCity) {
           selectCity(matchedCity);
+          toast.success(`Location detected: ${matchedCity}`);
         } else if (detectedCity) {
           // Add detected city to selection even if not in predefined list
           selectCity(detectedCity);
+          toast.success(`Location detected: ${detectedCity}`);
         } else {
           // Fallback to state/region
-          selectCity(data.principalSubdivision || 'Mumbai');
+          const fallbackCity = data.principalSubdivision || 'Mumbai';
+          selectCity(fallbackCity);
+          toast.success(`Location detected: ${fallbackCity}`);
         }
+        
+        setHasPermission(true);
       } else {
         throw new Error('Geocoding failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Location detection failed:', error);
-      // Show error toast or fallback
+      
+      if (error.code === 1) {
+        // Permission denied
+        setHasPermission(false);
+        toast.error('Location access denied. Please select your city manually.');
+      } else if (error.code === 2) {
+        toast.error('Unable to detect location. Please try again.');
+      } else if (error.code === 3) {
+        toast.error('Location detection timed out. Please try again.');
+      } else {
+        toast.error('Failed to detect location. Please select manually.');
+      }
     } finally {
       setIsDetecting(false);
     }
-  };
+  }, [location]);
 
   const selectCity = (city: string) => {
     setLocation(city);
@@ -96,12 +151,13 @@ const LocationDropdown = () => {
             "hover:bg-primary/5 transition-all duration-300",
             "border border-transparent hover:border-primary/20 rounded-full"
           )}
+          aria-label={location ? `Current location: ${location}` : 'Select your city'}
         >
-          <MapPin className="w-3.5 h-3.5 text-primary" />
+          <MapPin className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
           <span className="hidden sm:inline max-w-[80px] truncate">
             {location || 'Select City'}
           </span>
-          <ChevronDown className="w-3 h-3 opacity-50" />
+          <ChevronDown className="w-3 h-3 opacity-50" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
@@ -116,25 +172,44 @@ const LocationDropdown = () => {
           onClick={detectLocation}
           disabled={isDetecting}
         >
-          <Navigation className={cn("w-4 h-4", isDetecting && "animate-spin")} />
+          {isDetecting ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Navigation className="w-4 h-4" />
+          )}
           {isDetecting ? 'Detecting...' : 'Detect My Location'}
         </Button>
 
+        {/* GPS Status Indicator */}
+        {hasPermission !== null && (
+          <p className={cn(
+            "text-xs mb-2 flex items-center gap-1",
+            hasPermission ? "text-green-600" : "text-muted-foreground"
+          )}>
+            <span className={cn(
+              "w-2 h-2 rounded-full",
+              hasPermission ? "bg-green-500" : "bg-muted-foreground"
+            )} />
+            {hasPermission ? 'GPS enabled' : 'GPS not enabled'}
+          </p>
+        )}
+
         {/* Search */}
         <div className="relative mb-2">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
           <Input
             placeholder="Search city..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8 h-8 text-sm bg-muted/50 border-0"
+            aria-label="Search for a city"
           />
         </div>
 
         <DropdownMenuSeparator />
 
         {/* Cities List */}
-        <div className="max-h-48 overflow-y-auto space-y-0.5">
+        <div className="max-h-48 overflow-y-auto space-y-0.5" role="listbox" aria-label="Available cities">
           {filteredCities.map((city) => (
             <DropdownMenuItem
               key={city}
@@ -143,8 +218,10 @@ const LocationDropdown = () => {
                 "cursor-pointer rounded-lg",
                 location === city && "bg-primary/10 text-primary"
               )}
+              role="option"
+              aria-selected={location === city}
             >
-              <MapPin className="w-3.5 h-3.5 mr-2 opacity-50" />
+              <MapPin className="w-3.5 h-3.5 mr-2 opacity-50" aria-hidden="true" />
               {city}
             </DropdownMenuItem>
           ))}

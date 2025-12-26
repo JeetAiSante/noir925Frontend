@@ -54,6 +54,7 @@ const AdminInventory = lazy(() => import("./pages/admin/AdminInventory"));
 const AdminLoyalty = lazy(() => import("./pages/admin/AdminLoyalty"));
 const AdminFeatureToggles = lazy(() => import("./pages/admin/AdminFeatureToggles"));
 const AdminGiftCards = lazy(() => import("./pages/admin/AdminGiftCards"));
+const AdminTrustBadges = lazy(() => import("./pages/admin/AdminTrustBadges"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 // Performance-optimized cursor - lazy load as non-critical
@@ -143,6 +144,7 @@ const App = memo(() => (
                     <Route path="loyalty" element={<AdminLoyalty />} />
                     <Route path="feature-toggles" element={<AdminFeatureToggles />} />
                     <Route path="gift-cards" element={<AdminGiftCards />} />
+                    <Route path="trust-badges" element={<AdminTrustBadges />} />
                     <Route path="messages" element={<AdminMessages />} />
                     <Route path="customers" element={<AdminCustomers />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
