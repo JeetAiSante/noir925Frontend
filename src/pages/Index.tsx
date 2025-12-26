@@ -26,7 +26,6 @@ const RandomReviewsCarousel = lazy(() => import('@/components/home/RandomReviews
 const LuxuryEditorialSection = lazy(() => import('@/components/home/LuxuryEditorialSection'));
 const VideoShowcase = lazy(() => import('@/components/home/VideoShowcase'));
 const FeaturedCategories = lazy(() => import('@/components/home/FeaturedCategories'));
-const PromoBanners = lazy(() => import('@/components/home/PromoBanners'));
 const BrandStorySection = lazy(() => import('@/components/home/BrandStorySection'));
 const CollectionsStory = lazy(() => import('@/components/home/CollectionsStory'));
 const ShopByOccasion = lazy(() => import('@/components/home/ShopByOccasion'));
@@ -71,8 +70,6 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   // Banners
   parallax_banner: ParallaxBanner,
   parallax: ParallaxBanner,
-  promo_banners: PromoBanners,
-  promo: PromoBanners,
   
   // Product sections
   new_arrivals: NewArrivalsGrid,
@@ -115,10 +112,10 @@ const Index = memo(() => {
 
   // Default section order when DB not loaded yet
   const defaultOrder = [
-    'video_hero', 'countdown_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
+    'video_hero', 'countdown_banner', 'festival_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
     'gender_shop', 'wedding_collection', 'parallax_banner', 'new_arrivals',
     'trending_slider', 'editorial_section', 'video_showcase',
-    'featured_categories', 'promo_banners', 'brand_story', 'collections_story',
+    'featured_categories', 'brand_story', 'collections_story',
     'shop_by_occasion', 'silver_care', 'brand_partners', 'reviews', 'instagram_feed', 'newsletter',
     'recently_viewed', 'final_cta'
   ];
