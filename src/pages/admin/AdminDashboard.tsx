@@ -24,7 +24,8 @@ import {
   Star,
   ToggleLeft,
   CreditCard,
-  Shield
+  Shield,
+  LayoutGrid
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ const navItems = [
   { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
   { icon: Warehouse, label: 'Inventory', path: '/admin/inventory' },
   { icon: Tag, label: 'Sales & Offers', path: '/admin/sales' },
+  { icon: LayoutGrid, label: 'Homepage Sections', path: '/admin/homepage-sections' },
   { icon: Image, label: 'Banners', path: '/admin/banners' },
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
