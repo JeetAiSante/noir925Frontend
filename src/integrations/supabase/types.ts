@@ -258,35 +258,50 @@ export type Database = {
       }
       countdown_timers: {
         Row: {
+          accent_color: string | null
+          bg_color: string | null
+          button_text: string | null
           created_at: string
           end_time: string
+          icon_type: string | null
           id: string
           is_active: boolean
           link: string | null
           position: string
           subtitle: string | null
+          text_color: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          accent_color?: string | null
+          bg_color?: string | null
+          button_text?: string | null
           created_at?: string
           end_time: string
+          icon_type?: string | null
           id?: string
           is_active?: boolean
           link?: string | null
           position?: string
           subtitle?: string | null
+          text_color?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          accent_color?: string | null
+          bg_color?: string | null
+          button_text?: string | null
           created_at?: string
           end_time?: string
+          icon_type?: string | null
           id?: string
           is_active?: boolean
           link?: string | null
           position?: string
           subtitle?: string | null
+          text_color?: string | null
           title?: string
           updated_at?: string
         }
