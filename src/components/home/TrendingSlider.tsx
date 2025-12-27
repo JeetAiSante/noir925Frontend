@@ -1,209 +1,197 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Flame, Star } from 'lucide-react';
 import { products, formatPrice } from '@/data/products';
 
 const TrendingSlider = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isAutoScrolling, setIsAutoScrolling] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const animationRef = useRef<number>();
 
-  const trendingProducts = products.filter((p) => p.isTrending || p.isBestseller).slice(0, 8);
+  const trendingProducts = products.filter((p) => p.isTrending || p.isBestseller).slice(0, 12);
+  
+  // Double the products for seamless infinite scroll
+  const displayProducts = [...trendingProducts, ...trendingProducts];
 
-  // Auto-scroll functionality
-  useEffect(() => {
-    if (!isAutoScrolling) return;
-    
-    const interval = setInterval(() => {
-      if (scrollRef.current) {
-        const container = scrollRef.current;
-        const cardWidth = 320;
-        const maxScroll = container.scrollWidth - container.clientWidth;
-        
-        if (container.scrollLeft >= maxScroll - 10) {
-          container.scrollTo({ left: 0, behavior: 'smooth' });
-          setActiveIndex(0);
-        } else {
-          container.scrollBy({ left: cardWidth, behavior: 'smooth' });
-          setActiveIndex((prev) => (prev + 1) % trendingProducts.length);
-        }
-      }
-    }, 3500);
-    
-    return () => clearInterval(interval);
-  }, [isAutoScrolling, trendingProducts.length]);
-
-  // Update active index on scroll
+  // Continuous scroll animation
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
 
-    const handleScroll = () => {
-      const scrollPosition = container.scrollLeft;
-      const cardWidth = 320;
-      const newIndex = Math.round(scrollPosition / cardWidth);
-      setActiveIndex(Math.min(newIndex, trendingProducts.length - 1));
+    let scrollPosition = 0;
+    const scrollSpeed = 0.5; // pixels per frame
+
+    const animate = () => {
+      if (!isPaused && container) {
+        scrollPosition += scrollSpeed;
+        
+        // Reset when we've scrolled through the first set
+        const halfWidth = container.scrollWidth / 2;
+        if (scrollPosition >= halfWidth) {
+          scrollPosition = 0;
+        }
+        
+        container.scrollLeft = scrollPosition;
+      }
+      animationRef.current = requestAnimationFrame(animate);
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [trendingProducts.length]);
+    animationRef.current = requestAnimationFrame(animate);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      setIsAutoScrolling(false);
-      const scrollAmount = 320;
-      scrollRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-      // Resume auto-scroll after 5 seconds
-      setTimeout(() => setIsAutoScrolling(true), 5000);
-    }
-  };
-
-  const scrollToIndex = (index: number) => {
-    if (scrollRef.current) {
-      setIsAutoScrolling(false);
-      const cardWidth = 320;
-      scrollRef.current.scrollTo({
-        left: index * cardWidth,
-        behavior: 'smooth',
-      });
-      setActiveIndex(index);
-      setTimeout(() => setIsAutoScrolling(true), 5000);
-    }
-  };
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPaused]);
 
   return (
-    <section className="py-12 md:py-16 bg-foreground text-background relative overflow-hidden">
-      {/* Shimmer background effect */}
+    <section className="py-12 md:py-20 bg-gradient-to-b from-foreground via-foreground to-foreground/95 relative overflow-hidden">
+      {/* Animated Background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-64 h-64 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 rounded-full bg-accent/10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-secondary/5 blur-3xl" />
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        <div className="absolute top-1/4 left-10 w-32 h-32 rounded-full bg-accent/10 blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
       <div className="container mx-auto px-4 relative">
         {/* Header */}
-        <div className="flex items-end justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Flame className="w-4 h-4 text-accent animate-pulse" />
-              <p className="font-accent text-xs text-accent tracking-widest uppercase">
-                What's Hot
-              </p>
-            </div>
-            <h2 className="font-display text-2xl md:text-4xl text-background">
-              Trending Now
-            </h2>
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
+            <Flame className="w-4 h-4 text-accent animate-pulse" />
+            <span className="font-accent text-xs text-accent tracking-widest uppercase">
+              What's Hot Right Now
+            </span>
+            <Flame className="w-4 h-4 text-accent animate-pulse" />
           </div>
-          <div className="hidden md:flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => scroll('left')}
-              className="rounded-full text-background hover:bg-background/10 w-9 h-9"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => scroll('right')}
-              className="rounded-full text-background hover:bg-background/10 w-9 h-9"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </div>
+          <h2 className="font-display text-3xl md:text-5xl text-background mb-3">
+            Trending Now
+          </h2>
+          <p className="text-background/60 max-w-md mx-auto text-sm md:text-base">
+            Discover our most loved pieces that everyone's talking about
+          </p>
         </div>
 
-        {/* Slider */}
+        {/* Infinite Scroll Container */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory"
-          onMouseEnter={() => setIsAutoScrolling(false)}
-          onMouseLeave={() => setIsAutoScrolling(true)}
+          className="flex gap-4 md:gap-6 overflow-x-hidden"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
         >
-          {trendingProducts.map((product, index) => (
+          {displayProducts.map((product, index) => (
             <Link
-              key={product.id}
+              key={`${product.id}-${index}`}
               to={`/product/${product.id}`}
-              className="group flex-shrink-0 w-[280px] md:w-[300px] snap-start transition-all duration-500"
+              className="group flex-shrink-0 w-[200px] sm:w-[240px] md:w-[280px]"
             >
-              <div className={`relative overflow-hidden rounded-xl bg-background/10 backdrop-blur-sm border border-background/20 p-3 transition-all duration-500 ${
-                index === activeIndex ? 'scale-[1.02] shadow-xl shadow-accent/20' : 'hover:scale-[1.01]'
-              }`}>
-                {/* Badge */}
-                {product.discount && (
-                  <div className="absolute top-4 left-4 z-10 px-2 py-0.5 bg-accent text-accent-foreground text-xs font-semibold rounded-full">
-                    -{product.discount}%
-                  </div>
-                )}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-background/10 to-background/5 backdrop-blur-sm border border-background/10 p-3 transition-all duration-500 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10">
+                {/* Badges */}
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
+                  {product.discount && (
+                    <span className="px-2 py-0.5 bg-accent text-accent-foreground text-[10px] font-bold rounded-full">
+                      -{product.discount}%
+                    </span>
+                  )}
+                  {product.isNew && (
+                    <span className="px-2 py-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full">
+                      NEW
+                    </span>
+                  )}
+                </div>
                 
                 {/* Image */}
-                <div className="relative overflow-hidden rounded-lg aspect-[4/5] mb-3">
+                <div className="relative overflow-hidden rounded-xl aspect-square mb-3">
                   <img
                     src={product.image}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     loading="lazy"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
-                  {/* Shimmer overlay on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-background/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* Sparkle effects */}
-                  <div className="absolute top-1/4 right-1/4 w-1.5 h-1.5 rounded-full bg-background/80 animate-ping" style={{ animationDuration: '2s' }} />
-                  <div className="absolute bottom-1/3 left-1/3 w-1 h-1 rounded-full bg-accent/80 animate-ping" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
+                  {/* Quick View Overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <span className="px-4 py-2 bg-background/90 backdrop-blur-sm rounded-full text-foreground text-xs font-medium transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                      Quick View
+                    </span>
+                  </div>
                 </div>
 
                 {/* Info */}
-                <div className="space-y-1.5">
-                  <p className="font-body text-[10px] text-background/60 uppercase tracking-wider">
+                <div className="space-y-2">
+                  <p className="font-body text-[9px] text-background/50 uppercase tracking-widest">
                     {product.category}
                   </p>
-                  <h3 className="font-display text-lg text-background group-hover:text-accent transition-colors line-clamp-1">
+                  <h3 className="font-display text-sm md:text-base text-background group-hover:text-accent transition-colors line-clamp-1">
                     {product.name}
                   </h3>
-                  <div className="flex items-center justify-between">
+                  
+                  {/* Rating */}
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${
+                          i < Math.floor(product.rating)
+                            ? 'fill-accent text-accent'
+                            : 'text-background/20'
+                        }`}
+                      />
+                    ))}
+                    <span className="text-[10px] text-background/40 ml-1">
+                      ({product.reviews})
+                    </span>
+                  </div>
+
+                  {/* Price */}
+                  <div className="flex items-center gap-2">
                     <span className="font-display text-base font-semibold text-background">
                       {formatPrice(product.price)}
                     </span>
                     {product.originalPrice && (
-                      <span className="font-body text-sm text-background/50 line-through">
+                      <span className="font-body text-xs text-background/40 line-through">
                         {formatPrice(product.originalPrice)}
                       </span>
                     )}
                   </div>
                 </div>
-
-                {/* Glow effect on active */}
-                {index === activeIndex && (
-                  <div className="absolute inset-0 rounded-xl opacity-30 pointer-events-none border-2 border-accent animate-pulse" />
-                )}
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Progress indicators */}
-        <div className="flex justify-center gap-1.5 mt-6">
-          {trendingProducts.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => scrollToIndex(index)}
-              className={`h-1 rounded-full transition-all duration-500 ${
-                index === activeIndex
-                  ? 'w-8 bg-accent'
-                  : 'w-2 bg-background/30 hover:bg-background/50'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+        {/* Scroll Indicators */}
+        <div className="flex justify-center gap-2 mt-8">
+          <div className="h-1 w-20 rounded-full bg-background/20 overflow-hidden">
+            <div className="h-full w-full bg-accent rounded-full animate-scroll-indicator" />
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div className="text-center mt-8">
+          <Link 
+            to="/shop?sort=trending" 
+            className="inline-flex items-center gap-2 px-6 py-3 bg-accent/10 hover:bg-accent text-accent hover:text-accent-foreground rounded-full font-medium text-sm transition-all duration-300 border border-accent/30"
+          >
+            View All Trending
+            <Flame className="w-4 h-4" />
+          </Link>
         </div>
       </div>
+
+      <style>{`
+        @keyframes scroll-indicator {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-scroll-indicator {
+          animation: scroll-indicator 2s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   );
 };
