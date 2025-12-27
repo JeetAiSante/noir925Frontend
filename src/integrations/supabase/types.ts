@@ -405,12 +405,14 @@ export type Database = {
           created_at: string
           discount_percent: number | null
           end_date: string | null
+          floating_banner_text: string | null
           id: string
           is_active: boolean
           logo_overlay: string | null
           name: string
           primary_color: string
           secondary_color: string
+          show_floating_banner: boolean | null
           slug: string
           special_offer: string | null
           start_date: string | null
@@ -423,12 +425,14 @@ export type Database = {
           created_at?: string
           discount_percent?: number | null
           end_date?: string | null
+          floating_banner_text?: string | null
           id?: string
           is_active?: boolean
           logo_overlay?: string | null
           name: string
           primary_color?: string
           secondary_color?: string
+          show_floating_banner?: boolean | null
           slug: string
           special_offer?: string | null
           start_date?: string | null
@@ -441,12 +445,14 @@ export type Database = {
           created_at?: string
           discount_percent?: number | null
           end_date?: string | null
+          floating_banner_text?: string | null
           id?: string
           is_active?: boolean
           logo_overlay?: string | null
           name?: string
           primary_color?: string
           secondary_color?: string
+          show_floating_banner?: boolean | null
           slug?: string
           special_offer?: string | null
           start_date?: string | null
@@ -922,6 +928,8 @@ export type Database = {
           description: string | null
           dimensions: string | null
           discount_percent: number | null
+          festival_id: string | null
+          gender: string | null
           id: string
           images: Json
           is_active: boolean
@@ -951,6 +959,8 @@ export type Database = {
           description?: string | null
           dimensions?: string | null
           discount_percent?: number | null
+          festival_id?: string | null
+          gender?: string | null
           id?: string
           images?: Json
           is_active?: boolean
@@ -980,6 +990,8 @@ export type Database = {
           description?: string | null
           dimensions?: string | null
           discount_percent?: number | null
+          festival_id?: string | null
+          gender?: string | null
           id?: string
           images?: Json
           is_active?: boolean
@@ -1011,6 +1023,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "products_festival_id_fkey"
+            columns: ["festival_id"]
+            isOneToOne: false
+            referencedRelation: "festival_themes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -1040,6 +1059,51 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      site_contact: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          facebook_url: string | null
+          gst_number: string | null
+          id: string
+          instagram_url: string | null
+          phone: string | null
+          twitter_url: string | null
+          updated_at: string
+          whatsapp: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          facebook_url?: string | null
+          gst_number?: string | null
+          id?: string
+          instagram_url?: string | null
+          phone?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          facebook_url?: string | null
+          gst_number?: string | null
+          id?: string
+          instagram_url?: string | null
+          phone?: string | null
+          twitter_url?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -1204,6 +1268,36 @@ export type Database = {
           is_enabled?: boolean
           show_on_pages?: string[] | null
           spins_per_day?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tax_settings: {
+        Row: {
+          created_at: string
+          id: string
+          is_enabled: boolean | null
+          is_inclusive: boolean | null
+          tax_name: string
+          tax_percent: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          is_inclusive?: boolean | null
+          tax_name?: string
+          tax_percent?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_enabled?: boolean | null
+          is_inclusive?: boolean | null
+          tax_name?: string
+          tax_percent?: number
           updated_at?: string
         }
         Relationships: []

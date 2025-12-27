@@ -5,6 +5,7 @@ import { useHomepageSections } from '@/hooks/useHomepageSections';
 import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/ProductSchema';
 import { SEOHead, LocalBusinessSchema } from '@/components/seo/SEOHead';
 import FirstTimePopup from '@/components/popups/FirstTimePopup';
+import FloatingFestivalBanner from '@/components/shop/FloatingFestivalBanner';
 
 // Eagerly loaded critical sections
 import LuxuryHeroSection from '@/components/home/LuxuryHeroSection';
@@ -165,6 +166,7 @@ const Index = memo(() => {
         </main>
         
         <Footer />
+        <FloatingFestivalBanner />
       </div>
     </FirstTimePopup>
   );

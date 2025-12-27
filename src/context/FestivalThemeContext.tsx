@@ -16,6 +16,8 @@ interface FestivalTheme {
   start_date: string | null;
   end_date: string | null;
   is_active: boolean;
+  show_floating_banner?: boolean;
+  floating_banner_text?: string | null;
 }
 
 interface FestivalThemeContextType {

@@ -25,6 +25,8 @@ interface FestivalTheme {
   start_date: string | null;
   end_date: string | null;
   is_active: boolean;
+  show_floating_banner?: boolean;
+  floating_banner_text?: string | null;
 }
 
 const AdminFestivalThemes = () => {
@@ -43,6 +45,8 @@ const AdminFestivalThemes = () => {
     discount_percent: 0,
     start_date: '',
     end_date: '',
+    show_floating_banner: true,
+    floating_banner_text: '',
   });
 
   const { data: themes, isLoading } = useQuery({
@@ -66,6 +70,8 @@ const AdminFestivalThemes = () => {
         special_offer: data.special_offer || null,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
+        show_floating_banner: data.show_floating_banner,
+        floating_banner_text: data.floating_banner_text || null,
       });
       if (error) throw error;
     },
@@ -133,6 +139,8 @@ const AdminFestivalThemes = () => {
       discount_percent: 0,
       start_date: '',
       end_date: '',
+      show_floating_banner: true,
+      floating_banner_text: '',
     });
   };
 
@@ -150,6 +158,8 @@ const AdminFestivalThemes = () => {
       discount_percent: theme.discount_percent || 0,
       start_date: theme.start_date?.split('T')[0] || '',
       end_date: theme.end_date?.split('T')[0] || '',
+      show_floating_banner: theme.show_floating_banner ?? true,
+      floating_banner_text: theme.floating_banner_text || '',
     });
     setDialogOpen(true);
   };
@@ -338,6 +348,27 @@ const AdminFestivalThemes = () => {
                     type="date"
                     value={formData.end_date}
                     onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Floating Banner Settings */}
+              <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="show_floating_banner">Show Floating Banner</Label>
+                  <Switch
+                    id="show_floating_banner"
+                    checked={formData.show_floating_banner}
+                    onCheckedChange={(checked) => setFormData({ ...formData, show_floating_banner: checked })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="floating_banner_text">Floating Banner Text</Label>
+                  <Input
+                    id="floating_banner_text"
+                    value={formData.floating_banner_text}
+                    onChange={(e) => setFormData({ ...formData, floating_banner_text: e.target.value })}
+                    placeholder="Limited Time: Extra 20% OFF!"
                   />
                 </div>
               </div>

@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users, Mail, Phone, Calendar, Loader2 } from 'lucide-react';
+import { Users, Mail, Phone, Calendar, Loader2, Shield } from 'lucide-react';
 import { format } from 'date-fns';
+import { maskEmail, maskPhone, getInitials, formatCurrency } from '@/utils/secureData';
 
 const AdminCustomers = () => {
   const { data: profiles, isLoading } = useQuery({
@@ -54,6 +55,10 @@ const AdminCustomers = () => {
           <h1 className="font-display text-2xl md:text-3xl">Customers</h1>
           <p className="text-muted-foreground mt-1">Manage your customer base</p>
         </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 text-green-600 rounded-full text-xs">
+          <Shield className="w-3 h-3" />
+          Data Protected
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -72,7 +77,10 @@ const AdminCustomers = () => {
       {/* Customers Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Customers</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            All Customers
+            <span className="text-xs font-normal text-muted-foreground">(PII masked for security)</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -95,31 +103,31 @@ const AdminCustomers = () => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={profile.avatar_url || ''} />
-                          <AvatarFallback>
-                            {profile.full_name?.charAt(0) || profile.email?.charAt(0) || '?'}
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {getInitials(profile.full_name)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="font-medium">{profile.full_name || 'Unknown'}</span>
+                        <span className="font-medium">{profile.full_name || 'Customer'}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-3 h-3 text-muted-foreground" />
-                        {profile.email || 'N/A'}
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Mail className="w-3 h-3" />
+                        <span className="font-mono text-xs">{maskEmail(profile.email)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3 text-muted-foreground" />
-                        {profile.phone || 'N/A'}
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Phone className="w-3 h-3" />
+                        <span className="font-mono text-xs">{maskPhone(profile.phone)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{stats.orderCount} orders</Badge>
                     </TableCell>
-                    <TableCell>₹{stats.totalSpent.toLocaleString('en-IN')}</TableCell>
+                    <TableCell className="font-medium">{formatCurrency(stats.totalSpent)}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <div className="flex items-center gap-2 text-muted-foreground text-xs">
                         <Calendar className="w-3 h-3" />
                         {profile.created_at ? format(new Date(profile.created_at), 'MMM d, yyyy') : 'N/A'}
                       </div>
