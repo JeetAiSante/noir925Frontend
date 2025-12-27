@@ -4,7 +4,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
-import { formatPrice } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+  const { formatPrice } = useCurrency();
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [isValidating, setIsValidating] = useState(false);

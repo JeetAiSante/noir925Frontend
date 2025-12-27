@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { formatPrice } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -58,6 +58,7 @@ const statusConfig: Record<string, { icon: any; color: string; label: string }> 
 
 const OrderHistory = () => {
   const { user } = useAuth();
+  const { formatPrice } = useCurrency();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(null);

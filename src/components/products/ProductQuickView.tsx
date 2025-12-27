@@ -3,7 +3,8 @@ import { Heart, ShoppingBag, Minus, Plus, ChevronLeft, ChevronRight, Maximize2, 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Product, formatPrice } from '@/data/products';
+import { Product } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import { useCart } from '@/context/CartContext';
 import { Link } from 'react-router-dom';
 import ProductImageZoom from './ProductImageZoom';
@@ -22,6 +23,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
   const [showZoom, setShowZoom] = useState(false);
   const [show360, setShow360] = useState(false);
   const { addToCart, addToWishlist, isInWishlist } = useCart();
+  const { formatPrice } = useCurrency();
 
   const productImages = product?.images && product.images.length > 0 
     ? product.images 

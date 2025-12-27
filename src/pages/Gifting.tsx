@@ -11,7 +11,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from '@/components/products/ProductCard';
-import { formatPrice } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 
 const giftGuides = [
   {
@@ -76,6 +76,7 @@ const wrappingOptions = [
 ];
 
 const Gifting = () => {
+  const { formatPrice } = useCurrency();
   const [selectedWrapping, setSelectedWrapping] = useState('standard');
   const [giftMessage, setGiftMessage] = useState('');
   const [recipientName, setRecipientName] = useState('');

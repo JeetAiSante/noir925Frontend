@@ -4,10 +4,11 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
-import { formatPrice } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 
 const Wishlist = () => {
   const { wishlistItems, removeFromWishlist, moveToCart, wishlistCount } = useCart();
+  const { formatPrice } = useCurrency();
 
   if (wishlistItems.length === 0) {
     return (
