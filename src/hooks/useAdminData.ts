@@ -68,6 +68,7 @@ export interface DBProduct {
   tags: string[];
   meta_title: string | null;
   meta_description: string | null;
+  hover_image_index: number | null;
 }
 
 // Product mutation hooks

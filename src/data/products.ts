@@ -4,6 +4,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  hoverImage?: string;
   images?: string[];
   category: string;
   subcategory?: string;
