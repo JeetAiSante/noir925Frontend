@@ -35,6 +35,7 @@ const productSchema = z.object({
   is_trending: z.boolean(),
   meta_title: z.string().optional(),
   meta_description: z.string().optional(),
+  hover_image_index: z.number().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -74,6 +75,7 @@ const ProductForm = ({ isOpen, onClose, onSubmit, product, isLoading }: ProductF
       is_trending: false,
       meta_title: '',
       meta_description: '',
+      hover_image_index: 1,
     }
   });
 
@@ -102,6 +104,7 @@ const ProductForm = ({ isOpen, onClose, onSubmit, product, isLoading }: ProductF
         is_trending: product.is_trending,
         meta_title: product.meta_title || '',
         meta_description: product.meta_description || '',
+        hover_image_index: (product as any).hover_image_index || 1,
       });
       setImages(Array.isArray(product.images) ? product.images as string[] : []);
     } else {
@@ -131,7 +134,8 @@ const ProductForm = ({ isOpen, onClose, onSubmit, product, isLoading }: ProductF
       original_price: data.original_price || null,
       discount_percent: data.discount_percent || null,
       category_id: data.category_id || null,
-    });
+      hover_image_index: data.hover_image_index || 1,
+    } as any);
   };
 
   return (
@@ -146,16 +150,47 @@ const ProductForm = ({ isOpen, onClose, onSubmit, product, isLoading }: ProductF
         <ScrollArea className="max-h-[calc(90vh-120px)]">
           <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-6">
             {/* Images */}
-            <div className="space-y-2">
-              <Label>Product Images</Label>
-              <ImageUpload
-                bucket="product-images"
-                value={images}
-                onChange={(urls) => setImages(urls as string[])}
-                multiple
-                maxFiles={6}
-                aspectRatio="square"
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Product Images (First image is main, select hover image below)</Label>
+                <ImageUpload
+                  bucket="product-images"
+                  value={images}
+                  onChange={(urls) => setImages(urls as string[])}
+                  multiple
+                  maxFiles={6}
+                  aspectRatio="square"
+                />
+              </div>
+              
+              {/* Hover Image Selection */}
+              {images.length > 1 && (
+                <div className="space-y-2">
+                  <Label>Select Hover Image</Label>
+                  <div className="flex gap-2 flex-wrap">
+                    {images.map((img, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setValue('hover_image_index' as any, index)}
+                        className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                          watch('hover_image_index' as any) === index 
+                            ? 'border-primary ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <img src={img} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                        {watch('hover_image_index' as any) === index && (
+                          <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                            <span className="text-[10px] font-medium text-primary-foreground bg-primary px-1 rounded">HOVER</span>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">This image will be shown when customers hover over the product card</p>
+                </div>
+              )}
             </div>
 
             {/* Basic Info */}

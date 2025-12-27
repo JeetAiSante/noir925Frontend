@@ -55,7 +55,7 @@ const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminFestivalThemes = lazy(() => import("./pages/admin/AdminFestivalThemes"));
-const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
+
 const AdminInventory = lazy(() => import("./pages/admin/AdminInventory"));
 const AdminLoyalty = lazy(() => import("./pages/admin/AdminLoyalty"));
 const AdminFeatureToggles = lazy(() => import("./pages/admin/AdminFeatureToggles"));
@@ -162,7 +162,7 @@ const App = memo(() => (
                     <Route path="banners" element={<AdminBanners />} />
                     <Route path="timers" element={<AdminTimers />} />
                     <Route path="themes" element={<AdminFestivalThemes />} />
-                    <Route path="spin-wheel" element={<AdminSpinWheel />} />
+                    <Route path="inventory" element={<AdminInventory />} />
                     <Route path="inventory" element={<AdminInventory />} />
                     <Route path="loyalty" element={<AdminLoyalty />} />
                     <Route path="feature-toggles" element={<AdminFeatureToggles />} />

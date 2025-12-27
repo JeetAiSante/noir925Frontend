@@ -46,7 +46,6 @@ const navItems = [
   { icon: Image, label: 'Banners', path: '/admin/banners' },
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
-  { icon: Gift, label: 'Spin Wheel', path: '/admin/spin-wheel' },
   { icon: Bell, label: 'Popup Settings', path: '/admin/popup-settings' },
   { icon: Star, label: 'Loyalty Program', path: '/admin/loyalty' },
   { icon: CreditCard, label: 'Gift Cards', path: '/admin/gift-cards' },
