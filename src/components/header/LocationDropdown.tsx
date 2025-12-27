@@ -25,14 +25,27 @@ const LocationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
+  // Load saved location on mount and persist across navigation
   useEffect(() => {
     const saved = localStorage.getItem('noir925_location');
+    const savedCoords = localStorage.getItem('noir925_location_coords');
+    
     if (saved) {
       setLocation(saved);
+      setHasPermission(true);
     } else {
-      // Check if geolocation permission was previously granted
       checkGeolocationPermission();
     }
+
+    // Listen for storage changes (cross-tab sync)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'noir925_location' && e.newValue) {
+        setLocation(e.newValue);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const checkGeolocationPermission = async () => {
@@ -133,9 +146,14 @@ const LocationDropdown = () => {
     }
   }, [location]);
 
-  const selectCity = (city: string) => {
+  const selectCity = (city: string, coords?: { lat: number; lng: number }) => {
     setLocation(city);
     localStorage.setItem('noir925_location', city);
+    if (coords) {
+      localStorage.setItem('noir925_location_coords', JSON.stringify(coords));
+    }
+    // Dispatch custom event for immediate sync across components
+    window.dispatchEvent(new CustomEvent('locationChanged', { detail: { city, coords } }));
     setIsOpen(false);
     setSearchTerm('');
   };

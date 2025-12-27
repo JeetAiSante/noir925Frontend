@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Minus, Plus, X, ShoppingBag, ArrowRight, Truck, Shield, RotateCcw, Sparkles, Gift, CreditCard } from 'lucide-react';
+import { Minus, Plus, X, ShoppingBag, ArrowRight, Truck, Shield, RotateCcw, Sparkles, Gift, CreditCard, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -7,19 +7,92 @@ import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/data/products';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [isValidating, setIsValidating] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
   const shipping = cartTotal >= 2999 ? 0 : 149;
   const total = cartTotal + shipping - discount;
 
-  const applyCoupon = () => {
-    if (couponCode.toLowerCase() === 'save10') {
-      setDiscount(Math.round(cartTotal * 0.1));
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
     }
+
+    setIsValidating(true);
+    try {
+      // Check if coupon exists and is active in admin
+      const { data: coupon, error } = await supabase
+        .from('coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase())
+        .eq('is_active', true)
+        .single();
+
+      if (error || !coupon) {
+        toast.error('Invalid or expired coupon code');
+        setDiscount(0);
+        setAppliedCoupon(null);
+        return;
+      }
+
+      // Check date validity
+      const now = new Date();
+      if (coupon.start_date && new Date(coupon.start_date) > now) {
+        toast.error('This coupon is not yet active');
+        return;
+      }
+      if (coupon.end_date && new Date(coupon.end_date) < now) {
+        toast.error('This coupon has expired');
+        return;
+      }
+
+      // Check minimum order value
+      if (coupon.min_order_value && cartTotal < Number(coupon.min_order_value)) {
+        toast.error(`Minimum order value of ${formatPrice(Number(coupon.min_order_value))} required`);
+        return;
+      }
+
+      // Check usage limit
+      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+        toast.error('This coupon has reached its usage limit');
+        return;
+      }
+
+      // Calculate discount
+      let discountAmount = 0;
+      if (coupon.discount_type === 'percentage') {
+        discountAmount = Math.round(cartTotal * (Number(coupon.discount_value) / 100));
+        // Apply max discount cap if set
+        if (coupon.max_discount_amount && discountAmount > Number(coupon.max_discount_amount)) {
+          discountAmount = Number(coupon.max_discount_amount);
+        }
+      } else {
+        discountAmount = Number(coupon.discount_value);
+      }
+
+      setDiscount(discountAmount);
+      setAppliedCoupon(coupon.code);
+      toast.success(`Coupon applied! You save ${formatPrice(discountAmount)}`);
+    } catch (err) {
+      toast.error('Failed to validate coupon');
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setDiscount(0);
+    setAppliedCoupon(null);
+    setCouponCode('');
+    toast.success('Coupon removed');
   };
 
   if (cartItems.length === 0) {
@@ -208,21 +281,42 @@ const Cart = () => {
                 </p>
               </div>
 
-              {/* Coupon */}
+{/* Coupon */}
               <div className="mb-5">
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    className="flex-1 text-sm h-10"
-                  />
-                  <Button variant="outline" size="sm" onClick={applyCoupon} className="h-10">
-                    Apply
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">Try: SAVE10 for 10% off</p>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <div>
+                      <p className="text-sm font-medium text-primary">{appliedCoupon}</p>
+                      <p className="text-xs text-muted-foreground">Saving {formatPrice(discount)}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={removeCoupon} className="text-destructive hover:text-destructive">
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        placeholder="Enter coupon code"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="flex-1 text-sm h-10"
+                        disabled={isValidating}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={applyCoupon} 
+                        className="h-10"
+                        disabled={isValidating}
+                      >
+                        {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">Enter a valid coupon code</p>
+                  </>
+                )}
               </div>
 
               <Link to="/checkout">
