@@ -391,25 +391,25 @@ const ProductPage = () => {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3">
+            {/* Actions - Mobile Optimized */}
+            <div className="flex gap-2 sm:gap-3">
               <Button
                 variant={isOutOfStock ? "secondary" : "luxury"}
                 size="lg"
-                className="flex-1 h-12 md:h-14 text-base"
+                className="flex-1 h-11 sm:h-12 md:h-14 text-sm sm:text-base px-3 sm:px-4"
                 onClick={handleAddToCart}
                 disabled={isOutOfStock}
               >
-                <ShoppingBag className="w-5 h-5 mr-2" />
+                <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                 {isOutOfStock ? 'Sold Out' : 'Add to Cart'}
               </Button>
               <Button
                 variant="outline"
                 size="lg"
-                className="h-12 md:h-14 px-6"
+                className="h-11 sm:h-12 md:h-14 w-11 sm:w-12 md:w-14 p-0 shrink-0"
                 onClick={handleWishlistClick}
               >
-                <Heart className={`w-5 h-5 ${inWishlist ? 'fill-current text-secondary' : ''}`} />
+                <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${inWishlist ? 'fill-primary text-primary' : ''}`} />
               </Button>
             </div>
 
