@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { FestivalThemeProvider } from "@/context/FestivalThemeContext";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 import PwaManifestLink from "@/components/pwa/PwaManifestLink";
 
 // Eagerly loaded components for critical path
@@ -37,6 +38,7 @@ const Gifting = lazy(() => import("./pages/Gifting"));
 const FestivalPage = lazy(() => import("./pages/FestivalPage"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const SizeGuide = lazy(() => import("./pages/SizeGuide"));
+const SearchResults = lazy(() => import("./pages/SearchResults"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages - lazy loaded
@@ -61,6 +63,8 @@ const AdminGiftCards = lazy(() => import("./pages/admin/AdminGiftCards"));
 const AdminTrustBadges = lazy(() => import("./pages/admin/AdminTrustBadges"));
 const AdminHomepageSections = lazy(() => import("./pages/admin/AdminHomepageSections"));
 const AdminTaxSettings = lazy(() => import("./pages/admin/AdminTaxSettings"));
+const AdminPageContent = lazy(() => import("./pages/admin/AdminPageContent"));
+const AdminCurrencySettings = lazy(() => import("./pages/admin/AdminCurrencySettings"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 // Performance-optimized cursor - lazy load as non-critical
@@ -95,8 +99,9 @@ const App = memo(() => (
     <TooltipProvider delayDuration={0}>
       <AuthProvider>
         <FestivalThemeProvider>
-          <CartProvider>
-            <Suspense fallback={null}>
+          <CurrencyProvider>
+            <CartProvider>
+              <Suspense fallback={null}>
               <LuxuryCursor />
               <InstallPWAPrompt />
             </Suspense>
@@ -141,6 +146,7 @@ const App = memo(() => (
                   <Route path="/gifting" element={<Gifting />} />
                   <Route path="/help" element={<HelpCenter />} />
                   <Route path="/size-guide" element={<SizeGuide />} />
+                  <Route path="/search" element={<SearchResults />} />
                   <Route path="/festival" element={<FestivalPage />} />
                   <Route path="/festival/:slug" element={<FestivalPage />} />
                   
@@ -162,6 +168,8 @@ const App = memo(() => (
                     <Route path="trust-badges" element={<AdminTrustBadges />} />
                     <Route path="homepage-sections" element={<AdminHomepageSections />} />
                     <Route path="tax-settings" element={<AdminTaxSettings />} />
+                    <Route path="page-content" element={<AdminPageContent />} />
+                    <Route path="currency-settings" element={<AdminCurrencySettings />} />
                     <Route path="messages" element={<AdminMessages />} />
                     <Route path="customers" element={<AdminCustomers />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
@@ -173,7 +181,8 @@ const App = memo(() => (
                 </Routes>
               </Suspense>
             </BrowserRouter>
-          </CartProvider>
+            </CartProvider>
+          </CurrencyProvider>
         </FestivalThemeProvider>
       </AuthProvider>
     </TooltipProvider>
