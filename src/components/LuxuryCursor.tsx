@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CursorPosition {
   x: number;
@@ -21,12 +22,19 @@ const LuxuryCursor = () => {
     isClicking: false,
   });
   const [isVisible, setIsVisible] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(true); // Default to true to hide on load
+  const [isTouchDevice, setIsTouchDevice] = useState(true);
   const trailRef = useRef<CursorPosition>({ x: -100, y: -100 });
   const rafRef = useRef<number>();
+  const isMobile = useIsMobile();
 
-  // Detect touch/mobile devices including Android
+  // Detect touch/mobile devices - completely disable on mobile
   useEffect(() => {
+    // Always disable on mobile
+    if (isMobile) {
+      setIsTouchDevice(true);
+      return;
+    }
+
     const checkTouchDevice = () => {
       const hasTouchScreen = 'ontouchstart' in window || 
         navigator.maxTouchPoints > 0 ||
@@ -35,14 +43,15 @@ const LuxuryCursor = () => {
       
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const isSmallScreen = window.innerWidth < 1024;
       
-      setIsTouchDevice(hasTouchScreen || isMobileUA || isCoarsePointer);
+      setIsTouchDevice(hasTouchScreen || isMobileUA || isCoarsePointer || isSmallScreen);
     };
 
     checkTouchDevice();
     window.addEventListener('resize', checkTouchDevice);
     return () => window.removeEventListener('resize', checkTouchDevice);
-  }, []);
+  }, [isMobile]);
 
   const updateCursorState = useCallback((target: HTMLElement) => {
     const isProduct = target.closest('[data-cursor="product"]') !== null;
@@ -58,7 +67,7 @@ const LuxuryCursor = () => {
   }, []);
 
   useEffect(() => {
-    if (isTouchDevice) return;
+    if (isTouchDevice || isMobile) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
@@ -90,11 +99,11 @@ const LuxuryCursor = () => {
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
     };
-  }, [isTouchDevice, updateCursorState]);
+  }, [isTouchDevice, isMobile, updateCursorState]);
 
   // Optimized RAF-based trail animation
   useEffect(() => {
-    if (isTouchDevice) return;
+    if (isTouchDevice || isMobile) return;
 
     const animate = () => {
       trailRef.current = {
@@ -108,10 +117,10 @@ const LuxuryCursor = () => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [position, isTouchDevice]);
+  }, [position, isTouchDevice, isMobile]);
 
-  // Don't render on touch devices
-  if (isTouchDevice) return null;
+  // Don't render on touch/mobile devices
+  if (isTouchDevice || isMobile) return null;
 
   const getCursorSize = () => {
     if (cursorState.isClicking) return 20;
@@ -140,7 +149,7 @@ const LuxuryCursor = () => {
   return (
     <>
       <style>{`
-        @media (pointer: fine) {
+        @media (pointer: fine) and (min-width: 1024px) {
           * { cursor: none !important; }
         }
       `}</style>

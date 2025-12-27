@@ -6,7 +6,7 @@ import { Gift, Sparkles, Copy, Check, LogIn } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface SpinWheelPopupProps {
   open: boolean;
@@ -321,30 +321,53 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
                 className="mt-4"
               >
                 {result.value ? (
-                  <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 text-center">
-                    <p className="font-display text-primary mb-2">
-                      🎉 You Won {result.label}!
-                    </p>
-                    <div className="flex items-center justify-center gap-2">
-                      <code className="bg-background px-3 py-1.5 rounded-lg font-mono text-sm border">
-                        {result.value}
-                      </code>
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={copyCode}>
-                        {copied ? (
-                          <Check className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
+                  result.value === 'FREESHIP' ? (
+                    // Free Shipping Result
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-center">
+                      <p className="font-display text-green-600 dark:text-green-400 mb-2">
+                        🚚 Free Shipping Won!
+                      </p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Enjoy free shipping on your next order
+                      </p>
+                      <Link to="/shop">
+                        <Button size="sm" className="gap-2 bg-green-600 hover:bg-green-700">
+                          <Sparkles className="w-3 h-3" />
+                          Shop Now
+                        </Button>
+                      </Link>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Use this code at checkout!
-                    </p>
-                  </div>
+                  ) : (
+                    // Discount Code Result
+                    <div className="bg-primary/10 border border-primary/30 rounded-xl p-3 text-center">
+                      <p className="font-display text-primary mb-2">
+                        🎉 You Won {result.label}!
+                      </p>
+                      <div className="flex items-center justify-center gap-2">
+                        <code className="bg-background px-3 py-1.5 rounded-lg font-mono text-sm border">
+                          {result.value}
+                        </code>
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={copyCode}>
+                          {copied ? (
+                            <Check className="w-4 h-4 text-green-500" />
+                          ) : (
+                            <Copy className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Use this code at checkout!
+                      </p>
+                    </div>
+                  )
                 ) : (
-                  <div className="bg-muted rounded-xl p-3 text-center">
-                    <p className="text-sm text-muted-foreground">
-                      No luck this time. Try again tomorrow!
+                  // Better Luck Message
+                  <div className="bg-muted rounded-xl p-4 text-center">
+                    <p className="font-display text-lg text-foreground mb-1">
+                      😔 Better Luck Next Time!
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Come back tomorrow for another spin
                     </p>
                   </div>
                 )}

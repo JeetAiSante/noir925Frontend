@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Filter, Grid3X3, Grid2X2, X, ChevronRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -13,14 +13,33 @@ import { SEOHead, CollectionSchema, ItemListSchema } from '@/components/seo/SEOH
 import { BreadcrumbSchema } from '@/components/seo/ProductSchema';
 
 const Shop = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
+  const genderParam = searchParams.get('gender');
   
   const [gridSize, setGridSize] = useState<'large' | 'small'>('large');
   const [sortBy, setSortBy] = useState('featured');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 20000]);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync URL params with state
+  useEffect(() => {
+    setSelectedCategory(categoryParam);
+  }, [categoryParam]);
+
+  // Handle category change with URL update
+  const handleCategoryChange = (category: string | null) => {
+    setSelectedCategory(category);
+    const newParams = new URLSearchParams(searchParams);
+    if (category) {
+      newParams.set('category', category.toLowerCase());
+    } else {
+      newParams.delete('category');
+    }
+    setSearchParams(newParams, { replace: true });
+  };
 
   const { data: categories = [] } = useCategoriesWithCounts();
   const { data: totalCount = products.length } = useTotalProductCount();
@@ -205,7 +224,7 @@ const Shop = () => {
           {/* Category Pills - Quick Filter */}
           <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
             <button
-              onClick={() => setSelectedCategory(null)}
+              onClick={() => handleCategoryChange(null)}
               className={`shrink-0 px-4 py-2 rounded-full font-body text-sm transition-all ${
                 !selectedCategory
                   ? 'bg-primary text-primary-foreground shadow-md'
@@ -217,7 +236,7 @@ const Shop = () => {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(cat.name.toLowerCase())}
+                onClick={() => handleCategoryChange(cat.name.toLowerCase())}
                 className={`shrink-0 px-4 py-2 rounded-full font-body text-sm transition-all flex items-center gap-2 ${
                   selectedCategory === cat.name.toLowerCase()
                     ? 'bg-primary text-primary-foreground shadow-md'
@@ -319,7 +338,7 @@ const Shop = () => {
                 <h3 className="font-display text-base mb-4">Categories</h3>
                 <div className="space-y-1">
                   <button
-                    onClick={() => setSelectedCategory(null)}
+                    onClick={() => handleCategoryChange(null)}
                     className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg font-body text-sm transition-colors ${
                       !selectedCategory
                         ? 'bg-primary text-primary-foreground'
@@ -334,7 +353,7 @@ const Shop = () => {
                   {categories.map((cat) => (
                     <button
                       key={cat.id}
-                      onClick={() => setSelectedCategory(cat.name.toLowerCase())}
+                      onClick={() => handleCategoryChange(cat.name.toLowerCase())}
                       className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg font-body text-sm transition-colors ${
                         selectedCategory === cat.name.toLowerCase()
                           ? 'bg-primary text-primary-foreground'
