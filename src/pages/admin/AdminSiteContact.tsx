@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Loader2, Phone, Mail, MapPin, Globe, Instagram, Facebook, Twitter, Youtube } from 'lucide-react';
+import { Save, Loader2, Phone, Mail, MapPin, Globe, Instagram, Facebook, Twitter, Youtube, FileImage, PenTool } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AdminSecurityWrapper from '@/components/admin/AdminSecurityWrapper';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 interface SiteContact {
   id: string;
@@ -21,6 +22,10 @@ interface SiteContact {
   twitter_url: string | null;
   youtube_url: string | null;
   gst_number: string | null;
+  company_name: string | null;
+  company_logo: string | null;
+  company_signature: string | null;
+  invoice_prefix: string | null;
 }
 
 const AdminSiteContact = () => {
@@ -42,12 +47,11 @@ const AdminSiteContact = () => {
 
   const [formData, setFormData] = useState<Partial<SiteContact>>({});
 
-  // Initialize form when data loads
-  useState(() => {
+  useEffect(() => {
     if (contactInfo) {
       setFormData(contactInfo);
     }
-  });
+  }, [contactInfo]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<SiteContact>) => {
@@ -92,7 +96,6 @@ const AdminSiteContact = () => {
     );
   }
 
-  // Merge loaded data with form state
   const currentData = { ...contactInfo, ...formData };
 
   return (
@@ -114,6 +117,79 @@ const AdminSiteContact = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
+          {/* Company Branding */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileImage className="w-5 h-5 text-primary" />
+                Company Branding
+              </CardTitle>
+              <CardDescription>Logo and signature for invoices and emails</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <Label>Company Name</Label>
+                  <Input
+                    value={currentData.company_name || ''}
+                    onChange={(e) => handleChange('company_name', e.target.value)}
+                    placeholder="NOIR925"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Invoice Prefix</Label>
+                  <Input
+                    value={currentData.invoice_prefix || ''}
+                    onChange={(e) => handleChange('invoice_prefix', e.target.value)}
+                    placeholder="INV-"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>GST Number</Label>
+                  <Input
+                    value={currentData.gst_number || ''}
+                    onChange={(e) => handleChange('gst_number', e.target.value)}
+                    placeholder="22AAAAA0000A1Z5"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <FileImage className="w-4 h-4" />
+                    Company Logo
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Used in invoices, emails, and receipts. Recommended: PNG with transparent background.
+                  </p>
+                  <ImageUpload
+                    bucket="banner-images"
+                    value={currentData.company_logo || ''}
+                    onChange={(url) => handleChange('company_logo', url as string)}
+                    aspectRatio="video"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2">
+                    <PenTool className="w-4 h-4" />
+                    Company Signature
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Digital signature for invoices. Recommended: PNG with transparent background.
+                  </p>
+                  <ImageUpload
+                    bucket="banner-images"
+                    value={currentData.company_signature || ''}
+                    onChange={(url) => handleChange('company_signature', url as string)}
+                    aspectRatio="video"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Contact Details */}
           <Card>
             <CardHeader>
@@ -167,15 +243,6 @@ const AdminSiteContact = () => {
                   onChange={(e) => handleChange('address', e.target.value)}
                   placeholder="Full business address"
                   rows={3}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>GST Number</Label>
-                <Input
-                  value={currentData.gst_number || ''}
-                  onChange={(e) => handleChange('gst_number', e.target.value)}
-                  placeholder="22AAAAA0000A1Z5"
                 />
               </div>
             </CardContent>
@@ -246,8 +313,8 @@ const AdminSiteContact = () => {
               <li>• <strong>Footer</strong> - Contact details and social media icons</li>
               <li>• <strong>Contact Page</strong> - Full contact information</li>
               <li>• <strong>Help Center</strong> - Support contact details</li>
-              <li>• <strong>Order Confirmation Emails</strong> - Support contact</li>
-              <li>• <strong>Invoice Footer</strong> - GST number and address</li>
+              <li>• <strong>Order Emails</strong> - Company logo and signature</li>
+              <li>• <strong>Invoice</strong> - Logo, signature, GST number and address</li>
             </ul>
           </CardContent>
         </Card>

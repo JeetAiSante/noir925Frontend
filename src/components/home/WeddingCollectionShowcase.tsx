@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Heart, ArrowRight, Star } from 'lucide-react';
+import { Sparkles, Heart, ArrowRight, Star, Diamond } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCurrency } from '@/context/CurrencyContext';
 
@@ -31,8 +31,14 @@ const WeddingCollectionShowcase = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-background via-secondary/5 to-background overflow-hidden">
-      <div className="container mx-auto px-4">
+    <section className="py-16 md:py-24 bg-gradient-to-b from-[#0a0a0a] via-[#1a1a1a] to-[#0a0a0a] overflow-hidden relative">
+      {/* Decorative Elements */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-pink-500 blur-[100px]" />
+        <div className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-rose-400 blur-[120px]" />
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <motion.div 
           className="text-center mb-12 md:mb-16"
@@ -42,21 +48,28 @@ const WeddingCollectionShowcase = () => {
           transition={{ duration: 0.6 }}
         >
           <motion.div 
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-secondary/10 border border-secondary/20 mb-6"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-pink-500/10 border border-pink-500/30 mb-6"
             initial={{ scale: 0.9 }}
             whileInView={{ scale: 1 }}
             viewport={{ once: true }}
           >
-            <Heart className="w-4 h-4 text-secondary fill-secondary" />
-            <span className="font-accent text-sm tracking-wider text-secondary">Wedding Season 2024</span>
+            <Heart className="w-4 h-4 text-pink-400 fill-pink-400" />
+            <span className="font-accent text-sm tracking-widest uppercase text-pink-400">Wedding Season 2024</span>
           </motion.div>
           
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl mb-4">
-            <span className="text-secondary italic">Bridal</span>{' '}
-            <span className="text-foreground">Collection</span>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl mb-4 tracking-tight">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-rose-300 to-pink-400">Bridal</span>
+            <span className="text-white ml-3">Collection</span>
           </h2>
           
-          <p className="font-body text-muted-foreground max-w-2xl mx-auto text-base md:text-lg italic">
+          {/* Decorative line */}
+          <div className="flex items-center justify-center gap-4 my-6">
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-pink-500/50" />
+            <Diamond className="w-4 h-4 text-pink-400" />
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-pink-500/50" />
+          </div>
+          
+          <p className="font-body text-white/60 max-w-2xl mx-auto text-base md:text-lg leading-relaxed">
             Begin your forever with our exquisite bridal jewellery, handcrafted to make your special day unforgettable.
           </p>
         </motion.div>
@@ -71,7 +84,7 @@ const WeddingCollectionShowcase = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            <div className="relative group h-full min-h-[500px] md:min-h-[600px] rounded-3xl overflow-hidden bg-gradient-to-br from-rose-100 via-pink-50 to-rose-50">
+            <div className="relative group h-full min-h-[500px] md:min-h-[600px] rounded-3xl overflow-hidden bg-gradient-to-br from-pink-100 via-rose-50 to-pink-100">
               {/* Background Image */}
               <img 
                 src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=1000&fit=crop"
@@ -80,36 +93,42 @@ const WeddingCollectionShowcase = () => {
               />
               
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
               
               {/* Limited Edition Badge */}
               <motion.div 
-                className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-background/95 backdrop-blur-sm shadow-lg"
+                className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 backdrop-blur-sm shadow-lg border border-pink-200"
                 whileHover={{ scale: 1.05 }}
               >
-                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                <span className="font-accent text-sm font-medium">Limited Edition</span>
+                <Sparkles className="w-4 h-4 text-pink-500 animate-pulse" />
+                <span className="font-accent text-sm font-semibold text-black tracking-wide">Limited Edition</span>
               </motion.div>
 
-              {/* Decorative Dot */}
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-background/80 backdrop-blur-sm border-2 border-background" />
+              {/* Decorative Corner */}
+              <div className="absolute top-0 right-0 w-24 h-24 overflow-hidden">
+                <div className="absolute top-4 -right-8 w-32 bg-pink-500 text-white text-xs py-1 rotate-45 text-center font-medium tracking-wide">
+                  BRIDAL
+                </div>
+              </div>
               
               {/* Content */}
               <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
-                <h3 className="font-display text-3xl md:text-4xl text-background mb-2">Royal Heritage</h3>
-                <p className="font-body text-background/80 mb-4">Complete bridal ensemble</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-0.5 bg-pink-400" />
+                  <span className="text-pink-300 text-xs tracking-widest uppercase font-medium">Exclusive Design</span>
+                </div>
+                
+                <h3 className="font-display text-3xl md:text-4xl text-white mb-2 tracking-wide">Royal Heritage</h3>
+                <p className="font-body text-white/70 mb-4">Complete bridal ensemble</p>
                 
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-display text-2xl md:text-3xl text-accent">{formatPrice(89999)}</span>
-                  <span className="text-background/60 line-through text-lg">{formatPrice(119999)}</span>
-                  <span className="px-3 py-1.5 bg-secondary rounded-full text-xs font-bold text-secondary-foreground">
+                  <span className="font-display text-2xl md:text-3xl text-pink-300">{formatPrice(89999)}</span>
+                  <span className="text-white/50 line-through text-lg">{formatPrice(119999)}</span>
+                  <span className="px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full text-xs font-bold text-white tracking-wide">
                     25% OFF
                   </span>
                 </div>
               </div>
-              
-              {/* Decorative Borders */}
-              <div className="absolute -inset-1 border border-secondary/20 rounded-[1.75rem] -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
           </motion.div>
 
@@ -118,7 +137,7 @@ const WeddingCollectionShowcase = () => {
             {galleryImages.map((image, index) => (
               <motion.div
                 key={image.id}
-                className="relative group aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer"
+                className="relative group aspect-[4/3] rounded-2xl overflow-hidden cursor-pointer border border-white/5"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -132,17 +151,17 @@ const WeddingCollectionShowcase = () => {
                 />
                 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300" />
+                
+                {/* Pink accent border on hover */}
+                <div className="absolute inset-0 border-2 border-pink-400/0 group-hover:border-pink-400/50 rounded-2xl transition-all duration-300" />
                 
                 {/* View Icon */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
-                    <ArrowRight className="w-5 h-5 text-foreground" />
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-pink-500/30">
+                    <ArrowRight className="w-5 h-5 text-white" />
                   </div>
                 </div>
-
-                {/* Decorative Border */}
-                <div className="absolute inset-0 border border-background/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </motion.div>
             ))}
           </div>
@@ -158,12 +177,11 @@ const WeddingCollectionShowcase = () => {
         >
           <Link to="/collections/bridal-heritage">
             <Button 
-              variant="outline" 
               size="lg" 
-              className="group px-8 py-6 rounded-full border-2 border-foreground/20 hover:border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300"
+              className="group px-10 py-6 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-pink-500 hover:from-pink-600 hover:via-rose-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-pink-500/25 transition-all duration-300"
             >
-              <Heart className="w-5 h-5 mr-2 group-hover:fill-current transition-all" />
-              <span className="font-medium tracking-wide">EXPLORE BRIDAL COLLECTION</span>
+              <Heart className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+              <span className="font-semibold tracking-wider">EXPLORE BRIDAL COLLECTION</span>
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
@@ -171,22 +189,24 @@ const WeddingCollectionShowcase = () => {
 
         {/* Trust Indicators */}
         <motion.div 
-          className="flex flex-wrap items-center justify-center gap-8 mt-12 text-muted-foreground"
+          className="flex flex-wrap items-center justify-center gap-8 mt-12 text-white/50"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
           <div className="flex items-center gap-2">
-            <Star className="w-4 h-4 text-accent fill-accent" />
+            <Star className="w-4 h-4 text-pink-400 fill-pink-400" />
             <span className="text-sm">4.9/5 Rating</span>
           </div>
+          <div className="w-px h-4 bg-white/20" />
           <div className="flex items-center gap-2">
-            <Heart className="w-4 h-4 text-secondary" />
+            <Heart className="w-4 h-4 text-pink-400" />
             <span className="text-sm">5000+ Happy Brides</span>
           </div>
+          <div className="w-px h-4 bg-white/20" />
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
+            <Sparkles className="w-4 h-4 text-pink-400" />
             <span className="text-sm">Lifetime Exchange</span>
           </div>
         </motion.div>
