@@ -110,13 +110,15 @@ const ProductForm = ({ isOpen, onClose, onSubmit, product, isLoading }: ProductF
     }
   }, [product, reset]);
 
-  // Auto-generate slug from name
+  // Auto-generate slug from name (only for new products)
   useEffect(() => {
     if (!product && watchName) {
+      const timestamp = Date.now();
       const slug = watchName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '');
+        .replace(/^-|-$/g, '')
+        + '-' + timestamp.toString(36);
       setValue('slug', slug);
     }
   }, [watchName, product, setValue]);

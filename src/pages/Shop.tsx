@@ -7,6 +7,7 @@ import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
 import { products } from '@/data/products';
 import { useCategoriesWithCounts, useTotalProductCount } from '@/hooks/useProductCounts';
+import { useCurrency } from '@/context/CurrencyContext';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import MobileFilterDrawer from '@/components/shop/MobileFilterDrawer';
 import { SEOHead, CollectionSchema, ItemListSchema } from '@/components/seo/SEOHead';
@@ -43,6 +44,7 @@ const Shop = () => {
 
   const { data: categories = [] } = useCategoriesWithCounts();
   const { data: totalCount = products.length } = useTotalProductCount();
+  const { formatPrice } = useCurrency();
 
   const sortOptions = [
     { value: 'featured', label: 'Featured' },
@@ -177,7 +179,7 @@ const Shop = () => {
 
         <div className="container mx-auto px-4">
           {/* Quick Filters - Sticky Pills */}
-          <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md py-3 -mx-4 px-4 mb-4 border-b border-border/50">
+          <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md py-3 -mx-4 px-4 md:px-6 lg:px-8 mb-4 border-b border-border/50">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => {
@@ -186,7 +188,7 @@ const Shop = () => {
                 }}
                 className="shrink-0 px-4 py-2 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground text-sm font-medium transition-all border border-secondary/20 shadow-sm"
               >
-                Under ₹999
+                Under {formatPrice(999)}
               </button>
               <button
                 onClick={() => {

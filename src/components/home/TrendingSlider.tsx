@@ -15,25 +15,32 @@ const TrendingSlider = () => {
   // Double the products for seamless infinite scroll
   const displayProducts = [...trendingProducts, ...trendingProducts];
 
-  // Continuous scroll animation
+  // Smooth continuous scroll animation with easing on pause/resume
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
 
-    let scrollPosition = 0;
-    const scrollSpeed = 0.5; // pixels per frame
+    let scrollPosition = container.scrollLeft || 0;
+    let targetSpeed = 0.5; // pixels per frame
+    let currentSpeed = 0.5;
 
     const animate = () => {
-      if (!isPaused && container) {
-        scrollPosition += scrollSpeed;
+      if (container) {
+        // Smooth transition between paused and playing
+        const desiredSpeed = isPaused ? 0 : targetSpeed;
+        currentSpeed += (desiredSpeed - currentSpeed) * 0.1; // Ease in/out
         
-        // Reset when we've scrolled through the first set
-        const halfWidth = container.scrollWidth / 2;
-        if (scrollPosition >= halfWidth) {
-          scrollPosition = 0;
+        if (Math.abs(currentSpeed) > 0.01) {
+          scrollPosition += currentSpeed;
+          
+          // Reset when we've scrolled through the first set
+          const halfWidth = container.scrollWidth / 2;
+          if (scrollPosition >= halfWidth) {
+            scrollPosition = 0;
+          }
+          
+          container.scrollLeft = scrollPosition;
         }
-        
-        container.scrollLeft = scrollPosition;
       }
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -48,13 +55,24 @@ const TrendingSlider = () => {
   }, [isPaused]);
 
   return (
-    <section className="py-12 md:py-20 bg-gradient-to-b from-foreground via-foreground to-foreground/95 relative overflow-hidden">
-      {/* Animated Background */}
+    <section className="py-12 md:py-20 relative overflow-hidden">
+      {/* Luxury Background Image with Overlay */}
+      <div className="absolute inset-0">
+        <img 
+          src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1920&h=1080&fit=crop" 
+          alt="" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-foreground/95 via-foreground/90 to-foreground/95" />
+      </div>
+      
+      {/* Animated Decorative Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
         <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-        <div className="absolute top-1/4 left-10 w-32 h-32 rounded-full bg-accent/10 blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 left-10 w-32 h-32 rounded-full bg-accent/20 blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-10 w-40 h-40 rounded-full bg-primary/20 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-accent/5 blur-[100px]" />
       </div>
 
       <div className="container mx-auto px-4 relative">

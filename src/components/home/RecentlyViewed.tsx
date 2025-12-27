@@ -32,8 +32,14 @@ const RecentlyViewed = () => {
             </h3>
           </div>
           <button
-            onClick={() => setIsVisible(false)}
+            onClick={() => {
+              // Clear from local storage and hide section
+              localStorage.removeItem('noir925_recently_viewed');
+              setViewedIds([]);
+              setIsVisible(false);
+            }}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            title="Clear recently viewed"
           >
             <X className="w-5 h-5" />
           </button>

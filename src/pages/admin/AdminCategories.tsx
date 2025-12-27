@@ -121,13 +121,13 @@ const AdminCategories = () => {
               Add Category
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>{editingCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
+              <DialogTitle className="text-lg">{editingCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Category Image</Label>
+            <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
+                <Label className="text-sm">Category Image</Label>
                 <ImageUpload
                   bucket="banner-images"
                   value={formData.image_url ? [formData.image_url] : []}
@@ -135,55 +135,65 @@ const AdminCategories = () => {
                   maxFiles={1}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      name: e.target.value,
-                      slug: generateSlug(e.target.value)
-                    });
-                  }}
-                  placeholder="Category name"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Name *</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData({
+                        ...formData,
+                        name: e.target.value,
+                        slug: generateSlug(e.target.value)
+                      });
+                    }}
+                    placeholder="Category name"
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Slug</Label>
+                  <Input
+                    value={formData.slug}
+                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    placeholder="category-slug"
+                    className="h-9"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Slug</Label>
-                <Input
-                  value={formData.slug}
-                  onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  placeholder="category-slug"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Description</Label>
+                  <Input
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Short description"
+                    className="h-9"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Sort Order</Label>
+                  <Input
+                    type="number"
+                    value={formData.sort_order}
+                    onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+                    className="h-9"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Input
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Category description"
-                />
+              <div className="flex items-center gap-6 pt-2">
+                <div className="flex items-center gap-2">
+                  <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData({ ...formData, is_active: c })} />
+                  <Label className="text-sm">Active</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch checked={formData.is_featured} onCheckedChange={(c) => setFormData({ ...formData, is_featured: c })} />
+                  <Label className="text-sm">Featured</Label>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Sort Order</Label>
-                <Input
-                  type="number"
-                  value={formData.sort_order}
-                  onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>Active</Label>
-                <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData({ ...formData, is_active: c })} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label>Featured</Label>
-                <Switch checked={formData.is_featured} onCheckedChange={(c) => setFormData({ ...formData, is_featured: c })} />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button variant="outline" className="flex-1" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancel</Button>
-                <Button className="flex-1" onClick={handleSubmit}>{editingCategory ? 'Update' : 'Create'}</Button>
+              <div className="flex gap-2 pt-3">
+                <Button variant="outline" className="flex-1 h-9" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancel</Button>
+                <Button className="flex-1 h-9" onClick={handleSubmit}>{editingCategory ? 'Update' : 'Create'}</Button>
               </div>
             </div>
           </DialogContent>

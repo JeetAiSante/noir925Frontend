@@ -1,35 +1,42 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-const categories = [
+// Fallback static categories when database is empty
+const fallbackCategories = [
   {
     id: 'necklaces',
     name: 'Necklaces',
     description: 'Elegant chains and statement pendants',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=800&fit=crop',
-    count: 48,
+    image_url: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=800&fit=crop',
+    product_count: 48,
+    slug: 'necklaces',
   },
   {
     id: 'earrings',
     name: 'Earrings',
     description: 'From studs to chandelier drops',
-    image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=800&fit=crop',
-    count: 62,
+    image_url: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=800&fit=crop',
+    product_count: 62,
+    slug: 'earrings',
   },
   {
     id: 'rings',
     name: 'Rings',
     description: 'Bands, cocktails & statement pieces',
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=800&fit=crop',
-    count: 35,
+    image_url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=800&fit=crop',
+    product_count: 35,
+    slug: 'rings',
   },
   {
     id: 'bracelets',
     name: 'Bracelets',
     description: 'Cuffs, chains & charm bracelets',
-    image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=800&fit=crop',
-    count: 28,
+    image_url: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=800&fit=crop',
+    product_count: 28,
+    slug: 'bracelets',
   },
 ];
 
@@ -37,6 +44,26 @@ const FeaturedCategories = () => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const sectionRef = useRef<HTMLDivElement>(null);
+
+  // Fetch categories from database
+  const { data: dbCategories, isLoading } = useQuery({
+    queryKey: ['featured-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_featured', true)
+        .order('sort_order')
+        .limit(4);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Use database categories or fallback to static data
+  const categories = (dbCategories && dbCategories.length > 0) ? dbCategories : fallbackCategories;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -55,11 +82,11 @@ const FeaturedCategories = () => {
     items?.forEach((item) => observer.observe(item));
 
     return () => observer.disconnect();
-  }, []);
+  }, [categories]);
 
   return (
     <section className="py-12 md:py-16 bg-foreground">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8 md:mb-10">
           <p className="font-accent text-xs md:text-sm text-accent tracking-widest uppercase mb-2">
@@ -72,49 +99,55 @@ const FeaturedCategories = () => {
 
         {/* Categories Grid */}
         <div ref={sectionRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          {categories.map((category, index) => (
-            <Link
-              key={category.id}
-              to={`/shop?category=${category.id}`}
-              data-index={index}
-              className={`group relative overflow-hidden rounded-xl transition-all duration-700 ${
-                visibleItems.has(index)
-                  ? 'opacity-100 translate-y-0'
-                  : 'opacity-0 translate-y-10'
-              }`}
-              style={{ transitionDelay: `${index * 80}ms` }}
-              onMouseEnter={() => setHoveredIndex(index)}
-              onMouseLeave={() => setHoveredIndex(null)}
-            >
-              {/* Image */}
-              <div className="aspect-[3/4] overflow-hidden">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  loading="lazy"
-                  className={`w-full h-full object-cover transition-all duration-700 ${
-                    hoveredIndex === index ? 'scale-110' : 'scale-100'
-                  }`}
-                />
-              </div>
-
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
-
-              {/* Content */}
-              <div className="absolute inset-0 p-3 md:p-4 flex flex-col justify-end">
-                <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
-                  <h3 className="font-display text-base md:text-xl text-background mb-1 flex items-center gap-1">
-                    {category.name}
-                    <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all duration-300" />
-                  </h3>
-                  <p className="font-body text-xs text-background/70 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-500 hidden md:block">
-                    {category.description}
-                  </p>
+          {isLoading ? (
+            <div className="col-span-full flex justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            categories.map((category, index) => (
+              <Link
+                key={category.id}
+                to={`/shop?category=${category.slug || category.id}`}
+                data-index={index}
+                className={`group relative overflow-hidden rounded-xl transition-all duration-700 ${
+                  visibleItems.has(index)
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${index * 80}ms` }}
+                onMouseEnter={() => setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
+              >
+                {/* Image */}
+                <div className="aspect-[3/4] overflow-hidden">
+                  <img
+                    src={category.image_url || 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=800&fit=crop'}
+                    alt={category.name}
+                    loading="lazy"
+                    className={`w-full h-full object-cover transition-all duration-700 ${
+                      hoveredIndex === index ? 'scale-110' : 'scale-100'
+                    }`}
+                  />
                 </div>
-              </div>
-            </Link>
-          ))}
+
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/50 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500" />
+
+                {/* Content */}
+                <div className="absolute inset-0 p-3 md:p-4 flex flex-col justify-end">
+                  <div className="transform transition-transform duration-500 group-hover:-translate-y-2">
+                    <h3 className="font-display text-base md:text-xl text-background mb-1 flex items-center gap-1">
+                      {category.name}
+                      <ArrowUpRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all duration-300" />
+                    </h3>
+                    <p className="font-body text-xs text-background/70 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-500 hidden md:block">
+                      {category.description || `${category.product_count} products`}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </section>

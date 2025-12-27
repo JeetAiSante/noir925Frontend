@@ -205,8 +205,9 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="lg:hidden bg-background border-t border-border animate-fade-in">
             <nav className="container mx-auto px-4 py-4 space-y-1">
-              {/* Mobile Location */}
-              <div className="py-3 border-b border-border/50">
+              {/* Mobile Currency & Location */}
+              <div className="flex items-center justify-between py-3 border-b border-border/50">
+                <CurrencySelector />
                 <LocationDropdown />
               </div>
 
