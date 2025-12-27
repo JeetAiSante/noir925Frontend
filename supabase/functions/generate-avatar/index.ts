@@ -6,13 +6,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { initials, gender, userId } = await req.json();
+    const { initials, fullName, style } = await req.json();
     
     if (!initials) {
       throw new Error('Initials are required');
@@ -20,19 +19,21 @@ serve(async (req) => {
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+      console.log('LOVABLE_API_KEY not configured, using fallback');
+      const fallbackSvg = generateFallbackAvatar(initials, fullName);
+      return new Response(JSON.stringify({ 
+        success: true, 
+        avatarUrl: fallbackSvg,
+        type: 'svg'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    // Generate a luxury avatar prompt based on initials and gender
-    const genderStyle = gender === 'female' 
-      ? 'elegant feminine aesthetic with soft rose gold and pearl tones'
-      : gender === 'male'
-      ? 'sophisticated masculine aesthetic with silver and midnight blue tones'
-      : 'refined unisex aesthetic with champagne gold and platinum tones';
+    // Generate a luxury avatar prompt
+    const prompt = `Create a luxurious minimalist avatar design featuring the initials "${initials}" in an elegant serif font. The design should have a circular gradient background with subtle metallic shimmer effects, premium jewelry brand aesthetic, high-end boutique style with rose gold and champagne tones. Ultra high resolution, professional quality, suitable for a luxury silver jewelry brand profile picture. The initials should be prominently displayed in the center with artistic flourishes. Aspect ratio 1:1, circular avatar format.`;
 
-    const prompt = `Create a luxurious minimalist avatar design featuring the initials "${initials}" in an elegant serif font. ${genderStyle}. The design should have a circular gradient background with subtle metallic shimmer effects, premium jewelry brand aesthetic, high-end boutique style. Ultra high resolution, professional quality, suitable for a luxury silver jewelry brand profile picture. The initials should be prominently displayed in the center with artistic flourishes.`;
-
-    console.log('Generating avatar with prompt:', prompt);
+    console.log('Generating avatar with Lovable AI');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -55,7 +56,17 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('AI gateway error:', response.status, errorText);
-      throw new Error(`AI gateway error: ${response.status}`);
+      
+      // Return fallback on error
+      const fallbackSvg = generateFallbackAvatar(initials, fullName);
+      return new Response(JSON.stringify({ 
+        success: true, 
+        avatarUrl: fallbackSvg,
+        type: 'svg',
+        fallback: true
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const data = await response.json();
@@ -66,11 +77,10 @@ serve(async (req) => {
 
     if (!imageData) {
       console.log('No image generated, returning fallback');
-      // Return a fallback SVG avatar
-      const fallbackSvg = generateFallbackAvatar(initials, gender);
+      const fallbackSvg = generateFallbackAvatar(initials, fullName);
       return new Response(JSON.stringify({ 
         success: true, 
-        imageUrl: fallbackSvg,
+        avatarUrl: fallbackSvg,
         type: 'svg'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -79,7 +89,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      imageUrl: imageData,
+      avatarUrl: imageData,
       type: 'base64'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -88,11 +98,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error generating avatar:', error);
     
-    // Return fallback avatar on error
-    const fallbackSvg = generateFallbackAvatar('U', 'neutral');
+    const fallbackSvg = generateFallbackAvatar('U', null);
     return new Response(JSON.stringify({ 
       success: true, 
-      imageUrl: fallbackSvg,
+      avatarUrl: fallbackSvg,
       type: 'svg',
       fallback: true
     }), {
@@ -101,23 +110,29 @@ serve(async (req) => {
   }
 });
 
-function generateFallbackAvatar(initials: string, gender: string): string {
-  const colors = gender === 'female' 
-    ? { bg1: '#fce4ec', bg2: '#f8bbd9', text: '#c2185b' }
-    : gender === 'male'
-    ? { bg1: '#e3f2fd', bg2: '#bbdefb', text: '#1565c0' }
-    : { bg1: '#fff8e1', bg2: '#ffe082', text: '#f57c00' };
+function generateFallbackAvatar(initials: string, fullName: string | null): string {
+  // Generate color based on name
+  const colorIndex = fullName ? fullName.charCodeAt(0) % 6 : 0;
+  const colors = [
+    { bg1: '#fce4ec', bg2: '#f8bbd9', text: '#c2185b' },
+    { bg1: '#e8eaf6', bg2: '#c5cae9', text: '#3f51b5' },
+    { bg1: '#e0f2f1', bg2: '#b2dfdb', text: '#00897b' },
+    { bg1: '#fff8e1', bg2: '#ffe082', text: '#f57c00' },
+    { bg1: '#fce4ec', bg2: '#f48fb1', text: '#ad1457' },
+    { bg1: '#e3f2fd', bg2: '#90caf9', text: '#1565c0' },
+  ];
+  const color = colors[colorIndex];
 
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
       <defs>
         <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:${colors.bg1};stop-opacity:1" />
-          <stop offset="100%" style="stop-color:${colors.bg2};stop-opacity:1" />
+          <stop offset="0%" style="stop-color:${color.bg1};stop-opacity:1" />
+          <stop offset="100%" style="stop-color:${color.bg2};stop-opacity:1" />
         </linearGradient>
       </defs>
       <circle cx="100" cy="100" r="100" fill="url(#grad)"/>
-      <text x="100" y="115" font-family="serif" font-size="72" font-weight="600" fill="${colors.text}" text-anchor="middle">${initials.toUpperCase().slice(0, 2)}</text>
+      <text x="100" y="115" font-family="serif" font-size="72" font-weight="600" fill="${color.text}" text-anchor="middle">${initials.toUpperCase().slice(0, 2)}</text>
     </svg>
   `;
   
