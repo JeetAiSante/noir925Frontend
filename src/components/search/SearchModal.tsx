@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, X, TrendingUp, Clock, ArrowRight, Sparkles, Star, Zap } from 'lucide-react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Search, X, TrendingUp, Clock, ArrowRight, Sparkles, Star, Zap, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { products, categories, formatPrice } from '@/data/products';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SearchModalProps {
   open: boolean;
@@ -23,8 +24,8 @@ const getRecentSearches = () => {
   }
 };
 
-// Generate autocomplete suggestions
-const generateSuggestions = (query: string): string[] => {
+// Generate local fallback suggestions
+const generateLocalSuggestions = (query: string): string[] => {
   if (query.length < 2) return [];
   const q = query.toLowerCase();
   const suggestions = new Set<string>();
@@ -63,9 +64,54 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const aiRequestRef = useRef<AbortController | null>(null);
 
-  const suggestions = useMemo(() => generateSuggestions(query), [query]);
+  // Use local suggestions as fallback, prioritize AI suggestions when available
+  const suggestions = useMemo(() => {
+    if (aiSuggestions.length > 0) return aiSuggestions;
+    return generateLocalSuggestions(query);
+  }, [query, aiSuggestions]);
+
+  // Fetch AI suggestions
+  const fetchAISuggestions = useCallback(async (searchQuery: string) => {
+    if (searchQuery.length < 2) {
+      setAiSuggestions([]);
+      return;
+    }
+
+    // Cancel previous request
+    if (aiRequestRef.current) {
+      aiRequestRef.current.abort();
+    }
+
+    aiRequestRef.current = new AbortController();
+    setIsLoadingAI(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-search-suggest', {
+        body: {
+          query: searchQuery,
+          products: products.slice(0, 20).map(p => p.name),
+          categories: categories.map(c => c.name),
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.suggestions && Array.isArray(data.suggestions)) {
+        setAiSuggestions(data.suggestions);
+      }
+    } catch (err) {
+      // Use local suggestions as fallback
+      console.log('Using local suggestions fallback');
+      setAiSuggestions([]);
+    } finally {
+      setIsLoadingAI(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (open) {
@@ -76,8 +122,17 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
       setResults([]);
       setCategoryResults([]);
       setSelectedSuggestion(-1);
+      setAiSuggestions([]);
     }
   }, [open]);
+
+  // Trigger AI suggestions when query changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchAISuggestions(query);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, fetchAISuggestions]);
 
   useEffect(() => {
     setIsTyping(true);

@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.admin-login-notify]
 verify_jwt = false
+
+[functions.ai-search-suggest]
+verify_jwt = false
