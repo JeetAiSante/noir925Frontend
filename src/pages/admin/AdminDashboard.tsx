@@ -25,7 +25,9 @@ import {
   CreditCard,
   Shield,
   LayoutGrid,
-  Receipt
+  Receipt,
+  FileText,
+  DollarSign
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,8 @@ const navItems = [
   { icon: ToggleLeft, label: 'Feature Toggles', path: '/admin/feature-toggles' },
   { icon: Shield, label: 'Trust Badges', path: '/admin/trust-badges' },
   { icon: Receipt, label: 'Tax & GST', path: '/admin/tax-settings' },
+  { icon: FileText, label: 'Page Content', path: '/admin/page-content' },
+  { icon: DollarSign, label: 'Currency Settings', path: '/admin/currency-settings' },
   { icon: Mail, label: 'Messages', path: '/admin/messages' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },

@@ -7,6 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { categories } from '@/data/products';
 import SearchModal from '@/components/search/SearchModal';
 import LocationDropdown from '@/components/header/LocationDropdown';
+import CurrencySelector from '@/components/header/CurrencySelector';
 
 const INSTAGRAM_URL = 'https://www.instagram.com/noir925_official?igsh=bGZkcHR6eTV6cG4x';
 
@@ -129,6 +130,11 @@ const Header = () => {
 
             {/* Actions */}
             <div className="flex items-center gap-1 md:gap-2">
+              {/* Currency Selector - Desktop */}
+              <div className="hidden lg:block">
+                <CurrencySelector />
+              </div>
+
               {/* Location - Desktop */}
               <div className="hidden lg:block">
                 <LocationDropdown />
