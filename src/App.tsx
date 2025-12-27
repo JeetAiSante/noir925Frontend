@@ -35,6 +35,8 @@ const ReturnsPolicy = lazy(() => import("./pages/ReturnsPolicy"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder"));
 const Gifting = lazy(() => import("./pages/Gifting"));
 const FestivalPage = lazy(() => import("./pages/FestivalPage"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const SizeGuide = lazy(() => import("./pages/SizeGuide"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages - lazy loaded
@@ -127,11 +129,17 @@ const App = memo(() => (
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/faq" element={<FAQ />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/terms-conditions" element={<TermsConditions />} />
+                  <Route path="/terms" element={<TermsConditions />} />
                   <Route path="/shipping-policy" element={<ShippingPolicy />} />
+                  <Route path="/shipping" element={<ShippingPolicy />} />
                   <Route path="/returns-policy" element={<ReturnsPolicy />} />
+                  <Route path="/returns" element={<ReturnsPolicy />} />
                   <Route path="/track-order" element={<TrackOrder />} />
                   <Route path="/gifting" element={<Gifting />} />
+                  <Route path="/help" element={<HelpCenter />} />
+                  <Route path="/size-guide" element={<SizeGuide />} />
                   <Route path="/festival" element={<FestivalPage />} />
                   <Route path="/festival/:slug" element={<FestivalPage />} />
                   

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, X, TrendingUp, Clock, ArrowRight, Sparkles, Star, Zap } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { products, categories, formatPrice } from '@/data/products';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface SearchModalProps {
   open: boolean;
@@ -22,13 +23,49 @@ const getRecentSearches = () => {
   }
 };
 
+// Generate autocomplete suggestions
+const generateSuggestions = (query: string): string[] => {
+  if (query.length < 2) return [];
+  const q = query.toLowerCase();
+  const suggestions = new Set<string>();
+  
+  // Add product names that match
+  products.forEach(p => {
+    if (p.name.toLowerCase().includes(q)) {
+      suggestions.add(p.name);
+    }
+  });
+  
+  // Add category-based suggestions
+  categories.forEach(c => {
+    if (c.name.toLowerCase().includes(q)) {
+      suggestions.add(c.name);
+      suggestions.add(`${c.name} for Women`);
+      suggestions.add(`${c.name} for Men`);
+    }
+  });
+
+  // Add common search patterns
+  const patterns = ['silver', 'gold plated', 'oxidized', 'antique', 'bridal', 'daily wear', 'party wear'];
+  patterns.forEach(pattern => {
+    if (pattern.includes(q) || q.includes(pattern.split(' ')[0])) {
+      suggestions.add(`${pattern} jewellery`);
+    }
+  });
+
+  return Array.from(suggestions).slice(0, 5);
+};
+
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<typeof products>([]);
   const [categoryResults, setCategoryResults] = useState<typeof categories>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const suggestions = useMemo(() => generateSuggestions(query), [query]);
 
   useEffect(() => {
     if (open) {
@@ -38,11 +75,13 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
       setQuery('');
       setResults([]);
       setCategoryResults([]);
+      setSelectedSuggestion(-1);
     }
   }, [open]);
 
   useEffect(() => {
     setIsTyping(true);
+    setSelectedSuggestion(-1);
     const timer = setTimeout(() => {
       if (query.length > 1) {
         const searchLower = query.toLowerCase();
@@ -62,10 +101,26 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
         setCategoryResults([]);
       }
       setIsTyping(false);
-    }, 200);
+    }, 150);
 
     return () => clearTimeout(timer);
   }, [query]);
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedSuggestion(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedSuggestion(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === 'Enter' && selectedSuggestion >= 0) {
+      e.preventDefault();
+      setQuery(suggestions[selectedSuggestion]);
+    }
+  };
 
   const handleSearch = (term: string) => {
     const recent = getRecentSearches();
@@ -87,20 +142,58 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
         <DialogTitle className="sr-only">Search NOIR925</DialogTitle>
         
         {/* Search Input */}
-        <div className="flex items-center border-b border-border px-4 bg-muted/30">
-          <Search className="w-5 h-5 text-primary flex-shrink-0" />
-          <Input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search for silver jewellery..."
-            className="border-0 focus-visible:ring-0 text-base py-5 bg-transparent placeholder:text-muted-foreground/60 flex-1"
-          />
-          {query && (
-            <Button variant="ghost" size="icon" onClick={() => setQuery('')} className="h-8 w-8 flex-shrink-0">
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+        <div className="relative border-b border-border bg-muted/30">
+          <div className="flex items-center px-4">
+            <Search className="w-5 h-5 text-primary flex-shrink-0" />
+            <Input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search for silver jewellery..."
+              className="border-0 focus-visible:ring-0 text-base py-5 bg-transparent placeholder:text-muted-foreground/60 flex-1"
+            />
+            {query && (
+              <Button variant="ghost" size="icon" onClick={() => setQuery('')} className="h-8 w-8 flex-shrink-0">
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+          
+          {/* Autocomplete Suggestions Dropdown */}
+          <AnimatePresence>
+            {suggestions.length > 0 && query.length > 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                className="absolute left-0 right-0 top-full bg-background border-b border-border shadow-lg z-50"
+              >
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion}
+                    onClick={() => {
+                      setQuery(suggestion);
+                      handleSearch(suggestion);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                      selectedSuggestion === index ? 'bg-primary/10' : 'hover:bg-muted'
+                    }`}
+                  >
+                    <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm">
+                      {suggestion.split(new RegExp(`(${query})`, 'gi')).map((part, i) => (
+                        <span key={i} className={part.toLowerCase() === query.toLowerCase() ? 'font-bold text-primary' : ''}>
+                          {part}
+                        </span>
+                      ))}
+                    </span>
+                    <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100" />
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto overscroll-contain">

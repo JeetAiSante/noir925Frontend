@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { products } from '@/data/products';
 import { useCategoriesWithCounts, useTotalProductCount } from '@/hooks/useProductCounts';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
+import MobileFilterDrawer from '@/components/shop/MobileFilterDrawer';
 import { SEOHead, CollectionSchema, ItemListSchema } from '@/components/seo/SEOHead';
 import { BreadcrumbSchema } from '@/components/seo/ProductSchema';
 
@@ -238,11 +239,26 @@ const Shop = () => {
           {/* Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-border">
             <div className="flex items-center gap-3">
+              {/* Mobile Filter Drawer */}
+              <MobileFilterDrawer
+                categories={categories.map(c => ({ id: c.id, name: c.name, productCount: c.productCount }))}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                priceRange={priceRange}
+                setPriceRange={setPriceRange}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                totalProducts={totalCount}
+                filteredCount={filteredProducts.length}
+                onClearFilters={clearFilters}
+              />
+
+              {/* Desktop Filter Button */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2"
+                className="hidden md:flex items-center gap-2"
               >
                 <Filter className="w-4 h-4" />
                 Filters
