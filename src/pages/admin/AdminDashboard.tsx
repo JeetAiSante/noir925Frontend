@@ -27,7 +27,9 @@ import {
   LayoutGrid,
   Receipt,
   FileText,
-  DollarSign
+  DollarSign,
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -45,6 +47,7 @@ const navItems = [
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
   { icon: Gift, label: 'Spin Wheel', path: '/admin/spin-wheel' },
+  { icon: Bell, label: 'Popup Settings', path: '/admin/popup-settings' },
   { icon: Star, label: 'Loyalty Program', path: '/admin/loyalty' },
   { icon: CreditCard, label: 'Gift Cards', path: '/admin/gift-cards' },
   { icon: ToggleLeft, label: 'Feature Toggles', path: '/admin/feature-toggles' },
@@ -52,6 +55,7 @@ const navItems = [
   { icon: Receipt, label: 'Tax & GST', path: '/admin/tax-settings' },
   { icon: FileText, label: 'Page Content', path: '/admin/page-content' },
   { icon: DollarSign, label: 'Currency Settings', path: '/admin/currency-settings' },
+  { icon: MessageSquare, label: 'Site Contact', path: '/admin/site-contact' },
   { icon: Mail, label: 'Messages', path: '/admin/messages' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
