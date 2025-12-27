@@ -45,31 +45,20 @@ const Contact = () => {
   useEffect(() => {
     const fetchContactSettings = async () => {
       try {
-        const { data } = await supabase
-          .from('site_settings')
-          .select('key, value')
-          .in('key', ['contact_email', 'contact_phone', 'contact_address', 'business_hours']);
+        // Fetch from site_contact table (primary source)
+        const { data: siteContact } = await supabase
+          .from('site_contact')
+          .select('*')
+          .limit(1)
+          .single();
 
-        if (data) {
-          const settings: Partial<ContactSettings> = {};
-          data.forEach((item) => {
-            const value = typeof item.value === 'string' ? item.value : String(item.value);
-            switch (item.key) {
-              case 'contact_email':
-                settings.email = value;
-                break;
-              case 'contact_phone':
-                settings.phone = value;
-                break;
-              case 'contact_address':
-                settings.address = value;
-                break;
-              case 'business_hours':
-                settings.businessHours = value;
-                break;
-            }
+        if (siteContact) {
+          setContactSettings({
+            email: siteContact.email || 'hello@noir925.com',
+            phone: siteContact.phone || '+91 98765 43210',
+            address: siteContact.address || 'Mumbai, Maharashtra',
+            businessHours: '10:00 AM - 7:00 PM'
           });
-          setContactSettings(prev => ({ ...prev, ...settings }));
         }
       } catch (error) {
         console.error('Error fetching contact settings:', error);

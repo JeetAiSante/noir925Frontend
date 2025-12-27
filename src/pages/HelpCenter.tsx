@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -6,6 +6,8 @@ import { SEOHead } from '@/components/seo/SEOHead';
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Search, Package, CreditCard, Truck, RotateCcw, Phone, Mail, MessageCircle, ChevronRight, HelpCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const helpCategories = [
   {
@@ -60,6 +62,21 @@ const helpCategories = [
 
 const HelpCenter = () => {
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch contact info from database
+  const { data: contactInfo } = useQuery({
+    queryKey: ['site-contact-help'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_contact')
+        .select('*')
+        .limit(1)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 1000 * 60 * 30,
+  });
 
   const filteredCategories = helpCategories.filter((cat) =>
     cat.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,14 +189,14 @@ const HelpCenter = () => {
             <p className="text-muted-foreground mb-6">Our support team is here to assist you</p>
             <div className="flex flex-wrap justify-center gap-4">
               <a 
-                href="tel:+919876543210" 
+                href={`tel:${contactInfo?.phone || '+919876543210'}`}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-background rounded-full hover:shadow-lg transition-shadow"
               >
                 <Phone className="w-4 h-4 text-primary" />
                 <span className="font-medium">Call Us</span>
               </a>
               <a 
-                href="mailto:support@noir925.com" 
+                href={`mailto:${contactInfo?.email || 'support@noir925.com'}`}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-background rounded-full hover:shadow-lg transition-shadow"
               >
                 <Mail className="w-4 h-4 text-primary" />
@@ -190,7 +207,7 @@ const HelpCenter = () => {
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span className="font-medium">Live Chat</span>
+                <span className="font-medium">Contact Form</span>
               </Link>
             </div>
           </div>
