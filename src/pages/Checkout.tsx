@@ -9,11 +9,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { useCurrency } from "@/context/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLoyaltySettings, useUserLoyaltyPoints, useEarnPoints, useRedeemPoints } from "@/hooks/useLoyaltyPoints";
 import { z } from "zod";
-import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins } from "lucide-react";
+import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins, Info } from "lucide-react";
 import GiftWrapping from "@/components/checkout/GiftWrapping";
 import {
   AlertDialog,
@@ -81,6 +82,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
+  const { formatPrice, currentCurrency } = useCurrency();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("card");
