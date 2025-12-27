@@ -6,6 +6,7 @@ import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/P
 import { SEOHead, LocalBusinessSchema } from '@/components/seo/SEOHead';
 import FirstTimePopup from '@/components/popups/FirstTimePopup';
 import FloatingFestivalBanner from '@/components/shop/FloatingFestivalBanner';
+import { useSoldProductsAutomation } from '@/hooks/useSoldProductsAutomation';
 
 // Eagerly loaded critical sections
 import LuxuryHeroSection from '@/components/home/LuxuryHeroSection';
@@ -110,6 +111,9 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
 
 const Index = memo(() => {
   const { sections, loading, isSectionVisible } = useHomepageSections();
+  
+  // Enable sold products automation - auto marks products sold and removes after 7 days
+  useSoldProductsAutomation();
 
   // Default section order when DB not loaded yet
   const defaultOrder = [

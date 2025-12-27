@@ -163,7 +163,6 @@ const App = memo(() => (
                     <Route path="timers" element={<AdminTimers />} />
                     <Route path="themes" element={<AdminFestivalThemes />} />
                     <Route path="inventory" element={<AdminInventory />} />
-                    <Route path="inventory" element={<AdminInventory />} />
                     <Route path="loyalty" element={<AdminLoyalty />} />
                     <Route path="feature-toggles" element={<AdminFeatureToggles />} />
                     <Route path="gift-cards" element={<AdminGiftCards />} />

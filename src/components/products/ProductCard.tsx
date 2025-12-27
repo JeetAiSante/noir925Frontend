@@ -16,29 +16,14 @@ interface ProductCardProps {
   isLoading?: boolean;
 }
 
-// Alternate images for hover effect
-const alternateImages: Record<string, string> = {
-  'p1': 'https://images.unsplash.com/photo-1603561591411-07134e71a2a9?w=600&h=600&fit=crop',
-  'p2': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop',
-  'p3': 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&h=600&fit=crop',
-  'p4': 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&h=600&fit=crop',
-  'p5': 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&h=600&fit=crop',
-  'p6': 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&h=600&fit=crop',
-  'p7': 'https://images.unsplash.com/photo-1608042314453-ae338d80c427?w=600&h=600&fit=crop',
-  'p8': 'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=600&h=600&fit=crop',
-  'p9': 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&h=600&fit=crop',
-  'p10': 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&h=600&fit=crop',
-  'p11': 'https://images.unsplash.com/photo-1629224316810-9d8805b95e76?w=600&h=600&fit=crop',
-  'p12': 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&h=600&fit=crop',
-};
-
 const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const { formatPrice } = useCurrency();
 
-  const alternateImage = alternateImages[product.id] || product.image;
+  // Use hoverImage from product if available, otherwise fallback to main image
+  const hoverImage = (product as any).hoverImage || product.image;
 
   if (isLoading) {
     return <ProductSkeleton className={className} />;
@@ -111,9 +96,9 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               }`}
             />
             
-            {/* Alternate Image (shown on hover) */}
+            {/* Hover Image (shown on hover - selected in admin) */}
             <OptimizedImage
-              src={alternateImage}
+              src={hoverImage}
               alt={`${product.name} - alternate view showing different angle`}
               aspectRatio="square"
               priority={false}

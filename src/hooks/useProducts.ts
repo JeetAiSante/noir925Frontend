@@ -23,26 +23,35 @@ interface DbProduct {
   rating: number | null;
   reviews_count: number | null;
   category_id: string | null;
+  hover_image_index: number | null;
 }
 
-const mapDbProductToProduct = (db: DbProduct): Product => ({
-  id: db.id,
-  name: db.name,
-  price: db.price,
-  originalPrice: db.original_price || undefined,
-  discount: db.discount_percent || undefined,
-  image: Array.isArray(db.images) && db.images.length > 0 ? db.images[0] : 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600',
-  category: 'Silver Jewelry',
-  rating: db.rating || 4.5,
-  reviews: db.reviews_count || 0,
-  isNew: db.is_new,
-  isBestseller: db.is_bestseller,
-  isTrending: db.is_trending,
-  description: db.description || '',
-  material: db.material || '925 Sterling Silver',
-  weight: db.weight || '',
-  purity: '92.5% Pure Silver',
-});
+const mapDbProductToProduct = (db: DbProduct): Product => {
+  const images = Array.isArray(db.images) ? db.images : [];
+  const mainImage = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600';
+  const hoverIndex = db.hover_image_index ?? 1;
+  const hoverImage = images.length > hoverIndex ? images[hoverIndex] : mainImage;
+  
+  return {
+    id: db.id,
+    name: db.name,
+    price: db.price,
+    originalPrice: db.original_price || undefined,
+    discount: db.discount_percent || undefined,
+    image: mainImage,
+    hoverImage: hoverImage,
+    category: 'Silver Jewelry',
+    rating: db.rating || 4.5,
+    reviews: db.reviews_count || 0,
+    isNew: db.is_new,
+    isBestseller: db.is_bestseller,
+    isTrending: db.is_trending,
+    description: db.description || '',
+    material: db.material || '925 Sterling Silver',
+    weight: db.weight || '',
+    purity: '92.5% Pure Silver',
+  };
+};
 
 export const useProducts = (options?: { 
   featured?: boolean; 
@@ -54,10 +63,9 @@ export const useProducts = (options?: {
   return useQuery({
     queryKey: ['products', options],
     queryFn: async () => {
-      // Select only needed columns for performance
       let query = supabase
         .from('products')
-        .select('id, name, slug, price, original_price, discount_percent, images, is_new, is_trending, is_bestseller, rating, reviews_count, description, material, weight')
+        .select('id, name, slug, price, original_price, discount_percent, images, is_new, is_trending, is_bestseller, rating, reviews_count, description, material, weight, hover_image_index')
         .eq('is_active', true);
 
       if (options?.featured) {
@@ -82,8 +90,8 @@ export const useProducts = (options?: {
 
       return (data as DbProduct[]).map(mapDbProductToProduct);
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    gcTime: 1000 * 60 * 30, // 30 minutes cache
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 };
 
