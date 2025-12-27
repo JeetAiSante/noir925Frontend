@@ -595,6 +595,42 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_settings: {
+        Row: {
+          company_logo: string | null
+          company_name: string | null
+          company_signature: string | null
+          created_at: string | null
+          footer_text: string | null
+          id: string
+          invoice_prefix: string | null
+          terms_text: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_logo?: string | null
+          company_name?: string | null
+          company_signature?: string | null
+          created_at?: string | null
+          footer_text?: string | null
+          id?: string
+          invoice_prefix?: string | null
+          terms_text?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_logo?: string | null
+          company_name?: string | null
+          company_signature?: string | null
+          created_at?: string | null
+          footer_text?: string | null
+          id?: string
+          invoice_prefix?: string | null
+          terms_text?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       loyalty_settings: {
         Row: {
           created_at: string
@@ -1005,6 +1041,7 @@ export type Database = {
           discount_percent: number | null
           festival_id: string | null
           gender: string | null
+          hover_image_index: number | null
           id: string
           images: Json
           is_active: boolean
@@ -1036,6 +1073,7 @@ export type Database = {
           discount_percent?: number | null
           festival_id?: string | null
           gender?: string | null
+          hover_image_index?: number | null
           id?: string
           images?: Json
           is_active?: boolean
@@ -1067,6 +1105,7 @@ export type Database = {
           discount_percent?: number | null
           festival_id?: string | null
           gender?: string | null
+          hover_image_index?: number | null
           id?: string
           images?: Json
           is_active?: boolean
@@ -1140,12 +1179,16 @@ export type Database = {
       site_contact: {
         Row: {
           address: string | null
+          company_logo: string | null
+          company_name: string | null
+          company_signature: string | null
           created_at: string
           email: string | null
           facebook_url: string | null
           gst_number: string | null
           id: string
           instagram_url: string | null
+          invoice_prefix: string | null
           phone: string | null
           twitter_url: string | null
           updated_at: string
@@ -1154,12 +1197,16 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          company_signature?: string | null
           created_at?: string
           email?: string | null
           facebook_url?: string | null
           gst_number?: string | null
           id?: string
           instagram_url?: string | null
+          invoice_prefix?: string | null
           phone?: string | null
           twitter_url?: string | null
           updated_at?: string
@@ -1168,12 +1215,16 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          company_logo?: string | null
+          company_name?: string | null
+          company_signature?: string | null
           created_at?: string
           email?: string | null
           facebook_url?: string | null
           gst_number?: string | null
           id?: string
           instagram_url?: string | null
+          invoice_prefix?: string | null
           phone?: string | null
           twitter_url?: string | null
           updated_at?: string
