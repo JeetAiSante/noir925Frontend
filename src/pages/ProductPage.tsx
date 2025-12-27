@@ -6,7 +6,8 @@ import Footer from '@/components/layout/Footer';
 import MobileFooter from '@/components/layout/MobileFooter';
 import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
-import { products, formatPrice } from '@/data/products';
+import { products } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import ProductCard from '@/components/products/ProductCard';
 import ProductImageZoom from '@/components/products/ProductImageZoom';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
@@ -22,6 +23,7 @@ const ProductPage = () => {
   const [activeImage, setActiveImage] = useState(0);
   const [showZoom, setShowZoom] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
+  const { formatPrice } = useCurrency();
 
   const product = products.find((p) => p.id === id);
   

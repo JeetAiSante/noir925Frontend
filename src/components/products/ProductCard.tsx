@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Star, Sparkles, TrendingUp, Zap, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
-import { Product, formatPrice } from '@/data/products';
+import { Product } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import ProductQuickView from './ProductQuickView';
 import { ProductSkeleton } from '@/components/ui/product-skeleton';
 import { motion } from 'framer-motion';
@@ -35,6 +36,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
   const [isHovered, setIsHovered] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
+  const { formatPrice } = useCurrency();
 
   const alternateImage = alternateImages[product.id] || product.image;
 
