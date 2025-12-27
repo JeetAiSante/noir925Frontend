@@ -90,11 +90,13 @@ const Checkout = () => {
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showSaveAddressDialog, setShowSaveAddressDialog] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
+  const [taxSettings, setTaxSettings] = useState<{ tax_name: string; tax_percent: number; is_enabled: boolean; is_inclusive: boolean } | null>(null);
 
   // Loyalty hooks
   const { data: loyaltySettings } = useLoyaltySettings();
@@ -125,12 +127,24 @@ const Checkout = () => {
     }
   }, [user, navigate, toast]);
 
-  // Fetch saved addresses
+  // Fetch saved addresses and tax settings
   useEffect(() => {
     if (user) {
       fetchSavedAddresses();
     }
+    fetchTaxSettings();
   }, [user]);
+
+  const fetchTaxSettings = async () => {
+    const { data } = await supabase
+      .from('tax_settings')
+      .select('*')
+      .single();
+    
+    if (data) {
+      setTaxSettings(data);
+    }
+  };
 
   const fetchSavedAddresses = async () => {
     const { data } = await supabase
@@ -164,11 +178,17 @@ const Checkout = () => {
     });
   };
 
+  // Calculate tax based on admin settings
+  const taxPercent = taxSettings?.is_enabled ? taxSettings.tax_percent : 0;
+  const taxAmount = taxSettings?.is_inclusive 
+    ? Math.round(cartTotal - (cartTotal / (1 + taxPercent / 100)))
+    : Math.round(cartTotal * (taxPercent / 100));
   const shipping = cartTotal > 2000 ? 0 : 99;
-  const tax = Math.round(cartTotal * 0.18);
   const giftWrapCost = isGiftWrap ? GIFT_WRAP_COST : 0;
   const couponDiscount = appliedCoupon ? Math.round(cartTotal * (appliedCoupon.discount / 100)) : 0;
-  const total = cartTotal + shipping + tax + giftWrapCost - couponDiscount - loyaltyDiscount;
+  const total = taxSettings?.is_inclusive 
+    ? cartTotal + shipping + giftWrapCost - couponDiscount - loyaltyDiscount
+    : cartTotal + shipping + taxAmount + giftWrapCost - couponDiscount - loyaltyDiscount;
   const potentialPoints = loyaltySettings?.is_enabled ? Math.floor(cartTotal * (loyaltySettings.points_per_rupee || 1)) : 0;
 
   const handleRedeemPoints = () => {
@@ -331,7 +351,7 @@ const Checkout = () => {
           order_number: "",
           subtotal: cartTotal,
           shipping_cost: shipping,
-          tax,
+          tax: taxAmount,
           discount: couponDiscount,
           total,
           payment_method: paymentMethod,
@@ -446,7 +466,7 @@ const Checkout = () => {
             })),
             subtotal: cartTotal,
             shipping: shipping,
-            tax: tax,
+            tax: taxAmount,
             discount: (appliedCoupon?.discount || 0) + loyaltyDiscount,
             total: total,
             shippingAddress: {
@@ -477,7 +497,18 @@ const Checkout = () => {
         title: "🎉 Order Placed Successfully!",
         description: `Your order #${order.order_number} has been placed. Thank you for shopping with us!`,
       });
-      navigate("/account");
+      
+      // Check if address is not already saved and show save prompt
+      const isAddressSaved = savedAddresses.some(addr => 
+        addr.address_line1 === shippingInfo.addressLine1 && 
+        addr.postal_code === shippingInfo.postalCode
+      );
+      
+      if (!isAddressSaved && shippingInfo.addressLine1) {
+        setShowSaveAddressDialog(true);
+      } else {
+        navigate("/account");
+      }
     } catch (error) {
       console.error("Order error:", error);
       toast({
@@ -928,10 +959,14 @@ const Checkout = () => {
                     {shipping === 0 ? "FREE" : `₹${shipping}`}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tax (18% GST)</span>
-                  <span>₹{tax.toLocaleString()}</span>
-                </div>
+                {taxSettings?.is_enabled && taxAmount > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {taxSettings.tax_name} ({taxSettings.tax_percent}%{taxSettings.is_inclusive ? ' incl.' : ''})
+                    </span>
+                    <span>{taxSettings.is_inclusive ? 'Included' : `₹${taxAmount.toLocaleString()}`}</span>
+                  </div>
+                )}
                 {isGiftWrap && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground flex items-center gap-1">
@@ -1039,6 +1074,42 @@ const Checkout = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Save Address After Order Dialog */}
+      <AlertDialog open={showSaveAddressDialog} onOpenChange={setShowSaveAddressDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-primary" />
+              Save This Address?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Would you like to save this shipping address for faster checkout next time?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="p-4 bg-muted/50 rounded-lg my-2">
+            <p className="font-medium">{shippingInfo.fullName}</p>
+            <p className="text-sm text-muted-foreground">{shippingInfo.addressLine1}</p>
+            {shippingInfo.addressLine2 && (
+              <p className="text-sm text-muted-foreground">{shippingInfo.addressLine2}</p>
+            )}
+            <p className="text-sm text-muted-foreground">
+              {shippingInfo.city}, {shippingInfo.state} - {shippingInfo.postalCode}
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => navigate("/account")}>
+              No Thanks
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={async () => {
+              await saveNewAddress();
+              navigate("/account");
+            }}>
+              Save Address
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>

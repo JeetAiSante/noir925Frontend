@@ -113,7 +113,11 @@ const ProfileAvatar = ({ userId, avatarUrl, fullName, onAvatarUpdate }: ProfileA
     setIsGenerating(true);
     
     try {
-      // Generate a luxury-themed avatar using AI
+      toast({
+        title: 'Generating Avatar',
+        description: 'Creating your personalized AI avatar...',
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-avatar', {
         body: {
           initials,
@@ -135,16 +139,18 @@ const ProfileAvatar = ({ userId, avatarUrl, fullName, onAvatarUpdate }: ProfileA
 
         onAvatarUpdate(data.avatarUrl);
         toast({
-          title: 'AI Avatar Generated',
-          description: 'Your unique avatar has been created.',
+          title: data.fallback ? 'Avatar Created' : 'AI Avatar Generated',
+          description: data.fallback 
+            ? 'Created a beautiful avatar for you.' 
+            : 'Your unique AI-generated avatar is ready!',
         });
       }
     } catch (error) {
       console.error('AI avatar error:', error);
-      // Fall back to default gradient avatar
       toast({
-        title: 'Using default avatar',
-        description: 'AI generation unavailable. Using luxury default.',
+        title: 'Generation Failed',
+        description: 'Could not generate avatar. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
