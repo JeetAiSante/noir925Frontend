@@ -1,7 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, Sparkles, User } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Camera, Upload, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +40,6 @@ const ProfileAvatar = ({ userId, avatarUrl, fullName, onAvatarUpdate }: ProfileA
     .toUpperCase()
     .slice(0, 2) || 'U';
 
-  // Generate a consistent color based on the user's name
   const colorIndex = fullName ? fullName.charCodeAt(0) % AVATAR_COLORS.length : 0;
   const gradientClass = AVATAR_COLORS[colorIndex];
 
@@ -84,7 +82,6 @@ const ProfileAvatar = ({ userId, avatarUrl, fullName, onAvatarUpdate }: ProfileA
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile with new avatar URL
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
@@ -129,7 +126,6 @@ const ProfileAvatar = ({ userId, avatarUrl, fullName, onAvatarUpdate }: ProfileA
       if (error) throw error;
 
       if (data?.avatarUrl) {
-        // Update profile with AI-generated avatar
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ avatar_url: data.avatarUrl })
@@ -158,52 +154,54 @@ const ProfileAvatar = ({ userId, avatarUrl, fullName, onAvatarUpdate }: ProfileA
   };
 
   return (
-    <div className="relative inline-block">
-      <Avatar className="w-24 h-24 ring-4 ring-primary/20 ring-offset-2 ring-offset-background shadow-luxury">
-        <AvatarImage src={avatarUrl || ''} className="object-cover" />
-        <AvatarFallback className={`text-2xl font-display text-white bg-gradient-to-br ${gradientClass}`}>
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+    <div className="flex flex-col items-center gap-3">
+      <div className="relative">
+        <Avatar className="w-20 h-20 sm:w-24 sm:h-24 ring-4 ring-primary/20 ring-offset-2 ring-offset-background shadow-lg">
+          <AvatarImage src={avatarUrl || ''} className="object-cover" />
+          <AvatarFallback className={`text-xl sm:text-2xl font-display text-white bg-gradient-to-br ${gradientClass}`}>
+            {initials}
+          </AvatarFallback>
+        </Avatar>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button 
-            className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-all shadow-lg hover:scale-105 disabled:opacity-50"
-            disabled={isUploading || isGenerating}
-          >
-            {isUploading || isGenerating ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Camera className="w-4 h-4" />
-            )}
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuItem 
-            onClick={() => cameraInputRef.current?.click()}
-            className="cursor-pointer"
-          >
-            <Camera className="w-4 h-4 mr-2" />
-            Take Photo
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={() => fileInputRef.current?.click()}
-            className="cursor-pointer"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload from Gallery
-          </DropdownMenuItem>
-          <DropdownMenuItem 
-            onClick={generateAIAvatar}
-            className="cursor-pointer"
-            disabled={isGenerating}
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Generate AI Avatar
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button 
+              className="absolute bottom-0 right-0 p-2 sm:p-2.5 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-all shadow-lg hover:scale-105 disabled:opacity-50"
+              disabled={isUploading || isGenerating}
+            >
+              {isUploading || isGenerating ? (
+                <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 sm:w-56">
+            <DropdownMenuItem 
+              onClick={() => cameraInputRef.current?.click()}
+              className="cursor-pointer text-sm"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Take Photo
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer text-sm"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload from Gallery
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={generateAIAvatar}
+              className="cursor-pointer text-sm"
+              disabled={isGenerating}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate AI Avatar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Hidden file inputs */}
       <input
