@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles, Play, Eye, ChevronLeft, ZoomIn } from 'lucide-react';
+import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles, ChevronLeft, ZoomIn } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileFooter from '@/components/layout/MobileFooter';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
 import { products, formatPrice } from '@/data/products';
 import ProductCard from '@/components/products/ProductCard';
-import Product360View from '@/components/products/Product360View';
 import ProductImageZoom from '@/components/products/ProductImageZoom';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,7 +20,6 @@ const ProductPage = () => {
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
-  const [show360View, setShow360View] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
 
@@ -195,15 +193,6 @@ const ProductPage = () => {
                   <ZoomIn className="w-4 h-4" />
                   Zoom
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setShow360View(true)}
-                >
-                  <Eye className="w-4 h-4" />
-                  360° View
-                </Button>
               </div>
 
               {/* Discount Badge */}
@@ -337,10 +326,10 @@ const ProductPage = () => {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <p className="font-medium text-sm md:text-base">Select Size</p>
-                  <button className="text-primary text-xs md:text-sm flex items-center gap-1 hover:underline">
+                  <Link to="/size-guide" className="text-primary text-xs md:text-sm flex items-center gap-1 hover:underline">
                     <Ruler className="w-4 h-4" />
                     Size Guide
-                  </button>
+                  </Link>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((size) => (
@@ -450,13 +439,6 @@ const ProductPage = () => {
       <FloatingSpinWheel />
       <Footer />
       <MobileFooter />
-
-      {/* 360 View Modal */}
-      <Product360View
-        images={images}
-        open={show360View}
-        onOpenChange={setShow360View}
-      />
 
       {/* Zoom Modal */}
       <ProductImageZoom
