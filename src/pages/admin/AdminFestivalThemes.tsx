@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Palette, Plus, Trash2, Loader2, Edit, Calendar } from 'lucide-react';
+import { Palette, Plus, Trash2, Loader2, Edit, Calendar, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import ImageUpload from '@/components/admin/ImageUpload';
 
 interface FestivalTheme {
   id: string;
@@ -41,6 +42,7 @@ const AdminFestivalThemes = () => {
     accent_color: '#8B7355',
     background_color: '#0a0a0a',
     banner_image: '',
+    logo_overlay: '',
     special_offer: '',
     discount_percent: 0,
     start_date: '',
@@ -67,6 +69,7 @@ const AdminFestivalThemes = () => {
         ...data,
         discount_percent: data.discount_percent || null,
         banner_image: data.banner_image || null,
+        logo_overlay: data.logo_overlay || null,
         special_offer: data.special_offer || null,
         start_date: data.start_date || null,
         end_date: data.end_date || null,
@@ -135,6 +138,7 @@ const AdminFestivalThemes = () => {
       accent_color: '#8B7355',
       background_color: '#0a0a0a',
       banner_image: '',
+      logo_overlay: '',
       special_offer: '',
       discount_percent: 0,
       start_date: '',
@@ -154,6 +158,7 @@ const AdminFestivalThemes = () => {
       accent_color: theme.accent_color,
       background_color: theme.background_color,
       banner_image: theme.banner_image || '',
+      logo_overlay: theme.logo_overlay || '',
       special_offer: theme.special_offer || '',
       discount_percent: theme.discount_percent || 0,
       start_date: theme.start_date?.split('T')[0] || '',
@@ -301,13 +306,30 @@ const AdminFestivalThemes = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="banner_image">Banner Image URL</Label>
-                <Input
-                  id="banner_image"
+                <Label className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Festival Banner Image
+                </Label>
+                <ImageUpload
+                  bucket="banner-images"
                   value={formData.banner_image}
-                  onChange={(e) => setFormData({ ...formData, banner_image: e.target.value })}
-                  placeholder="https://..."
+                  onChange={(url) => setFormData({ ...formData, banner_image: url as string })}
+                  aspectRatio="banner"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Logo Overlay Image
+                </Label>
+                <ImageUpload
+                  bucket="banner-images"
+                  value={formData.logo_overlay}
+                  onChange={(url) => setFormData({ ...formData, logo_overlay: url as string })}
+                  aspectRatio="square"
+                />
+                <p className="text-xs text-muted-foreground">Optional: PNG with transparent background for overlay effects</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

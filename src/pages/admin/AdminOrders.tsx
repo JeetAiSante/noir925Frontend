@@ -11,11 +11,10 @@ import {
   Clock,
   XCircle,
   Mail,
-  FileText,
-  Download,
   User,
   MapPin,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AdminSecurityWrapper from '@/components/admin/AdminSecurityWrapper';
+import InvoiceGenerator from '@/components/admin/InvoiceGenerator';
 
 const statusConfig = {
   pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-500/10 text-yellow-500' },
@@ -58,6 +58,21 @@ interface ShippingAddress {
   country?: string;
 }
 
+interface SiteContact {
+  company_name?: string;
+  company_logo?: string;
+  company_signature?: string;
+  invoice_prefix?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  gst_number?: string;
+  instagram_url?: string;
+  facebook_url?: string;
+  twitter_url?: string;
+  whatsapp?: string;
+}
+
 const AdminOrders = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +81,7 @@ const AdminOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [customerProfile, setCustomerProfile] = useState<any>(null);
-  const [siteContact, setSiteContact] = useState<any>(null);
+  const [siteContact, setSiteContact] = useState<SiteContact | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const { formatPrice } = useCurrency();
 
@@ -195,30 +210,17 @@ const AdminOrders = () => {
 
       const { error } = await supabase.functions.invoke('send-email', {
         body: {
-          to: customerEmail,
-          subject: `Order ${selectedOrder.order_number} - Status Update`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <div style="background: linear-gradient(135deg, #D4AF37 0%, #8B7355 100%); padding: 20px; text-align: center;">
-                <h1 style="color: white; margin: 0;">NOIR925</h1>
-              </div>
-              <div style="padding: 30px; background: #f9f9f9;">
-                <h2>Order Status Update</h2>
-                <p>Dear ${shippingAddress?.full_name || 'Customer'},</p>
-                <p>Your order <strong>${selectedOrder.order_number}</strong> status has been updated to:</p>
-                <div style="background: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
-                  <span style="font-size: 18px; font-weight: bold; color: #D4AF37; text-transform: uppercase;">
-                    ${selectedOrder.status}
-                  </span>
-                </div>
-                <p>Order Total: <strong>${formatPrice(selectedOrder.total)}</strong></p>
-                <p>Thank you for shopping with NOIR925!</p>
-              </div>
-              <div style="background: #333; color: white; padding: 20px; text-align: center; font-size: 12px;">
-                <p>© 2024 NOIR925. All rights reserved.</p>
-              </div>
-            </div>
-          `,
+          type: 'order_status',
+          data: {
+            to: customerEmail,
+            orderNumber: selectedOrder.order_number,
+            customerName: shippingAddress?.full_name || 'Customer',
+            status: selectedOrder.status,
+            total: selectedOrder.total,
+            companyName: siteContact?.company_name,
+            companyLogo: siteContact?.company_logo,
+            companySignature: siteContact?.company_signature,
+          },
         },
       });
 
@@ -226,7 +228,7 @@ const AdminOrders = () => {
 
       toast({
         title: "Email sent",
-        description: "Status update email sent to customer",
+        description: `Status update email sent to ${customerEmail}`,
       });
     } catch (error) {
       console.error('Error sending email:', error);
@@ -240,154 +242,10 @@ const AdminOrders = () => {
     }
   };
 
-  const generateInvoiceHTML = () => {
+  const getCustomerEmail = () => {
     if (!selectedOrder) return '';
-    
     const shippingAddress = selectedOrder.shipping_address as ShippingAddress;
-    const orderDate = new Date(selectedOrder.created_at).toLocaleDateString('en-IN', {
-      year: 'numeric', month: 'long', day: 'numeric'
-    });
-
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #D4AF37; padding-bottom: 20px; margin-bottom: 20px;">
-          <div>
-            <h1 style="color: #D4AF37; margin: 0;">NOIR925</h1>
-            <p style="color: #666; margin: 5px 0;">Premium 925 Sterling Silver Jewellery</p>
-          </div>
-          <div style="text-align: right;">
-            <h2 style="margin: 0;">INVOICE</h2>
-            <p style="color: #666; margin: 5px 0;">${selectedOrder.order_number}</p>
-            <p style="color: #666; margin: 5px 0;">${orderDate}</p>
-          </div>
-        </div>
-
-        <!-- Addresses -->
-        <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
-          <div>
-            <h4 style="margin: 0 0 10px 0; color: #333;">Bill To:</h4>
-            <p style="margin: 3px 0;">${shippingAddress?.full_name || 'N/A'}</p>
-            <p style="margin: 3px 0;">${shippingAddress?.address_line1 || ''}</p>
-            ${shippingAddress?.address_line2 ? `<p style="margin: 3px 0;">${shippingAddress.address_line2}</p>` : ''}
-            <p style="margin: 3px 0;">${shippingAddress?.city || ''}, ${shippingAddress?.state || ''} ${shippingAddress?.postal_code || ''}</p>
-            <p style="margin: 3px 0;">${shippingAddress?.phone || ''}</p>
-          </div>
-          <div style="text-align: right;">
-            <h4 style="margin: 0 0 10px 0; color: #333;">From:</h4>
-            <p style="margin: 3px 0;">${siteContact?.company_name || 'NOIR925'}</p>
-            <p style="margin: 3px 0;">${siteContact?.address || ''}</p>
-            <p style="margin: 3px 0;">${siteContact?.phone || ''}</p>
-            <p style="margin: 3px 0;">${siteContact?.email || ''}</p>
-            ${siteContact?.gst_number ? `<p style="margin: 3px 0;">GST: ${siteContact.gst_number}</p>` : ''}
-          </div>
-        </div>
-
-        <!-- Items -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <thead>
-            <tr style="background: #f5f5f5;">
-              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd;">Item</th>
-              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd;">Qty</th>
-              <th style="padding: 12px; text-align: right; border-bottom: 2px solid #ddd;">Price</th>
-              <th style="padding: 12px; text-align: right; border-bottom: 2px solid #ddd;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${orderItems.map(item => `
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.product_name}</td>
-                <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${item.quantity}</td>
-                <td style="padding: 12px; text-align: right; border-bottom: 1px solid #eee;">${formatPrice(item.price)}</td>
-                <td style="padding: 12px; text-align: right; border-bottom: 1px solid #eee;">${formatPrice(item.price * item.quantity)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <!-- Totals -->
-        <div style="text-align: right; margin-bottom: 30px;">
-          <p style="margin: 5px 0;">Subtotal: ${formatPrice(selectedOrder.subtotal)}</p>
-          ${selectedOrder.shipping_cost > 0 ? `<p style="margin: 5px 0;">Shipping: ${formatPrice(selectedOrder.shipping_cost)}</p>` : ''}
-          ${selectedOrder.discount > 0 ? `<p style="margin: 5px 0; color: green;">Discount: -${formatPrice(selectedOrder.discount)}</p>` : ''}
-          ${selectedOrder.tax > 0 ? `<p style="margin: 5px 0;">Tax: ${formatPrice(selectedOrder.tax)}</p>` : ''}
-          <p style="margin: 10px 0; font-size: 18px; font-weight: bold; border-top: 2px solid #333; padding-top: 10px;">
-            Total: ${formatPrice(selectedOrder.total)}
-          </p>
-        </div>
-
-        <!-- Footer -->
-        <div style="text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px;">
-          <p>Thank you for shopping with NOIR925!</p>
-          <p>For queries: ${siteContact?.email || 'support@noir925.com'} | ${siteContact?.phone || ''}</p>
-        </div>
-      </div>
-    `;
-  };
-
-  const downloadInvoice = () => {
-    const invoiceHTML = generateInvoiceHTML();
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Invoice - ${selectedOrder?.order_number}</title>
-            <style>
-              @media print {
-                body { margin: 0; padding: 20px; }
-              }
-            </style>
-          </head>
-          <body>${invoiceHTML}</body>
-        </html>
-      `);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
-
-  const sendInvoiceEmail = async () => {
-    if (!selectedOrder) return;
-    
-    setSendingEmail(true);
-    try {
-      const shippingAddress = selectedOrder.shipping_address as ShippingAddress;
-      const customerEmail = shippingAddress?.email || customerProfile?.email;
-      
-      if (!customerEmail) {
-        toast({
-          title: "Error",
-          description: "No customer email found",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase.functions.invoke('send-email', {
-        body: {
-          to: customerEmail,
-          subject: `Invoice for Order ${selectedOrder.order_number} - NOIR925`,
-          html: generateInvoiceHTML(),
-        },
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Invoice sent",
-        description: "Invoice email sent to customer",
-      });
-    } catch (error) {
-      console.error('Error sending invoice:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send invoice email",
-        variant: "destructive",
-      });
-    } finally {
-      setSendingEmail(false);
-    }
+    return shippingAddress?.email || customerProfile?.email || '';
   };
 
   const filteredOrders = orders.filter(order => {
@@ -416,7 +274,7 @@ const AdminOrders = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {Object.entries(statusConfig).map(([key, config]) => {
             const count = orders.filter(o => o.status === key).length;
             return (
@@ -542,7 +400,7 @@ const AdminOrders = () => {
 
         {/* Order Details Dialog */}
         <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-display text-xl flex items-center justify-between">
                 <span>Order {selectedOrder?.order_number}</span>
@@ -630,6 +488,12 @@ const AdminOrders = () => {
                         <span>-{formatPrice(selectedOrder.discount)}</span>
                       </div>
                     )}
+                    {selectedOrder.tax > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tax</span>
+                        <span>{formatPrice(selectedOrder.tax)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-lg font-semibold border-t border-border pt-2">
                       <span>Total</span>
                       <span>{formatPrice(selectedOrder.total)}</span>
@@ -660,7 +524,7 @@ const AdminOrders = () => {
                       </SelectContent>
                     </Select>
                     <Button variant="outline" onClick={sendStatusEmail} disabled={sendingEmail}>
-                      <Mail className="w-4 h-4 mr-2" />
+                      {sendingEmail ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                       {sendingEmail ? 'Sending...' : 'Send Status Email'}
                     </Button>
                   </div>
@@ -713,26 +577,13 @@ const AdminOrders = () => {
                   })()}
                 </TabsContent>
 
-                <TabsContent value="invoice" className="space-y-4 mt-4">
-                  <div className="flex gap-2">
-                    <Button onClick={downloadInvoice}>
-                      <Download className="w-4 h-4 mr-2" />
-                      Download/Print Invoice
-                    </Button>
-                    <Button variant="outline" onClick={sendInvoiceEmail} disabled={sendingEmail}>
-                      <Mail className="w-4 h-4 mr-2" />
-                      {sendingEmail ? 'Sending...' : 'Email Invoice'}
-                    </Button>
-                  </div>
-                  
-                  <Card>
-                    <CardContent className="p-4">
-                      <div 
-                        className="border rounded-lg p-4 bg-white"
-                        dangerouslySetInnerHTML={{ __html: generateInvoiceHTML() }}
-                      />
-                    </CardContent>
-                  </Card>
+                <TabsContent value="invoice" className="mt-4">
+                  <InvoiceGenerator
+                    order={selectedOrder}
+                    orderItems={orderItems}
+                    siteContact={siteContact}
+                    customerEmail={getCustomerEmail()}
+                  />
                 </TabsContent>
               </Tabs>
             )}
