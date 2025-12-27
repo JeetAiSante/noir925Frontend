@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { products, categories, formatPrice } from '@/data/products';
+import { products, categories } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +59,7 @@ const generateLocalSuggestions = (query: string): string[] => {
 };
 
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
+  const { formatPrice } = useCurrency();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<typeof products>([]);
   const [categoryResults, setCategoryResults] = useState<typeof categories>([]);

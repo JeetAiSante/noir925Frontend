@@ -1,9 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, Star } from 'lucide-react';
-import { products, formatPrice } from '@/data/products';
+import { products } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 
 const TrendingSlider = () => {
+  const { formatPrice } = useCurrency();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
   const animationRef = useRef<number>();

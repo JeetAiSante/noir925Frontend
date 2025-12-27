@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Gift, Percent, Star, ShoppingBag, Clock, Filter } from 'lucide-react';
-import { formatPrice, Product } from '@/data/products';
+import { Product } from '@/data/products';
+import { useCurrency } from '@/context/CurrencyContext';
 import ProductCard from '@/components/products/ProductCard';
 import OptimizedImage from '@/components/ui/optimized-image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -163,6 +164,7 @@ const ProductListSchema = ({ products, theme }: { products: Product[]; theme: Fe
 
 const FestivalPage = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { formatPrice } = useCurrency();
   const [sortBy, setSortBy] = useState<string>('featured');
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
