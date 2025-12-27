@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import LocationPopup from './LocationPopup';
 import DiscountPopup from './DiscountPopup';
 import SpinWheelPopup from './SpinWheelPopup';
+import { useFeatureToggles } from '@/hooks/useFeatureToggle';
 
 interface FirstTimePopupProps {
   children: React.ReactNode;
@@ -15,17 +16,26 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
   const [userLocation, setUserLocation] = useState<string | null>(null);
   const [pageNavigations, setPageNavigations] = useState(0);
   const location = useLocation();
+  
+  // Get feature toggles from database
+  const { data: features = [] } = useFeatureToggles();
+  
+  const isLocationPopupEnabled = features.find(f => f.feature_key === 'location_popup')?.is_enabled ?? true;
+  const isDiscountPopupEnabled = features.find(f => f.feature_key === 'discount_popup')?.is_enabled ?? true;
+  const isSpinWheelEnabled = features.find(f => f.feature_key === 'spin_wheel_popup')?.is_enabled ?? true;
 
   // Track page navigations for spin wheel
   useEffect(() => {
+    if (!isSpinWheelEnabled) return;
     const hasSpun = localStorage.getItem('noir925_has_spun');
     if (!hasSpun) {
       setPageNavigations(prev => prev + 1);
     }
-  }, [location.pathname]);
+  }, [location.pathname, isSpinWheelEnabled]);
 
   // Show spin wheel after 2 page navigations
   useEffect(() => {
+    if (!isSpinWheelEnabled) return;
     const hasSpun = localStorage.getItem('noir925_has_spun');
     if (!hasSpun && pageNavigations >= 2 && !showLocationPopup && !showDiscountPopup) {
       const timer = setTimeout(() => {
@@ -34,7 +44,7 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [pageNavigations, showLocationPopup, showDiscountPopup]);
+  }, [pageNavigations, showLocationPopup, showDiscountPopup, isSpinWheelEnabled]);
 
   useEffect(() => {
     // Check if user has already set location
@@ -45,7 +55,7 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
 
     if (savedLocation) {
       setUserLocation(savedLocation);
-    } else {
+    } else if (isLocationPopupEnabled) {
       // Show location popup after 2 seconds for first-time visitors
       const timer = setTimeout(() => {
         setShowLocationPopup(true);
@@ -54,7 +64,7 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
     }
 
     // Track scroll for discount popup
-    if (!hasSubscribed && popupShownToday !== today) {
+    if (isDiscountPopupEnabled && !hasSubscribed && popupShownToday !== today) {
       let scrollCount = 0;
       let lastScrollY = window.scrollY;
       
@@ -74,7 +84,7 @@ const FirstTimePopup = ({ children }: FirstTimePopupProps) => {
       window.addEventListener('scroll', scrollListener, { passive: true });
       return () => window.removeEventListener('scroll', scrollListener);
     }
-  }, [showLocationPopup, showDiscountPopup, showSpinWheel]);
+  }, [showLocationPopup, showDiscountPopup, showSpinWheel, isLocationPopupEnabled, isDiscountPopupEnabled]);
 
   const handleLocationSelect = (location: string) => {
     setUserLocation(location);

@@ -65,6 +65,8 @@ const AdminHomepageSections = lazy(() => import("./pages/admin/AdminHomepageSect
 const AdminTaxSettings = lazy(() => import("./pages/admin/AdminTaxSettings"));
 const AdminPageContent = lazy(() => import("./pages/admin/AdminPageContent"));
 const AdminCurrencySettings = lazy(() => import("./pages/admin/AdminCurrencySettings"));
+const AdminPopupSettings = lazy(() => import("./pages/admin/AdminPopupSettings"));
+const AdminSiteContact = lazy(() => import("./pages/admin/AdminSiteContact"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 // Performance-optimized cursor - lazy load as non-critical
@@ -170,6 +172,8 @@ const App = memo(() => (
                     <Route path="tax-settings" element={<AdminTaxSettings />} />
                     <Route path="page-content" element={<AdminPageContent />} />
                     <Route path="currency-settings" element={<AdminCurrencySettings />} />
+                    <Route path="popup-settings" element={<AdminPopupSettings />} />
+                    <Route path="site-contact" element={<AdminSiteContact />} />
                     <Route path="messages" element={<AdminMessages />} />
                     <Route path="customers" element={<AdminCustomers />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
