@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, TrendingUp, Star, ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback, memo } from 'react';
+import { X, Sparkles, TrendingUp, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface ProductPopupSettings {
@@ -43,14 +41,14 @@ interface Product {
   rating: number;
 }
 
-const ProductSpotlightPopup = () => {
+const ProductSpotlightPopup = memo(() => {
   const [isVisible, setIsVisible] = useState(false);
   const [hasBeenShown, setHasBeenShown] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { formatPrice } = useCurrency();
   const isMobile = useIsMobile();
 
-  // Fetch popup settings
+  // Fetch popup settings with stale time to reduce requests
   const { data: settings } = useQuery({
     queryKey: ['product-popup-settings'],
     queryFn: async () => {
@@ -62,9 +60,11 @@ const ProductSpotlightPopup = () => {
       if (error && error.code !== 'PGRST116') throw error;
       return data as ProductPopupSettings | null;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch feature toggle
+  // Fetch feature toggle with stale time
   const { data: featureToggle } = useQuery({
     queryKey: ['feature-toggle-product-popup'],
     queryFn: async () => {
@@ -77,17 +77,19 @@ const ProductSpotlightPopup = () => {
       if (error && error.code !== 'PGRST116') return { is_enabled: false };
       return data;
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  // Fetch products based on settings
+  // Fetch products based on settings - minimal fields only
   const { data: products = [] } = useQuery({
-    queryKey: ['spotlight-products', settings],
+    queryKey: ['spotlight-products', settings?.id],
     queryFn: async () => {
       if (!settings) return [];
 
       let query = supabase
         .from('products')
-        .select('id, name, slug, price, original_price, images, is_new, is_trending, is_bestseller, is_featured, rating')
+        .select('id, name, slug, price, original_price, images, is_new, is_trending, rating')
         .eq('is_active', true);
 
       // If specific products are selected, fetch those
@@ -112,6 +114,8 @@ const ProductSpotlightPopup = () => {
       return (data || []) as Product[];
     },
     enabled: !!settings && settings.is_enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Check current page
@@ -160,168 +164,159 @@ const ProductSpotlightPopup = () => {
     setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
   }, [products.length]);
 
-  if (!settings?.is_enabled || !featureToggle?.is_enabled || products.length === 0) {
+  if (!settings?.is_enabled || !featureToggle?.is_enabled || products.length === 0 || !isVisible) {
     return null;
   }
 
   const product = products[currentIndex];
   const imageUrl = Array.isArray(product?.images) && product.images.length > 0 
     ? product.images[0] 
-    : 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400';
+    : '/placeholder.svg';
 
   const discount = product?.original_price && product.price 
     ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
     : 0;
 
-  // Position classes based on settings
+  // Position classes based on settings - compact and mobile optimized
   const getPositionClasses = () => {
     if (isMobile) {
-      return 'bottom-20 left-4 right-4';
+      return 'bottom-20 left-2 right-2';
     }
     switch (settings.position) {
       case 'center':
         return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
       case 'bottom':
-        return 'bottom-6 left-1/2 -translate-x-1/2';
+        return 'bottom-4 left-1/2 -translate-x-1/2';
       default:
-        return 'bottom-6 right-6';
+        return 'bottom-4 right-4';
     }
   };
 
   return (
-    <AnimatePresence>
-      {isVisible && product && (
-        <motion.div
-          className={`fixed z-50 ${getPositionClasses()}`}
-          initial={{ opacity: 0, y: 50, scale: 0.9 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 50, scale: 0.9 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+    <div
+      className={`fixed z-50 ${getPositionClasses()} animate-in slide-in-from-bottom-4 fade-in duration-300`}
+    >
+      <div 
+        className="relative bg-card/98 backdrop-blur-md rounded-xl shadow-xl border border-border/50 overflow-hidden"
+        style={{ 
+          maxWidth: isMobile ? '100%' : '280px',
+          minWidth: isMobile ? 'auto' : '260px'
+        }}
+      >
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-2 right-2 z-10 w-6 h-6 rounded-full bg-background/90 flex items-center justify-center hover:bg-background transition-colors"
+          aria-label="Close popup"
         >
-          <div 
-            className="relative bg-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 overflow-hidden"
-            style={{ 
-              maxWidth: isMobile ? '100%' : '360px',
-              minWidth: isMobile ? 'auto' : '320px'
-            }}
-          >
-            {/* Close button */}
-            <button
-              onClick={handleClose}
-              className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center hover:bg-background transition-colors"
-              aria-label="Close popup"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          <X className="w-3 h-3" />
+        </button>
 
-            {/* Header */}
-            <div className="px-4 pt-4 pb-2">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-                <span className="font-accent text-xs tracking-widest uppercase text-primary">
-                  {settings.title || 'Trending Now'}
-                </span>
-              </div>
-              {settings.subtitle && (
-                <p className="text-xs text-muted-foreground">{settings.subtitle}</p>
+        {/* Compact Header */}
+        <div className="px-3 pt-3 pb-1">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="font-accent text-[10px] tracking-widest uppercase text-primary">
+              {settings.title || 'Trending'}
+            </span>
+          </div>
+        </div>
+
+        {/* Product Card - Compact */}
+        <Link 
+          to={`/product/${product.slug}`} 
+          onClick={handleClose}
+          className="block group"
+        >
+          <div className="relative aspect-[4/3] mx-3 rounded-lg overflow-hidden">
+            <img
+              src={imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+            
+            {/* Badges - Compact */}
+            <div className="absolute top-1.5 left-1.5 flex flex-col gap-0.5">
+              {product.is_new && (
+                <Badge className="bg-green-500 text-white text-[9px] px-1.5 py-0 h-4">
+                  NEW
+                </Badge>
+              )}
+              {product.is_trending && (
+                <Badge className="bg-primary text-primary-foreground text-[9px] px-1.5 py-0 h-4 flex items-center gap-0.5">
+                  <TrendingUp className="w-2.5 h-2.5" />
+                  HOT
+                </Badge>
+              )}
+              {discount > 0 && (
+                <Badge className="bg-red-500 text-white text-[9px] px-1.5 py-0 h-4">
+                  -{discount}%
+                </Badge>
               )}
             </div>
 
-            {/* Product Card */}
+            {/* Rating - Compact */}
+            {product.rating && (
+              <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 bg-background/90 rounded-full px-1.5 py-0.5">
+                <Star className="w-2.5 h-2.5 text-yellow-500 fill-yellow-500" />
+                <span className="text-[10px] font-medium">{product.rating.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="px-3 py-2">
+            <h4 className="font-medium text-xs line-clamp-1 group-hover:text-primary transition-colors">
+              {product.name}
+            </h4>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="font-semibold text-sm text-primary">{formatPrice(product.price)}</span>
+              {product.original_price && product.original_price > product.price && (
+                <span className="text-[10px] text-muted-foreground line-through">
+                  {formatPrice(product.original_price)}
+                </span>
+              )}
+            </div>
+          </div>
+        </Link>
+
+        {/* Navigation - Compact */}
+        {products.length > 1 && (
+          <div className="px-3 pb-2 flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={prevProduct}
+                className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                aria-label="Previous product"
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </button>
+              <span className="text-[10px] text-muted-foreground px-1">
+                {currentIndex + 1}/{products.length}
+              </span>
+              <button
+                onClick={nextProduct}
+                className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
+                aria-label="Next product"
+              >
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            
             <Link 
               to={`/product/${product.slug}`} 
               onClick={handleClose}
-              className="block group"
+              className="text-[10px] font-medium text-primary hover:underline"
             >
-              <div className="relative aspect-square mx-4 rounded-xl overflow-hidden">
-                <img
-                  src={imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                
-                {/* Badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                  {product.is_new && (
-                    <Badge className="bg-green-500 text-white text-[10px] px-2 py-0.5">
-                      NEW
-                    </Badge>
-                  )}
-                  {product.is_trending && (
-                    <Badge className="bg-primary text-primary-foreground text-[10px] px-2 py-0.5 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      HOT
-                    </Badge>
-                  )}
-                  {discount > 0 && (
-                    <Badge className="bg-red-500 text-white text-[10px] px-2 py-0.5">
-                      -{discount}%
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Rating */}
-                {product.rating && (
-                  <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-1">
-                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                    <span className="text-xs font-medium">{product.rating.toFixed(1)}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-4">
-                <h4 className="font-medium text-sm line-clamp-1 group-hover:text-primary transition-colors">
-                  {product.name}
-                </h4>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="font-semibold text-primary">{formatPrice(product.price)}</span>
-                  {product.original_price && product.original_price > product.price && (
-                    <span className="text-xs text-muted-foreground line-through">
-                      {formatPrice(product.original_price)}
-                    </span>
-                  )}
-                </div>
-              </div>
+              Shop Now →
             </Link>
-
-            {/* Navigation & CTA */}
-            <div className="px-4 pb-4 flex items-center justify-between">
-              {products.length > 1 ? (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={prevProduct}
-                    className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-                    aria-label="Previous product"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="text-xs text-muted-foreground">
-                    {currentIndex + 1} / {products.length}
-                  </span>
-                  <button
-                    onClick={nextProduct}
-                    className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors"
-                    aria-label="Next product"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div />
-              )}
-              
-              <Link to={`/product/${product.slug}`} onClick={handleClose}>
-                <Button size="sm" className="gap-2">
-                  <ShoppingBag className="w-4 h-4" />
-                  Shop Now
-                </Button>
-              </Link>
-            </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </div>
+    </div>
   );
-};
+});
+
+ProductSpotlightPopup.displayName = 'ProductSpotlightPopup';
 
 export default ProductSpotlightPopup;
