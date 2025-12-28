@@ -7,6 +7,7 @@ import { ArrowRight, ChevronLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCollectionCounts } from '@/hooks/useProductCounts';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
+import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 
 const collectionData = [
   {
@@ -62,6 +63,7 @@ const collectionData = [
 const Collections = () => {
   const { slug } = useParams();
   const { data: collectionCounts = [] } = useCollectionCounts();
+  const { settings } = useLayoutSettings();
   
   const collection = slug ? collectionData.find(c => c.slug === slug) : null;
 
@@ -123,7 +125,23 @@ const Collections = () => {
           {/* Products Grid */}
           <section className="py-12 md:py-16">
             <div className="container mx-auto px-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              <style>{`
+                .collection-grid { 
+                  display: grid;
+                  gap: 1rem;
+                  grid-template-columns: repeat(${settings.productsPerRowMobile}, 1fr);
+                }
+                @media (min-width: 768px) {
+                  .collection-grid { 
+                    gap: 1.5rem;
+                    grid-template-columns: repeat(${settings.productsPerRowTablet}, 1fr); 
+                  }
+                }
+                @media (min-width: 1024px) {
+                  .collection-grid { grid-template-columns: repeat(${settings.productsPerRow}, 1fr); }
+                }
+              `}</style>
+              <div className="collection-grid">
                 {collectionProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
