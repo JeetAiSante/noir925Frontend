@@ -110,9 +110,11 @@ const AdminOrders = () => {
   const [bulkStatus, setBulkStatus] = useState('');
   const [bulkProcessing, setBulkProcessing] = useState(false);
   
-  // Tracking number state
+  // Tracking state - now using dedicated columns
   const [trackingDialog, setTrackingDialog] = useState(false);
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingUrl, setTrackingUrl] = useState('');
+  const [carrier, setCarrier] = useState('');
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const [savingTracking, setSavingTracking] = useState(false);
 
@@ -318,28 +320,32 @@ const AdminOrders = () => {
     }
   };
 
-  // Save tracking number
+  // Save tracking number using dedicated columns
   const handleSaveTracking = async () => {
     if (!trackingOrderId || !trackingNumber.trim()) return;
     
     setSavingTracking(true);
     try {
-      // Store tracking in notes for now (could add a dedicated column via migration)
-      const order = orders.find(o => o.id === trackingOrderId);
-      const existingNotes = order?.notes || '';
-      const newNotes = existingNotes 
-        ? `${existingNotes}\n\nTracking: ${trackingNumber.trim()}`
-        : `Tracking: ${trackingNumber.trim()}`;
-      
       const { error } = await supabase
         .from('orders')
-        .update({ notes: newNotes, status: 'shipped' })
+        .update({ 
+          tracking_number: trackingNumber.trim(),
+          tracking_url: trackingUrl.trim() || null,
+          carrier: carrier.trim() || null,
+          status: 'shipped' 
+        })
         .eq('id', trackingOrderId);
 
       if (error) throw error;
 
       setOrders(prev => prev.map(o => 
-        o.id === trackingOrderId ? { ...o, notes: newNotes, status: 'shipped' } : o
+        o.id === trackingOrderId ? { 
+          ...o, 
+          tracking_number: trackingNumber.trim(),
+          tracking_url: trackingUrl.trim() || null,
+          carrier: carrier.trim() || null,
+          status: 'shipped' 
+        } : o
       ));
 
       toast({
@@ -349,6 +355,8 @@ const AdminOrders = () => {
 
       setTrackingDialog(false);
       setTrackingNumber('');
+      setTrackingUrl('');
+      setCarrier('');
       setTrackingOrderId(null);
     } catch (error) {
       console.error('Error saving tracking:', error);
@@ -553,7 +561,7 @@ const AdminOrders = () => {
                 {filteredOrders.map((order) => {
                   const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
                   const shippingAddress = order.shipping_address as ShippingAddress;
-                  const hasTracking = order.notes?.includes('Tracking:');
+                  const hasTracking = !!order.tracking_number;
                   
                   return (
                     <tr key={order.id} className={`hover:bg-muted/30 ${selectedOrderIds.has(order.id) ? 'bg-primary/5' : ''}`}>
@@ -687,14 +695,23 @@ const AdminOrders = () => {
         <Dialog open={trackingDialog} onOpenChange={setTrackingDialog}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add Tracking Number</DialogTitle>
+              <DialogTitle>Add Tracking Information</DialogTitle>
             </DialogHeader>
             <div className="py-4 space-y-4">
               <p className="text-sm text-muted-foreground">
-                Enter the tracking number for this shipment. The order will be marked as shipped.
+                Enter the tracking details for this shipment. The order will be marked as shipped.
               </p>
               <div className="space-y-2">
-                <Label htmlFor="tracking">Tracking Number</Label>
+                <Label htmlFor="carrier">Carrier Name</Label>
+                <Input
+                  id="carrier"
+                  placeholder="e.g., BlueDart, DTDC, Delhivery"
+                  value={carrier}
+                  onChange={(e) => setCarrier(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tracking">Tracking Number *</Label>
                 <Input
                   id="tracking"
                   placeholder="e.g., AWB123456789"
@@ -702,11 +719,22 @@ const AdminOrders = () => {
                   onChange={(e) => setTrackingNumber(e.target.value.toUpperCase())}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="trackingUrl">Tracking URL (Optional)</Label>
+                <Input
+                  id="trackingUrl"
+                  placeholder="https://tracking.carrier.com/..."
+                  value={trackingUrl}
+                  onChange={(e) => setTrackingUrl(e.target.value)}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => {
                 setTrackingDialog(false);
                 setTrackingNumber('');
+                setTrackingUrl('');
+                setCarrier('');
                 setTrackingOrderId(null);
               }}>
                 Cancel
