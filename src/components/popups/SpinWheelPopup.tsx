@@ -194,7 +194,7 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
       setIsSpinning(false);
       setHasSpun(true);
 
-      // Save to database
+      // Save to database and localStorage
       try {
         await supabase.from('spin_wheel_history').insert({
           user_id: user.id,
@@ -203,6 +203,9 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
           coupon_code: winner.value || null,
           is_redeemed: false,
         });
+        
+        // Store spin date in localStorage to hide the floating button
+        localStorage.setItem('spinWheelLastSpin', new Date().toISOString());
       } catch (error) {
         console.error('Error saving spin result:', error);
       }
