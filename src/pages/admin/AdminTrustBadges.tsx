@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AdminSecurityWrapper from '@/components/admin/AdminSecurityWrapper';
 
 interface TrustBadge {
   id: string;
@@ -182,13 +183,16 @@ const AdminTrustBadges = () => {
 
   if (isLoading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <AdminSecurityWrapper>
+        <div className="p-6 flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminSecurityWrapper>
     );
   }
 
   return (
+    <AdminSecurityWrapper>
     <div className="p-6 lg:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -318,6 +322,7 @@ const AdminTrustBadges = () => {
         </DialogContent>
       </Dialog>
     </div>
+    </AdminSecurityWrapper>
   );
 };
 
