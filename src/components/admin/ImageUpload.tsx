@@ -6,9 +6,9 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
-  bucket: 'product-images' | 'banner-images';
+  bucket: 'product-images' | 'banner-images' | 'avatars';
   value?: string | string[];
-  onChange: (urls: string | string[]) => void;
+  onChange: (urls: string[]) => void;
   multiple?: boolean;
   maxFiles?: number;
   aspectRatio?: 'square' | 'video' | 'banner';
@@ -100,16 +100,16 @@ const ImageUpload = ({
         setUploadProgress(((i + 1) / filesToUpload.length) * 100);
       }
 
-      if (multiple) {
-        onChange([...images, ...newUrls]);
-      } else {
-        onChange(newUrls[0] || '');
-      }
+      // Always return array
+      const updatedUrls = multiple ? [...images, ...newUrls] : newUrls;
+      onChange(updatedUrls);
 
-      toast({
-        title: "Upload successful",
-        description: `${newUrls.length} image(s) uploaded successfully.`
-      });
+      if (newUrls.length > 0) {
+        toast({
+          title: "Upload successful",
+          description: `${newUrls.length} image(s) uploaded successfully.`
+        });
+      }
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -135,11 +135,9 @@ const ImageUpload = ({
 
       await supabase.storage.from(bucket).remove([fileName]);
 
-      if (multiple) {
-        onChange(images.filter(url => url !== urlToRemove));
-      } else {
-        onChange('');
-      }
+      // Always return array
+      const remainingImages = images.filter(url => url !== urlToRemove);
+      onChange(remainingImages);
 
       toast({
         title: "Image removed",
@@ -148,11 +146,8 @@ const ImageUpload = ({
     } catch (error) {
       console.error('Delete error:', error);
       // Still remove from UI even if storage delete fails
-      if (multiple) {
-        onChange(images.filter(url => url !== urlToRemove));
-      } else {
-        onChange('');
-      }
+      const remainingImages = images.filter(url => url !== urlToRemove);
+      onChange(remainingImages);
     }
   };
 

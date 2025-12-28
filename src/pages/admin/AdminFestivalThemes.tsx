@@ -312,8 +312,8 @@ const AdminFestivalThemes = () => {
                 </Label>
                 <ImageUpload
                   bucket="banner-images"
-                  value={formData.banner_image}
-                  onChange={(url) => setFormData({ ...formData, banner_image: url as string })}
+                  value={formData.banner_image ? [formData.banner_image] : []}
+                  onChange={(urls) => setFormData({ ...formData, banner_image: urls[0] || '' })}
                   aspectRatio="banner"
                 />
               </div>
@@ -325,8 +325,8 @@ const AdminFestivalThemes = () => {
                 </Label>
                 <ImageUpload
                   bucket="banner-images"
-                  value={formData.logo_overlay}
-                  onChange={(url) => setFormData({ ...formData, logo_overlay: url as string })}
+                  value={formData.logo_overlay ? [formData.logo_overlay] : []}
+                  onChange={(urls) => setFormData({ ...formData, logo_overlay: urls[0] || '' })}
                   aspectRatio="square"
                 />
                 <p className="text-xs text-muted-foreground">Optional: PNG with transparent background for overlay effects</p>

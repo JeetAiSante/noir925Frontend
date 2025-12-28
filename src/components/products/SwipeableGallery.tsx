@@ -38,7 +38,8 @@ const SwipeableGallery = ({
     })
   };
 
-  const swipeConfidenceThreshold = 10000;
+  // Lowered threshold for better mobile touch response
+  const swipeConfidenceThreshold = 5000;
   const swipePower = (offset: number, velocity: number) => {
     return Math.abs(offset) * velocity;
   };
@@ -60,6 +61,13 @@ const SwipeableGallery = ({
       paginate(1);
     } else if (swipe > swipeConfidenceThreshold) {
       paginate(-1);
+    } else if (Math.abs(offset.x) > 50) {
+      // Fallback: if dragged more than 50px, change slide
+      if (offset.x < 0) {
+        paginate(1);
+      } else {
+        paginate(-1);
+      }
     }
   };
 
@@ -89,14 +97,15 @@ const SwipeableGallery = ({
       {/* Main Image */}
       <div 
         ref={containerRef}
-        className="relative aspect-square overflow-hidden rounded-2xl bg-muted group touch-pan-y"
+        className="relative aspect-square overflow-hidden rounded-2xl bg-muted group"
+        style={{ touchAction: 'pan-y pinch-zoom' }}
       >
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.img
             key={activeIndex}
             src={images[activeIndex]}
             alt={`${alt} - Image ${activeIndex + 1}`}
-            className="w-full h-full object-cover select-none"
+            className="w-full h-full object-cover select-none touch-none"
             custom={direction}
             variants={slideVariants}
             initial="enter"
@@ -108,8 +117,9 @@ const SwipeableGallery = ({
             }}
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={1}
+            dragElastic={0.7}
             onDragEnd={handleDragEnd}
+            whileTap={{ cursor: "grabbing" }}
           />
         </AnimatePresence>
 
