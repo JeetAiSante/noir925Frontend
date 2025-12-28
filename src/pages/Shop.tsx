@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { products } from '@/data/products';
 import { useCategoriesWithCounts, useTotalProductCount } from '@/hooks/useProductCounts';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import MobileFilterDrawer from '@/components/shop/MobileFilterDrawer';
 import { SEOHead, CollectionSchema, ItemListSchema } from '@/components/seo/SEOHead';
@@ -18,6 +19,7 @@ const Shop = () => {
   const navigate = useNavigate();
   const categoryParam = searchParams.get('category');
   const genderParam = searchParams.get('gender');
+  const { settings: layoutSettings } = useLayoutSettings();
   
   const [gridSize, setGridSize] = useState<'large' | 'small'>('large');
   const [sortBy, setSortBy] = useState('featured');
@@ -428,17 +430,22 @@ const Shop = () => {
                   <Button onClick={clearFilters}>Clear Filters</Button>
                 </div>
               ) : (
-                <div
-                  className={`grid gap-4 md:gap-6 ${
-                    gridSize === 'large'
-                      ? 'grid-cols-2 lg:grid-cols-3'
-                      : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-                  }`}
-                >
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+                <>
+                  <style>{`
+                    .shop-products-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowMobile}, 1fr); }
+                    @media (min-width: 640px) {
+                      .shop-products-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowTablet}, 1fr); }
+                    }
+                    @media (min-width: 1024px) {
+                      .shop-products-grid { grid-template-columns: repeat(${gridSize === 'large' ? Math.min(layoutSettings.productsPerRow, 3) : layoutSettings.productsPerRow}, 1fr); }
+                    }
+                  `}</style>
+                  <div className="shop-products-grid grid gap-4 md:gap-6">
+                    {filteredProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -13,6 +13,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLoyaltySettings, useUserLoyaltyPoints, useEarnPoints, useRedeemPoints } from "@/hooks/useLoyaltyPoints";
+import { useLayoutSettings } from "@/hooks/useLayoutSettings";
 import { z } from "zod";
 import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins, AlertCircle } from "lucide-react";
 import GiftWrapping from "@/components/checkout/GiftWrapping";
@@ -109,6 +110,7 @@ const Checkout = () => {
   const { data: userPoints } = useUserLoyaltyPoints();
   const earnPointsMutation = useEarnPoints();
   const redeemPointsMutation = useRedeemPoints();
+  const { showLoyaltyBanner } = useLayoutSettings();
 
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
@@ -1235,17 +1237,19 @@ const Checkout = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Order Success Banner */}
-      <OrderSuccessBanner
-        isOpen={showSuccessBanner}
-        onClose={() => {
-          setShowSuccessBanner(false);
-          navigate("/account");
-        }}
-        orderNumber={successOrderData?.orderNumber || ''}
-        pointsEarned={successOrderData?.pointsEarned || 0}
-        customerName={shippingInfo.fullName}
-      />
+      {/* Order Success Banner - Controlled by admin settings */}
+      {showLoyaltyBanner && (
+        <OrderSuccessBanner
+          isOpen={showSuccessBanner}
+          onClose={() => {
+            setShowSuccessBanner(false);
+            navigate("/account");
+          }}
+          orderNumber={successOrderData?.orderNumber || ''}
+          pointsEarned={successOrderData?.pointsEarned || 0}
+          customerName={shippingInfo.fullName}
+        />
+      )}
       
       <Footer />
     </div>

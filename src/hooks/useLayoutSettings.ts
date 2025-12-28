@@ -5,12 +5,14 @@ interface LayoutSettings {
   productsPerRow: number;
   productsPerRowMobile: number;
   productsPerRowTablet: number;
+  showLoyaltyBanner: boolean;
 }
 
 const defaultSettings: LayoutSettings = {
   productsPerRow: 4,
   productsPerRowMobile: 2,
   productsPerRowTablet: 3,
+  showLoyaltyBanner: true,
 };
 
 export const useLayoutSettings = () => {
@@ -32,6 +34,7 @@ export const useLayoutSettings = () => {
             productsPerRow: value.productsPerRow ?? 4,
             productsPerRowMobile: value.productsPerRowMobile ?? 2,
             productsPerRowTablet: value.productsPerRowTablet ?? 3,
+            showLoyaltyBanner: value.showLoyaltyBanner ?? true,
           });
         }
       } catch (err) {
@@ -61,6 +64,7 @@ export const useLayoutSettings = () => {
               productsPerRow: value.productsPerRow ?? 4,
               productsPerRowMobile: value.productsPerRowMobile ?? 2,
               productsPerRowTablet: value.productsPerRowTablet ?? 3,
+              showLoyaltyBanner: value.showLoyaltyBanner ?? true,
             });
           }
         }
@@ -93,5 +97,6 @@ export const useLayoutSettings = () => {
     loading, 
     getGridClasses,
     getGridStyle,
+    showLoyaltyBanner: settings.showLoyaltyBanner,
   };
 };
