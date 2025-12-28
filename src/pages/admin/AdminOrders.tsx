@@ -14,11 +14,19 @@ import {
   User,
   MapPin,
   Phone,
-  Loader2
+  Loader2,
+  CheckSquare,
+  Square,
+  MoreHorizontal,
+  Send,
+  Home,
+  Box
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -31,7 +39,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,9 +56,12 @@ import InvoiceGenerator from '@/components/admin/InvoiceGenerator';
 
 const statusConfig = {
   pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-500/10 text-yellow-500' },
-  processing: { label: 'Processing', icon: Package, color: 'bg-blue-500/10 text-blue-500' },
+  confirmed: { label: 'Confirmed', icon: CheckCircle, color: 'bg-indigo-500/10 text-indigo-500' },
+  processing: { label: 'Packed', icon: Box, color: 'bg-blue-500/10 text-blue-500' },
   shipped: { label: 'Shipped', icon: Truck, color: 'bg-purple-500/10 text-purple-500' },
-  delivered: { label: 'Delivered', icon: CheckCircle, color: 'bg-green-500/10 text-green-500' },
+  in_transit: { label: 'In Transit', icon: MapPin, color: 'bg-cyan-500/10 text-cyan-500' },
+  out_for_delivery: { label: 'Out for Delivery', icon: Truck, color: 'bg-teal-500/10 text-teal-500' },
+  delivered: { label: 'Delivered', icon: Home, color: 'bg-green-500/10 text-green-500' },
   cancelled: { label: 'Cancelled', icon: XCircle, color: 'bg-red-500/10 text-red-500' },
 };
 
@@ -84,6 +103,18 @@ const AdminOrders = () => {
   const [siteContact, setSiteContact] = useState<SiteContact | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const { formatPrice } = useCurrency();
+  
+  // Bulk actions state
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [bulkActionDialog, setBulkActionDialog] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState('');
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  
+  // Tracking number state
+  const [trackingDialog, setTrackingDialog] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
+  const [savingTracking, setSavingTracking] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -180,6 +211,154 @@ const AdminOrders = () => {
         description: "Failed to update order status",
         variant: "destructive",
       });
+    }
+  };
+
+  // Bulk status update
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkStatus || selectedOrderIds.size === 0) return;
+    
+    setBulkProcessing(true);
+    try {
+      const ids = Array.from(selectedOrderIds);
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: bulkStatus })
+        .in('id', ids);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(order => 
+        selectedOrderIds.has(order.id) ? { ...order, status: bulkStatus } : order
+      ));
+
+      toast({
+        title: "Bulk update complete",
+        description: `Updated ${ids.length} orders to ${bulkStatus}`,
+      });
+
+      setSelectedOrderIds(new Set());
+      setBulkActionDialog(false);
+      setBulkStatus('');
+    } catch (error) {
+      console.error('Error bulk updating:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update orders",
+        variant: "destructive",
+      });
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  // Send bulk emails
+  const handleBulkSendEmails = async () => {
+    if (selectedOrderIds.size === 0) return;
+    
+    setBulkProcessing(true);
+    let successCount = 0;
+    
+    for (const orderId of selectedOrderIds) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) continue;
+      
+      const shippingAddress = order.shipping_address as ShippingAddress;
+      const customerEmail = shippingAddress?.email;
+      
+      if (!customerEmail) continue;
+      
+      try {
+        await supabase.functions.invoke('send-email', {
+          body: {
+            type: 'order_status',
+            data: {
+              to: customerEmail,
+              orderNumber: order.order_number,
+              customerName: shippingAddress?.full_name || 'Customer',
+              status: order.status,
+              total: order.total,
+              companyName: siteContact?.company_name,
+              companyLogo: siteContact?.company_logo,
+            },
+          },
+        });
+        successCount++;
+      } catch (error) {
+        console.error('Error sending email:', error);
+      }
+    }
+
+    toast({
+      title: "Emails sent",
+      description: `Successfully sent ${successCount} emails`,
+    });
+    
+    setSelectedOrderIds(new Set());
+    setBulkProcessing(false);
+  };
+
+  // Toggle order selection
+  const toggleOrderSelection = (orderId: string) => {
+    const newSelection = new Set(selectedOrderIds);
+    if (newSelection.has(orderId)) {
+      newSelection.delete(orderId);
+    } else {
+      newSelection.add(orderId);
+    }
+    setSelectedOrderIds(newSelection);
+  };
+
+  // Select all filtered orders
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.size === filteredOrders.length) {
+      setSelectedOrderIds(new Set());
+    } else {
+      setSelectedOrderIds(new Set(filteredOrders.map(o => o.id)));
+    }
+  };
+
+  // Save tracking number
+  const handleSaveTracking = async () => {
+    if (!trackingOrderId || !trackingNumber.trim()) return;
+    
+    setSavingTracking(true);
+    try {
+      // Store tracking in notes for now (could add a dedicated column via migration)
+      const order = orders.find(o => o.id === trackingOrderId);
+      const existingNotes = order?.notes || '';
+      const newNotes = existingNotes 
+        ? `${existingNotes}\n\nTracking: ${trackingNumber.trim()}`
+        : `Tracking: ${trackingNumber.trim()}`;
+      
+      const { error } = await supabase
+        .from('orders')
+        .update({ notes: newNotes, status: 'shipped' })
+        .eq('id', trackingOrderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o => 
+        o.id === trackingOrderId ? { ...o, notes: newNotes, status: 'shipped' } : o
+      ));
+
+      toast({
+        title: "Tracking saved",
+        description: `Tracking number added and order marked as shipped`,
+      });
+
+      setTrackingDialog(false);
+      setTrackingNumber('');
+      setTrackingOrderId(null);
+    } catch (error) {
+      console.error('Error saving tracking:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save tracking number",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingTracking(false);
     }
   };
 
@@ -293,7 +472,7 @@ const AdminOrders = () => {
           })}
         </div>
 
-        {/* Filters */}
+        {/* Filters & Bulk Actions */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -316,6 +495,38 @@ const AdminOrders = () => {
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Bulk Actions */}
+          {selectedOrderIds.size > 0 && (
+            <div className="flex gap-2">
+              <Badge variant="secondary" className="px-3 py-2">
+                {selectedOrderIds.size} selected
+              </Badge>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreHorizontal className="w-4 h-4 mr-2" />
+                    Bulk Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setBulkActionDialog(true)}>
+                    <Package className="w-4 h-4 mr-2" />
+                    Update Status
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleBulkSendEmails} disabled={bulkProcessing}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Status Emails
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSelectedOrderIds(new Set())}>
+                    <XCircle className="w-4 h-4 mr-2" />
+                    Clear Selection
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
         </div>
 
         {/* Orders Table */}
@@ -324,6 +535,12 @@ const AdminOrders = () => {
             <table className="w-full">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
+                  <th className="text-left px-4 py-3 font-medium text-sm w-10">
+                    <Checkbox
+                      checked={selectedOrderIds.size === filteredOrders.length && filteredOrders.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 font-medium text-sm">Order</th>
                   <th className="text-left px-4 py-3 font-medium text-sm">Customer</th>
                   <th className="text-left px-4 py-3 font-medium text-sm">Date</th>
@@ -336,12 +553,25 @@ const AdminOrders = () => {
                 {filteredOrders.map((order) => {
                   const status = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
                   const shippingAddress = order.shipping_address as ShippingAddress;
+                  const hasTracking = order.notes?.includes('Tracking:');
                   
                   return (
-                    <tr key={order.id} className="hover:bg-muted/30">
+                    <tr key={order.id} className={`hover:bg-muted/30 ${selectedOrderIds.has(order.id) ? 'bg-primary/5' : ''}`}>
+                      <td className="px-4 py-4">
+                        <Checkbox
+                          checked={selectedOrderIds.has(order.id)}
+                          onCheckedChange={() => toggleOrderSelection(order.id)}
+                        />
+                      </td>
                       <td className="px-4 py-4">
                         <p className="font-medium">{order.order_number}</p>
                         <p className="text-xs text-muted-foreground">{order.id.slice(0, 8)}...</p>
+                        {hasTracking && (
+                          <Badge variant="outline" className="text-xs mt-1">
+                            <Truck className="w-3 h-3 mr-1" />
+                            Has Tracking
+                          </Badge>
+                        )}
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-medium">{shippingAddress?.full_name || 'N/A'}</p>
@@ -369,19 +599,33 @@ const AdminOrders = () => {
                             <Eye className="w-4 h-4 mr-1" />
                             View
                           </Button>
-                          <Select 
-                            value={order.status}
-                            onValueChange={(value) => updateOrderStatus(order.id, value)}
-                          >
-                            <SelectTrigger className="h-8 w-32">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setTrackingOrderId(order.id);
+                                setTrackingDialog(true);
+                              }}>
+                                <Send className="w-4 h-4 mr-2" />
+                                Add Tracking
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               {Object.entries(statusConfig).map(([key, config]) => (
-                                <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                                <DropdownMenuItem 
+                                  key={key}
+                                  onClick={() => updateOrderStatus(order.id, key)}
+                                  className={order.status === key ? 'bg-muted' : ''}
+                                >
+                                  <config.icon className="w-4 h-4 mr-2" />
+                                  {config.label}
+                                </DropdownMenuItem>
                               ))}
-                            </SelectContent>
-                          </Select>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </td>
                     </tr>
@@ -397,6 +641,83 @@ const AdminOrders = () => {
             </div>
           )}
         </div>
+
+        {/* Bulk Status Update Dialog */}
+        <Dialog open={bulkActionDialog} onOpenChange={setBulkActionDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Bulk Status Update</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Update status for {selectedOrderIds.size} selected orders
+              </p>
+              <div className="space-y-2">
+                <Label>New Status</Label>
+                <Select value={bulkStatus} onValueChange={setBulkStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(statusConfig).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>
+                        <div className="flex items-center gap-2">
+                          <config.icon className="w-4 h-4" />
+                          {config.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkActionDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleBulkStatusUpdate} disabled={!bulkStatus || bulkProcessing}>
+                {bulkProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Update {selectedOrderIds.size} Orders
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Tracking Number Dialog */}
+        <Dialog open={trackingDialog} onOpenChange={setTrackingDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Tracking Number</DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the tracking number for this shipment. The order will be marked as shipped.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="tracking">Tracking Number</Label>
+                <Input
+                  id="tracking"
+                  placeholder="e.g., AWB123456789"
+                  value={trackingNumber}
+                  onChange={(e) => setTrackingNumber(e.target.value.toUpperCase())}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setTrackingDialog(false);
+                setTrackingNumber('');
+                setTrackingOrderId(null);
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveTracking} disabled={!trackingNumber.trim() || savingTracking}>
+                {savingTracking ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Truck className="w-4 h-4 mr-2" />}
+                Save & Mark Shipped
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Order Details Dialog */}
         <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
