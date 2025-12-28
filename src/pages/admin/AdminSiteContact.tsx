@@ -165,8 +165,8 @@ const AdminSiteContact = () => {
                   </p>
                   <ImageUpload
                     bucket="banner-images"
-                    value={currentData.company_logo || ''}
-                    onChange={(url) => handleChange('company_logo', url as string)}
+                    value={currentData.company_logo ? [currentData.company_logo] : []}
+                    onChange={(urls) => handleChange('company_logo', urls[0] || '')}
                     aspectRatio="video"
                   />
                 </div>
@@ -181,8 +181,8 @@ const AdminSiteContact = () => {
                   </p>
                   <ImageUpload
                     bucket="banner-images"
-                    value={currentData.company_signature || ''}
-                    onChange={(url) => handleChange('company_signature', url as string)}
+                    value={currentData.company_signature ? [currentData.company_signature] : []}
+                    onChange={(urls) => handleChange('company_signature', urls[0] || '')}
                     aspectRatio="video"
                   />
                 </div>
