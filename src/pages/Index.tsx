@@ -6,6 +6,7 @@ import { OrganizationSchema, WebsiteSchema, FAQSchema } from '@/components/seo/P
 import { SEOHead, LocalBusinessSchema } from '@/components/seo/SEOHead';
 import FirstTimePopup from '@/components/popups/FirstTimePopup';
 import FloatingFestivalBanner from '@/components/shop/FloatingFestivalBanner';
+import ProductSpotlightPopup from '@/components/popups/ProductSpotlightPopup';
 import { useSoldProductsAutomation } from '@/hooks/useSoldProductsAutomation';
 
 // Eagerly loaded critical sections
@@ -171,6 +172,7 @@ const Index = memo(() => {
         
         <Footer />
         <FloatingFestivalBanner />
+        <ProductSpotlightPopup />
       </div>
     </FirstTimePopup>
   );

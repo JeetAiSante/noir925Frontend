@@ -1006,6 +1006,72 @@ export type Database = {
         }
         Relationships: []
       }
+      product_popup_settings: {
+        Row: {
+          accent_color: string | null
+          auto_popup_delay: number
+          background_color: string | null
+          created_at: string
+          display_duration: number
+          id: string
+          is_enabled: boolean
+          max_products: number
+          position: string
+          selected_product_ids: string[] | null
+          show_bestseller: boolean
+          show_featured: boolean
+          show_new: boolean
+          show_on_pages: string[] | null
+          show_trending: boolean
+          subtitle: string | null
+          theme_image: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          auto_popup_delay?: number
+          background_color?: string | null
+          created_at?: string
+          display_duration?: number
+          id?: string
+          is_enabled?: boolean
+          max_products?: number
+          position?: string
+          selected_product_ids?: string[] | null
+          show_bestseller?: boolean
+          show_featured?: boolean
+          show_new?: boolean
+          show_on_pages?: string[] | null
+          show_trending?: boolean
+          subtitle?: string | null
+          theme_image?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          auto_popup_delay?: number
+          background_color?: string | null
+          created_at?: string
+          display_duration?: number
+          id?: string
+          is_enabled?: boolean
+          max_products?: number
+          position?: string
+          selected_product_ids?: string[] | null
+          show_bestseller?: boolean
+          show_featured?: boolean
+          show_new?: boolean
+          show_on_pages?: string[] | null
+          show_trending?: boolean
+          subtitle?: string | null
+          theme_image?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_reviews: {
         Row: {
           content: string

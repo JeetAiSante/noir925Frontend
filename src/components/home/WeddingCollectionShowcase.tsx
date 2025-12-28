@@ -32,10 +32,22 @@ const WeddingCollectionShowcase = () => {
 
   return (
     <section className="py-16 md:py-24 relative overflow-hidden bg-background">
-      {/* Luxurious Background Pattern */}
+      {/* Luxurious Background Pattern with Edge Fade Effect */}
       <div className="absolute inset-0">
-        {/* Subtle gradient overlay using website colors */}
+        {/* Main gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background" />
+        
+        {/* Left edge fade effect */}
+        <div className="absolute inset-y-0 left-0 w-32 md:w-48 lg:w-64 bg-gradient-to-r from-background via-background/80 to-transparent z-[1]" />
+        
+        {/* Right edge fade effect */}
+        <div className="absolute inset-y-0 right-0 w-32 md:w-48 lg:w-64 bg-gradient-to-l from-background via-background/80 to-transparent z-[1]" />
+        
+        {/* Top edge fade for seamless transition */}
+        <div className="absolute inset-x-0 top-0 h-24 md:h-32 bg-gradient-to-b from-background via-background/60 to-transparent z-[1]" />
+        
+        {/* Bottom edge fade for seamless transition */}
+        <div className="absolute inset-x-0 bottom-0 h-24 md:h-32 bg-gradient-to-t from-background via-background/60 to-transparent z-[1]" />
         
         {/* Decorative ornamental pattern - transparent luxury effect */}
         <div className="absolute inset-0 opacity-[0.03]">

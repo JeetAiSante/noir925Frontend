@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Package, Truck, CheckCircle, MapPin, Clock, Box, Home, Bell, RefreshCw, Mail, MessageSquare } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle, MapPin, Clock, Box, Home, Bell, RefreshCw, Mail, MessageSquare, ExternalLink } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,9 @@ interface Order {
   total: number;
   shipping_address: any;
   items: OrderItem[];
+  tracking_number: string | null;
+  tracking_url: string | null;
+  carrier: string | null;
 }
 
 const statusSteps = [
@@ -127,7 +130,10 @@ const TrackOrder = () => {
 
       setOrderDetails({
         ...order,
-        items: items || []
+        items: items || [],
+        tracking_number: order.tracking_number || null,
+        tracking_url: order.tracking_url || null,
+        carrier: order.carrier || null,
       });
       setLastUpdated(new Date());
     } catch (err) {
@@ -339,6 +345,33 @@ const TrackOrder = () => {
                           })}
                         </div>
                       </div>
+                      
+                      {/* Tracking Information */}
+                      {orderDetails.tracking_number && (
+                        <div className="mt-4 p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                          <h4 className="font-medium mb-2 flex items-center gap-2 text-blue-600">
+                            <Truck className="w-4 h-4" />
+                            Tracking Information
+                          </h4>
+                          <div className="space-y-1">
+                            {orderDetails.carrier && (
+                              <p className="text-sm"><span className="text-muted-foreground">Carrier:</span> {orderDetails.carrier}</p>
+                            )}
+                            <p className="text-sm"><span className="text-muted-foreground">Tracking #:</span> <span className="font-mono">{orderDetails.tracking_number}</span></p>
+                            {orderDetails.tracking_url && (
+                              <a 
+                                href={orderDetails.tracking_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-2"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                Track on carrier website
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Estimated Delivery */}
                       {orderDetails.status !== 'delivered' && orderDetails.status !== 'cancelled' && (
