@@ -16,6 +16,18 @@ const FloatingSpinWheel = () => {
       return;
     }
 
+    // Check if user has already spun today
+    const lastSpinDate = localStorage.getItem('spinWheelLastSpin');
+    if (lastSpinDate) {
+      const lastSpin = new Date(lastSpinDate);
+      const today = new Date();
+      if (lastSpin.toDateString() === today.toDateString()) {
+        // User already spun today - hide the button
+        setDismissed(true);
+        return;
+      }
+    }
+
     // Show button after a short delay
     const timer = setTimeout(() => {
       setShowButton(true);

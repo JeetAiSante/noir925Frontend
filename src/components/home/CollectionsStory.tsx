@@ -81,15 +81,15 @@ const CollectionsStory = () => {
             </span>
           </div>
           <h2 className="font-display text-3xl md:text-5xl lg:text-6xl text-foreground mb-4">
-            Discover Our <span className="text-primary">Signature</span> Lines
+            Discover Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary animate-shimmer bg-[length:200%_auto]">Signature</span> Lines
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
             Each collection tells a unique story of craftsmanship, elegance, and timeless design
           </p>
         </motion.div>
 
-        {/* Collections Grid - Desktop */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-6 xl:gap-8">
+        {/* Collections Grid - Desktop - Luxury Oval Frames */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-8 xl:gap-10">
           {collections.map((collection, index) => (
             <motion.div
               key={collection.id}
@@ -97,7 +97,7 @@ const CollectionsStory = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.15 }}
-              className="group"
+              className="group perspective-1000"
               onMouseEnter={() => {
                 setActiveIndex(index);
                 setIsAutoPlaying(false);
@@ -105,22 +105,34 @@ const CollectionsStory = () => {
               onMouseLeave={() => setIsAutoPlaying(true)}
             >
               <Link to={`/collections/${collection.id}`}>
-                <div className={`relative overflow-hidden rounded-3xl transition-all duration-700 ${
+                <div className={`relative transition-all duration-700 ${
                   activeIndex === index 
-                    ? 'ring-2 ring-primary/50 shadow-2xl shadow-primary/20 scale-[1.02]' 
-                    : 'hover:ring-1 hover:ring-primary/30'
+                    ? 'scale-[1.03]' 
+                    : 'hover:scale-[1.01]'
                 }`}>
-                  {/* Image Container */}
-                  <div className="aspect-[3/4] overflow-hidden">
-                    <img
-                      src={collection.image}
-                      alt={collection.name}
-                      className={`w-full h-full object-cover transition-all duration-1000 ${
-                        activeIndex === index ? 'scale-110' : 'scale-100 group-hover:scale-105'
-                      }`}
-                      loading="lazy"
-                    />
-                  </div>
+                  {/* Luxury Oval Frame */}
+                  <div className={`relative rounded-[60px] overflow-hidden border-4 ${
+                    activeIndex === index 
+                      ? 'border-primary/60 shadow-2xl shadow-primary/30' 
+                      : 'border-primary/20 hover:border-primary/40'
+                  } transition-all duration-500`}>
+                    {/* Decorative Corner Accents */}
+                    <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-primary/40 rounded-tl-[20px] z-10" />
+                    <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-primary/40 rounded-tr-[20px] z-10" />
+                    <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-primary/40 rounded-bl-[20px] z-10" />
+                    <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-primary/40 rounded-br-[20px] z-10" />
+                    
+                    {/* Image Container */}
+                    <div className="aspect-[3/4] overflow-hidden">
+                      <img
+                        src={collection.image}
+                        alt={collection.name}
+                        className={`w-full h-full object-cover transition-all duration-1000 ${
+                          activeIndex === index ? 'scale-110' : 'scale-100 group-hover:scale-105'
+                        }`}
+                        loading="lazy"
+                      />
+                    </div>
                   
                   {/* Gradient Overlay */}
                   <div className={`absolute inset-0 bg-gradient-to-t ${collection.gradient} opacity-60`} />
@@ -161,6 +173,7 @@ const CollectionsStory = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               </Link>

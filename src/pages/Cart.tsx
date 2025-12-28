@@ -152,9 +152,9 @@ const Cart = () => {
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-3 md:space-y-4">
             {cartItems.map((item, index) => (
               <div
                 key={item.id}
@@ -240,8 +240,8 @@ const Cart = () => {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-card p-5 rounded-xl border border-border sticky top-20">
+          <div className="lg:col-span-1 order-first lg:order-none">
+            <div className="bg-card p-4 md:p-5 rounded-xl border border-border sticky top-20">
               <h2 className="font-display text-lg text-foreground mb-5 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
                 Order Summary
