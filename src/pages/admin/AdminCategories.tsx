@@ -121,7 +121,7 @@ const AdminCategories = () => {
               Add Category
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg">{editingCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
             </DialogHeader>
@@ -135,7 +135,7 @@ const AdminCategories = () => {
                   maxFiles={1}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm">Name *</Label>
                   <Input
@@ -161,7 +161,7 @@ const AdminCategories = () => {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm">Description</Label>
                   <Input
@@ -181,7 +181,7 @@ const AdminCategories = () => {
                   />
                 </div>
               </div>
-              <div className="flex items-center gap-6 pt-2">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
                 <div className="flex items-center gap-2">
                   <Switch checked={formData.is_active} onCheckedChange={(c) => setFormData({ ...formData, is_active: c })} />
                   <Label className="text-sm">Active</Label>
@@ -191,7 +191,7 @@ const AdminCategories = () => {
                   <Label className="text-sm">Featured</Label>
                 </div>
               </div>
-              <div className="flex gap-2 pt-3">
+              <div className="flex flex-col sm:flex-row gap-2 pt-3">
                 <Button variant="outline" className="flex-1 h-9" onClick={() => { setIsFormOpen(false); resetForm(); }}>Cancel</Button>
                 <Button className="flex-1 h-9" onClick={handleSubmit}>{editingCategory ? 'Update' : 'Create'}</Button>
               </div>

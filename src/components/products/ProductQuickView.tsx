@@ -8,7 +8,6 @@ import { useCurrency } from '@/context/CurrencyContext';
 import { useCart } from '@/context/CartContext';
 import { Link } from 'react-router-dom';
 import ProductImageZoom from './ProductImageZoom';
-import Product360View from './Product360View';
 
 interface ProductQuickViewProps {
   product: Product | null;
@@ -21,7 +20,6 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('');
   const [showZoom, setShowZoom] = useState(false);
-  const [show360, setShow360] = useState(false);
   const { addToCart, addToWishlist, isInWishlist } = useCart();
   const { formatPrice } = useCurrency();
 
@@ -76,19 +74,19 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-4xl p-0 gap-0 overflow-hidden bg-background border-border/50">
+        <DialogContent className="w-[95vw] max-w-3xl p-0 gap-0 overflow-hidden bg-background border-border/50 max-h-[90vh] overflow-y-auto">
           <DialogTitle className="sr-only">{product.name} Quick View</DialogTitle>
           
           {/* Single Close Button - Top Right */}
           <button 
             onClick={() => onOpenChange(false)}
-            className="absolute right-4 top-4 z-20 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-muted transition-colors"
+            className="absolute right-3 top-3 z-20 p-2 rounded-full bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-muted transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
           </button>
 
-          <div className="grid md:grid-cols-2 gap-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             {/* Image Section */}
             <div className="relative bg-muted/30 aspect-square">
               <img 
@@ -96,6 +94,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                 alt={product.name}
                 className="w-full h-full object-cover cursor-zoom-in"
                 onClick={() => setShowZoom(true)}
+                loading="lazy"
               />
               
               {/* Image Navigation */}
@@ -104,7 +103,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-soft"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-soft h-8 w-8"
                     onClick={prevImage}
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -112,7 +111,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-soft"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-soft h-8 w-8"
                     onClick={nextImage}
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -121,47 +120,39 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
               )}
 
               {/* Badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
+              <div className="absolute top-3 left-3 flex flex-col gap-1.5">
                 {product.isNew && (
-                  <Badge className="bg-primary text-primary-foreground shadow-soft">New</Badge>
+                  <Badge className="bg-primary text-primary-foreground shadow-soft text-xs">New</Badge>
                 )}
                 {discount > 0 && (
-                  <Badge variant="destructive" className="shadow-soft">-{discount}%</Badge>
+                  <Badge variant="destructive" className="shadow-soft text-xs">-{discount}%</Badge>
                 )}
               </div>
 
-              {/* Image Actions */}
-              <div className="absolute bottom-4 left-4 flex gap-2">
+              {/* Zoom Action */}
+              <div className="absolute bottom-3 left-3">
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="bg-background/90 hover:bg-background shadow-soft"
+                  className="bg-background/90 hover:bg-background shadow-soft h-8 text-xs"
                   onClick={() => setShowZoom(true)}
                 >
-                  <Maximize2 className="w-4 h-4 mr-2" /> Zoom
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="bg-background/90 hover:bg-background shadow-soft"
-                  onClick={() => setShow360(true)}
-                >
-                  360° View
+                  <Maximize2 className="w-3.5 h-3.5 mr-1.5" /> Zoom
                 </Button>
               </div>
 
               {/* Thumbnails */}
               {productImages.length > 1 && (
-                <div className="absolute bottom-4 right-4 flex gap-2">
+                <div className="absolute bottom-3 right-3 flex gap-1.5">
                   {productImages.slice(0, 4).map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedImage(idx)}
-                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all shadow-soft ${
+                      className={`w-10 h-10 rounded-md overflow-hidden border-2 transition-all shadow-soft ${
                         selectedImage === idx ? 'border-primary ring-2 ring-primary/20' : 'border-background/80'
                       }`}
                     >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
                     </button>
                   ))}
                 </div>
@@ -169,35 +160,35 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
             </div>
 
             {/* Content Section */}
-            <div className="p-6 md:p-8 flex flex-col max-h-[80vh] overflow-y-auto">
+            <div className="p-4 md:p-6 flex flex-col max-h-[60vh] md:max-h-[80vh] overflow-y-auto">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-2">{product.category}</p>
-                <h2 className="text-2xl md:text-3xl font-display font-semibold mb-3">{product.name}</h2>
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">{product.category}</p>
+                <h2 className="text-xl md:text-2xl font-display font-semibold mb-2">{product.name}</h2>
                 
                 {/* Rating */}
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-2 mb-3">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
                       <span 
                         key={i} 
-                        className={`text-lg ${i < Math.floor(product.rating) ? 'text-accent' : 'text-muted'}`}
+                        className={`text-sm ${i < Math.floor(product.rating) ? 'text-accent' : 'text-muted'}`}
                       >
                         ★
                       </span>
                     ))}
                   </div>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {product.rating} ({product.reviews} reviews)
                   </span>
                 </div>
 
                 {/* Price */}
-                <div className="flex items-baseline gap-3 mb-6">
-                  <span className="text-3xl font-bold text-primary">
+                <div className="flex items-baseline gap-2 mb-4">
+                  <span className="text-2xl font-bold text-primary">
                     {formatPrice(product.price)}
                   </span>
                   {product.originalPrice && (
-                    <span className="text-lg text-muted-foreground line-through">
+                    <span className="text-sm text-muted-foreground line-through">
                       {formatPrice(product.originalPrice)}
                     </span>
                   )}
@@ -207,32 +198,32 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                 </div>
 
                 {/* Description */}
-                <p className="text-muted-foreground mb-6 leading-relaxed">
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-3">
                   {product.description}
                 </p>
 
                 {/* Material Info */}
-                <div className="grid grid-cols-2 gap-3 mb-6 p-4 bg-muted/30 rounded-lg">
+                <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-muted/30 rounded-lg">
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Material</p>
-                    <p className="text-sm font-medium">{product.material}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Material</p>
+                    <p className="text-xs font-medium">{product.material}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider">Weight</p>
-                    <p className="text-sm font-medium">{product.weight}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Weight</p>
+                    <p className="text-xs font-medium">{product.weight}</p>
                   </div>
                 </div>
 
                 {/* Size Selection */}
                 {product.category !== 'Anklets' && sizes.length > 0 && (
-                  <div className="mb-6">
-                    <p className="text-sm font-medium mb-3">Select Size</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-2">Select Size</p>
+                    <div className="flex flex-wrap gap-1.5">
                       {sizes.map((size) => (
                         <button
                           key={size}
                           onClick={() => setSelectedSize(size)}
-                          className={`min-w-[44px] h-11 px-3 rounded-lg border text-sm font-medium transition-all ${
+                          className={`min-w-[40px] h-9 px-2.5 rounded-md border text-xs font-medium transition-all ${
                             selectedSize === size 
                               ? 'border-primary bg-primary text-primary-foreground shadow-soft' 
                               : 'border-border hover:border-primary hover:bg-primary/5'
@@ -246,47 +237,47 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                 )}
 
                 {/* Quantity */}
-                <div className="mb-6">
-                  <p className="text-sm font-medium mb-3">Quantity</p>
-                  <div className="flex items-center gap-3">
+                <div className="mb-4">
+                  <p className="text-sm font-medium mb-2">Quantity</p>
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="h-11 w-11"
+                      className="h-9 w-9"
                     >
-                      <Minus className="w-4 h-4" />
+                      <Minus className="w-3.5 h-3.5" />
                     </Button>
-                    <span className="w-12 text-center font-semibold text-lg">{quantity}</span>
+                    <span className="w-10 text-center font-semibold">{quantity}</span>
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => setQuantity(quantity + 1)}
-                      className="h-11 w-11"
+                      className="h-9 w-9"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="space-y-3 pt-4 border-t border-border/50">
-                <div className="flex gap-3">
+              <div className="space-y-2 pt-3 border-t border-border/50">
+                <div className="flex gap-2">
                   <Button 
-                    className="flex-1 h-12" 
-                    size="lg"
+                    className="flex-1 h-10" 
+                    size="default"
                     onClick={handleAddToCart}
                   >
-                    <ShoppingBag className="w-5 h-5 mr-2" /> Add to Cart
+                    <ShoppingBag className="w-4 h-4 mr-2" /> Add to Cart
                   </Button>
                   <Button
                     variant="outline"
-                    size="lg"
+                    size="default"
                     onClick={handleWishlist}
-                    className={`h-12 w-12 ${isInWishlist(product.id) ? 'text-secondary border-secondary bg-secondary/10' : ''}`}
+                    className={`h-10 w-10 ${isInWishlist(product.id) ? 'text-secondary border-secondary bg-secondary/10' : ''}`}
                   >
-                    <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                    <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                   </Button>
                 </div>
                 <Link 
@@ -294,7 +285,7 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
                   onClick={() => onOpenChange(false)}
                   className="block"
                 >
-                  <Button variant="ghost" className="w-full h-11">
+                  <Button variant="ghost" className="w-full h-9 text-sm">
                     View Full Details →
                   </Button>
                 </Link>
@@ -309,12 +300,6 @@ const ProductQuickView = ({ product, open, onOpenChange }: ProductQuickViewProps
         currentIndex={selectedImage}
         open={showZoom}
         onOpenChange={setShowZoom}
-      />
-
-      <Product360View
-        images={productImages}
-        open={show360}
-        onOpenChange={setShow360}
       />
     </>
   );

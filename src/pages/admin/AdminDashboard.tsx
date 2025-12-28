@@ -30,7 +30,8 @@ import {
   DollarSign,
   MessageSquare,
   Bell,
-  Disc
+  Disc,
+  Sparkles
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const navItems = [
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
   { icon: Bell, label: 'Popup Settings', path: '/admin/popup-settings' },
+  { icon: Sparkles, label: 'Product Popup', path: '/admin/product-popup' },
   { icon: Disc, label: 'Spin & Win', path: '/admin/spin-wheel' },
   { icon: Star, label: 'Loyalty Program', path: '/admin/loyalty' },
   { icon: CreditCard, label: 'Gift Cards', path: '/admin/gift-cards' },
