@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -14,7 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useLoyaltySettings, useUserLoyaltyPoints, useEarnPoints, useRedeemPoints } from "@/hooks/useLoyaltyPoints";
 import { z } from "zod";
-import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins, Info } from "lucide-react";
+import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins, Info, AlertCircle } from "lucide-react";
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import GiftWrapping from "@/components/checkout/GiftWrapping";
 import {
   AlertDialog,
@@ -99,6 +100,19 @@ const Checkout = () => {
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
   const [taxSettings, setTaxSettings] = useState<{ tax_name: string; tax_percent: number; is_enabled: boolean; is_inclusive: boolean } | null>(null);
+  
+  // CAPTCHA state
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [isVerifyingCaptcha, setIsVerifyingCaptcha] = useState(false);
+  const captchaRef = useRef<HCaptcha>(null);
+  
+  // Form validation state
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  
+  // hCaptcha site key
+  const [captchaSiteKey, setCaptchaSiteKey] = useState<string>('10000000-ffff-ffff-ffff-000000000001');
 
   // Loyalty hooks
   const { data: loyaltySettings } = useLoyaltySettings();
@@ -129,13 +143,25 @@ const Checkout = () => {
     }
   }, [user, navigate, toast]);
 
-  // Fetch saved addresses and tax settings
+  // Fetch saved addresses, tax settings, and captcha config
   useEffect(() => {
     if (user) {
       fetchSavedAddresses();
     }
     fetchTaxSettings();
+    fetchCaptchaConfig();
   }, [user]);
+
+  const fetchCaptchaConfig = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-captcha-config');
+      if (!error && data?.siteKey) {
+        setCaptchaSiteKey(data.siteKey);
+      }
+    } catch (err) {
+      console.error('Failed to fetch captcha config:', err);
+    }
+  };
 
   const fetchTaxSettings = async () => {
     const { data } = await supabase
@@ -221,9 +247,103 @@ const Checkout = () => {
     });
   };
 
+  // Validate a single field
+  const validateField = useCallback((field: string, value: string) => {
+    const fieldSchema = {
+      fullName: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be less than 100 characters"),
+      email: z.string().trim().email("Invalid email address").optional().or(z.literal("")),
+      phone: z.string().trim().regex(/^[+]?91?[0-9]{10}$/, "Invalid phone number (10 digits required)"),
+      addressLine1: z.string().trim().min(5, "Address must be at least 5 characters").max(200, "Address must be less than 200 characters"),
+      addressLine2: z.string().trim().max(200, "Address must be less than 200 characters").optional().or(z.literal("")),
+      city: z.string().trim().min(2, "City must be at least 2 characters").max(100, "City must be less than 100 characters"),
+      state: z.enum(indianStates, { errorMap: () => ({ message: "Please select a valid state" }) }),
+      postalCode: z.string().trim().regex(/^[0-9]{6}$/, "Postal code must be 6 digits"),
+    };
+    
+    const schema = fieldSchema[field as keyof typeof fieldSchema];
+    if (!schema) return '';
+    
+    const result = schema.safeParse(value);
+    return result.success ? '' : result.error.errors[0]?.message || 'Invalid value';
+  }, []);
+
+  // Handle field blur for validation
+  const handleFieldBlur = (field: string) => {
+    setTouchedFields(prev => ({ ...prev, [field]: true }));
+    const error = validateField(field, shippingInfo[field as keyof typeof shippingInfo]);
+    setFieldErrors(prev => ({ ...prev, [field]: error }));
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setSelectedAddressId(null); // Clear selected address when typing
-    setShippingInfo({ ...shippingInfo, [e.target.name]: e.target.value });
+    setShippingInfo({ ...shippingInfo, [name]: value });
+    
+    // Validate on change if field has been touched
+    if (touchedFields[name]) {
+      const error = validateField(name, value);
+      setFieldErrors(prev => ({ ...prev, [name]: error }));
+    }
+  };
+
+  const handleStateChange = (value: string) => {
+    setSelectedAddressId(null);
+    setShippingInfo(prev => ({ ...prev, state: value }));
+    setTouchedFields(prev => ({ ...prev, state: true }));
+    const error = validateField('state', value);
+    setFieldErrors(prev => ({ ...prev, state: error }));
+  };
+
+  // CAPTCHA handlers
+  const handleCaptchaVerify = async (token: string) => {
+    setCaptchaToken(token);
+    setIsVerifyingCaptcha(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-captcha', {
+        body: { token }
+      });
+      
+      if (error || !data?.success) {
+        console.error('Captcha verification failed:', error || data?.error);
+        toast({
+          title: "Verification Failed",
+          description: "Please complete the captcha verification again.",
+          variant: "destructive",
+        });
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken(null);
+        setCaptchaVerified(false);
+      } else {
+        setCaptchaVerified(true);
+        toast({
+          title: "Verification Complete",
+          description: "You can now proceed with checkout.",
+        });
+      }
+    } catch (err) {
+      console.error('Captcha verification error:', err);
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
+      setCaptchaVerified(false);
+    } finally {
+      setIsVerifyingCaptcha(false);
+    }
+  };
+
+  const handleCaptchaExpire = () => {
+    setCaptchaToken(null);
+    setCaptchaVerified(false);
+  };
+
+  const handleCaptchaError = () => {
+    setCaptchaToken(null);
+    setCaptchaVerified(false);
+    toast({
+      title: "Captcha Error",
+      description: "There was an error with the captcha. Please try again.",
+      variant: "destructive",
+    });
   };
 
   const handleGiftWrapChange = (enabled: boolean, message: string) => {
@@ -301,14 +421,40 @@ const Checkout = () => {
     const result = checkoutSchema.safeParse(shippingInfo);
     
     if (!result.success) {
+      // Set all field errors and mark all fields as touched
+      const errors: Record<string, string> = {};
+      const touched: Record<string, boolean> = {};
+      
+      result.error.errors.forEach(err => {
+        const field = err.path[0] as string;
+        if (!errors[field]) {
+          errors[field] = err.message;
+        }
+        touched[field] = true;
+      });
+      
+      setFieldErrors(prev => ({ ...prev, ...errors }));
+      setTouchedFields(prev => ({ ...prev, ...touched }));
+      
       const firstError = result.error.errors[0];
       toast({
-        title: "Validation Error",
+        title: "Please fix the following errors",
         description: firstError.message,
         variant: "destructive",
       });
       return;
     }
+
+    // Check captcha verification
+    if (!captchaVerified) {
+      toast({
+        title: "Verification Required",
+        description: "Please complete the CAPTCHA verification to proceed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setShowConfirmDialog(true);
   };
 
@@ -702,18 +848,25 @@ const Checkout = () => {
                 {savedAddresses.length > 0 ? 'Or Enter New Address' : 'Shipping Information'}
               </h2>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 space-y-1.5">
                   <Label htmlFor="fullName" className="text-sm">Full Name *</Label>
                   <Input
                     id="fullName"
                     name="fullName"
                     value={shippingInfo.fullName}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('fullName')}
                     placeholder="Enter your full name"
-                    className="mt-1.5"
+                    className={`mt-1.5 ${touchedFields.fullName && fieldErrors.fullName ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {touchedFields.fullName && fieldErrors.fullName && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.fullName}
+                    </p>
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-sm">Email</Label>
                   <Input
                     id="email"
@@ -721,61 +874,90 @@ const Checkout = () => {
                     type="email"
                     value={shippingInfo.email}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('email')}
                     placeholder="your@email.com"
-                    className="mt-1.5"
+                    className={`mt-1.5 ${touchedFields.email && fieldErrors.email ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {touchedFields.email && fieldErrors.email && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.email}
+                    </p>
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="phone" className="text-sm">Phone *</Label>
                   <Input
                     id="phone"
                     name="phone"
                     value={shippingInfo.phone}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('phone')}
                     placeholder="+91 98765 43210"
-                    className="mt-1.5"
+                    className={`mt-1.5 ${touchedFields.phone && fieldErrors.phone ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {touchedFields.phone && fieldErrors.phone && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.phone}
+                    </p>
+                  )}
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 space-y-1.5">
                   <Label htmlFor="addressLine1" className="text-sm">Address Line 1 *</Label>
                   <Input
                     id="addressLine1"
                     name="addressLine1"
                     value={shippingInfo.addressLine1}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('addressLine1')}
                     placeholder="Street address"
-                    className="mt-1.5"
+                    className={`mt-1.5 ${touchedFields.addressLine1 && fieldErrors.addressLine1 ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {touchedFields.addressLine1 && fieldErrors.addressLine1 && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.addressLine1}
+                    </p>
+                  )}
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 space-y-1.5">
                   <Label htmlFor="addressLine2" className="text-sm">Address Line 2</Label>
                   <Input
                     id="addressLine2"
                     name="addressLine2"
                     value={shippingInfo.addressLine2}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('addressLine2')}
                     placeholder="Apartment, suite, etc."
                     className="mt-1.5"
                   />
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="city" className="text-sm">City *</Label>
                   <Input
                     id="city"
                     name="city"
                     value={shippingInfo.city}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('city')}
                     placeholder="City"
-                    className="mt-1.5"
+                    className={`mt-1.5 ${touchedFields.city && fieldErrors.city ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {touchedFields.city && fieldErrors.city && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.city}
+                    </p>
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="state" className="text-sm">State *</Label>
                   <Select
                     value={shippingInfo.state}
-                    onValueChange={(value) => setShippingInfo({ ...shippingInfo, state: value })}
+                    onValueChange={handleStateChange}
                   >
-                    <SelectTrigger className="mt-1.5">
+                    <SelectTrigger className={`mt-1.5 ${touchedFields.state && fieldErrors.state ? 'border-destructive ring-2 ring-destructive/20' : ''}`}>
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
                     <SelectContent>
@@ -784,19 +966,32 @@ const Checkout = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {touchedFields.state && fieldErrors.state && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.state}
+                    </p>
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="postalCode" className="text-sm">Postal Code *</Label>
                   <Input
                     id="postalCode"
                     name="postalCode"
                     value={shippingInfo.postalCode}
                     onChange={handleInputChange}
+                    onBlur={() => handleFieldBlur('postalCode')}
                     placeholder="110001"
-                    className="mt-1.5"
+                    className={`mt-1.5 ${touchedFields.postalCode && fieldErrors.postalCode ? 'border-destructive ring-2 ring-destructive/20' : ''}`}
                   />
+                  {touchedFields.postalCode && fieldErrors.postalCode && (
+                    <p className="text-sm text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-4 h-4" />
+                      {fieldErrors.postalCode}
+                    </p>
+                  )}
                 </div>
-                <div>
+                <div className="space-y-1.5">
                   <Label htmlFor="country" className="text-sm">Country</Label>
                   <Input
                     id="country"
@@ -1058,12 +1253,42 @@ const Checkout = () => {
                 <span className="text-primary">₹{total.toLocaleString()}</span>
               </div>
 
+              {/* CAPTCHA Verification */}
+              <div className="mb-4">
+                <Label className="text-sm mb-2 block">Security Verification *</Label>
+                <div className={`rounded-lg p-3 ${captchaVerified ? 'bg-primary/10 border border-primary/30' : 'bg-muted/50 border border-border'}`}>
+                  {captchaVerified ? (
+                    <div className="flex items-center gap-2 text-primary">
+                      <CheckCircle className="w-5 h-5" />
+                      <span className="text-sm font-medium">Verified</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <HCaptcha
+                        ref={captchaRef}
+                        sitekey={captchaSiteKey}
+                        onVerify={handleCaptchaVerify}
+                        onExpire={handleCaptchaExpire}
+                        onError={handleCaptchaError}
+                        theme="dark"
+                      />
+                      {isVerifyingCaptcha && (
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                          Verifying...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <Button
                 className="w-full"
                 size="lg"
                 variant="luxury"
                 onClick={handlePlaceOrderClick}
-                disabled={isProcessing}
+                disabled={isProcessing || isVerifyingCaptcha}
               >
                 {isProcessing ? (
                   <>
