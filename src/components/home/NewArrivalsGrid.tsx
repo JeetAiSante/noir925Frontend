@@ -6,12 +6,14 @@ import ProductCard from '@/components/products/ProductCard';
 import ProductQuickView from '@/components/products/ProductQuickView';
 import { useProducts } from '@/hooks/useProducts';
 import { products as staticProducts, Product } from '@/data/products';
+import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 
 const NewArrivalsGrid = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set());
   const gridRef = useRef<HTMLDivElement>(null);
+  const { settings: layoutSettings } = useLayoutSettings();
 
   const { data: dbProducts, isLoading } = useProducts({ new: true, limit: 6 });
 
@@ -74,7 +76,17 @@ const NewArrivalsGrid = () => {
         </div>
 
         {/* Products Grid with Stagger Animation */}
-        <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
+        {/* Products Grid with dynamic layout */}
+        <style>{`
+          .new-arrivals-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowMobile}, 1fr); }
+          @media (min-width: 640px) {
+            .new-arrivals-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowTablet}, 1fr); }
+          }
+          @media (min-width: 1024px) {
+            .new-arrivals-grid { grid-template-columns: repeat(${layoutSettings.productsPerRow}, 1fr); }
+          }
+        `}</style>
+        <div ref={gridRef} className="new-arrivals-grid grid gap-4 md:gap-8">
           {newProducts.map((product, index) => (
             <div
               key={product.id}

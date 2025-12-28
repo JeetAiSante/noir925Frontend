@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import { useProducts } from '@/hooks/useProducts';
 import { products as staticProducts } from '@/data/products';
+import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 
 const BestsellersGrid = () => {
   const [filter, setFilter] = useState('all');
   const { data: dbProducts, isLoading } = useProducts({ limit: 12 });
+  const { settings: layoutSettings } = useLayoutSettings();
 
   const filters = [
     { id: 'all', name: 'All' },
@@ -61,8 +63,17 @@ const BestsellersGrid = () => {
           ))}
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+        {/* Products Grid with dynamic layout */}
+        <style>{`
+          .bestsellers-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowMobile}, 1fr); }
+          @media (min-width: 640px) {
+            .bestsellers-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowTablet}, 1fr); }
+          }
+          @media (min-width: 1024px) {
+            .bestsellers-grid { grid-template-columns: repeat(${layoutSettings.productsPerRow}, 1fr); }
+          }
+        `}</style>
+        <div className="bestsellers-grid grid gap-4 md:gap-6">
           {filteredProducts.slice(0, 8).map((product, index) => (
             <ProductCard
               key={product.id}
