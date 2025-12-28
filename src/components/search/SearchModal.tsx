@@ -25,15 +25,93 @@ const getRecentSearches = () => {
   }
 };
 
-// Generate local fallback suggestions
+// Smart search helpers
+const genderTerms = {
+  women: ['women', 'woman', 'ladies', 'lady', 'female', 'her', 'girls', 'girl'],
+  men: ['men', 'man', 'gents', 'gentleman', 'male', 'him', 'boys', 'boy'],
+};
+
+const occasionTerms = ['bridal', 'wedding', 'party', 'daily', 'casual', 'formal', 'office', 'festive', 'traditional'];
+const materialTerms = ['silver', 'gold', 'oxidized', 'oxidised', 'antique', 'plated', 'rose gold'];
+
+// Parse query to extract filters
+const parseSearchQuery = (query: string) => {
+  const q = query.toLowerCase();
+  const words = q.split(/\s+/);
+  
+  let gender: 'women' | 'men' | null = null;
+  let occasion: string | null = null;
+  let material: string | null = null;
+  let categoryHint: string | null = null;
+  
+  // Detect gender
+  for (const word of words) {
+    if (genderTerms.women.includes(word)) { gender = 'women'; break; }
+    if (genderTerms.men.includes(word)) { gender = 'men'; break; }
+  }
+  
+  // Detect occasion
+  for (const term of occasionTerms) {
+    if (q.includes(term)) { occasion = term; break; }
+  }
+  
+  // Detect material
+  for (const term of materialTerms) {
+    if (q.includes(term)) { material = term; break; }
+  }
+  
+  // Detect category
+  for (const cat of categories) {
+    if (q.includes(cat.name.toLowerCase())) {
+      categoryHint = cat.name.toLowerCase();
+      break;
+    }
+  }
+  
+  // Check for common category plurals
+  const categoryAliases: Record<string, string> = {
+    'rings': 'rings', 'ring': 'rings',
+    'earrings': 'earrings', 'earring': 'earrings',
+    'necklaces': 'necklaces', 'necklace': 'necklaces',
+    'bracelets': 'bracelets', 'bracelet': 'bracelets',
+    'chains': 'chains', 'chain': 'chains',
+    'pendants': 'pendants', 'pendant': 'pendants',
+    'anklets': 'anklets', 'anklet': 'anklets',
+    'bangles': 'bangles', 'bangle': 'bangles',
+  };
+  
+  for (const word of words) {
+    if (categoryAliases[word]) {
+      categoryHint = categoryAliases[word];
+      break;
+    }
+  }
+  
+  return { gender, occasion, material, categoryHint, originalQuery: q };
+};
+
+// Generate local fallback suggestions with smart matching
 const generateLocalSuggestions = (query: string): string[] => {
   if (query.length < 2) return [];
-  const q = query.toLowerCase();
+  const { gender, occasion, material, categoryHint } = parseSearchQuery(query);
   const suggestions = new Set<string>();
   
+  // Build contextual suggestions
+  if (categoryHint) {
+    if (gender) suggestions.add(`${categoryHint} for ${gender}`);
+    if (occasion) suggestions.add(`${occasion} ${categoryHint}`);
+    if (material) suggestions.add(`${material} ${categoryHint}`);
+    suggestions.add(categoryHint.charAt(0).toUpperCase() + categoryHint.slice(1));
+  }
+  
   // Add product names that match
+  const q = query.toLowerCase();
   products.forEach(p => {
-    if (p.name.toLowerCase().includes(q)) {
+    const nameMatch = p.name.toLowerCase().includes(q);
+    const catMatch = p.category.toLowerCase().includes(q);
+    const descMatch = p.description?.toLowerCase().includes(q);
+    
+    if (nameMatch || catMatch || descMatch) {
       suggestions.add(p.name);
     }
   });
@@ -47,15 +125,7 @@ const generateLocalSuggestions = (query: string): string[] => {
     }
   });
 
-  // Add common search patterns
-  const patterns = ['silver', 'gold plated', 'oxidized', 'antique', 'bridal', 'daily wear', 'party wear'];
-  patterns.forEach(pattern => {
-    if (pattern.includes(q) || q.includes(pattern.split(' ')[0])) {
-      suggestions.add(`${pattern} jewellery`);
-    }
-  });
-
-  return Array.from(suggestions).slice(0, 5);
+  return Array.from(suggestions).slice(0, 6);
 };
 
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
@@ -141,17 +211,39 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
     setSelectedSuggestion(-1);
     const timer = setTimeout(() => {
       if (query.length > 1) {
-        const searchLower = query.toLowerCase();
-        const filtered = products.filter(p => 
-          p.name.toLowerCase().includes(searchLower) ||
-          p.category.toLowerCase().includes(searchLower) ||
-          p.description?.toLowerCase().includes(searchLower)
-        ).slice(0, 6);
+        const { gender, occasion, material, categoryHint, originalQuery } = parseSearchQuery(query);
+        
+        // Smart filtering with parsed context
+        const filtered = products.filter(p => {
+          const name = p.name.toLowerCase();
+          const category = p.category.toLowerCase();
+          const desc = p.description?.toLowerCase() || '';
+          
+          // Basic text match
+          const textMatch = name.includes(originalQuery) || 
+                           category.includes(originalQuery) || 
+                           desc.includes(originalQuery);
+          
+          // Category hint match
+          const categoryMatch = categoryHint ? category.includes(categoryHint) : false;
+          
+          // Material match
+          const materialMatch = !material || name.includes(material) || desc.includes(material);
+          
+          // Occasion match
+          const occasionMatch = !occasion || name.includes(occasion) || desc.includes(occasion);
+          
+          // Return if text matches OR category matches, AND other filters pass
+          return (textMatch || categoryMatch) && materialMatch && occasionMatch;
+        }).slice(0, 8);
+        
         setResults(filtered);
         
-        const catFiltered = categories.filter(c => 
-          c.name.toLowerCase().includes(searchLower)
-        );
+        // Enhanced category filtering
+        const catFiltered = categories.filter(c => {
+          const catName = c.name.toLowerCase();
+          return catName.includes(originalQuery) || (categoryHint && catName.includes(categoryHint));
+        });
         setCategoryResults(catFiltered);
       } else {
         setResults([]);
