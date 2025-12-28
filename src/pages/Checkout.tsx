@@ -321,6 +321,26 @@ const Checkout = () => {
     let couponUsed = false;
 
     try {
+      // RATE LIMITING: Check if user has exceeded checkout attempts
+      const { data: rateLimitResult, error: rateLimitError } = await supabase
+        .rpc('check_checkout_rate_limit', { max_attempts: 5, window_minutes: 15 });
+
+      if (rateLimitError) {
+        console.error('Rate limit check error:', rateLimitError);
+        // Continue if rate limit check fails (fail-open for availability)
+      } else if (rateLimitResult && rateLimitResult.length > 0) {
+        const rateLimit = rateLimitResult[0];
+        if (!rateLimit.allowed) {
+          const minutes = Math.ceil(rateLimit.retry_after_seconds / 60);
+          toast({
+            title: "Too Many Attempts",
+            description: `Please wait ${minutes} minute${minutes > 1 ? 's' : ''} before trying again.`,
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+      }
       // ATOMIC: Use coupon first if applied (before order creation)
       if (appliedCoupon) {
         const { data: couponResult, error: couponError } = await supabase

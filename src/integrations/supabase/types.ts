@@ -178,6 +178,27 @@ export type Database = {
           },
         ]
       }
+      checkout_rate_limits: {
+        Row: {
+          attempt_time: string
+          id: string
+          ip_hint: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_time?: string
+          id?: string
+          ip_hint?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_time?: string
+          id?: string
+          ip_hint?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       collections: {
         Row: {
           created_at: string
@@ -1515,6 +1536,15 @@ export type Database = {
           success: boolean
         }[]
       }
+      check_checkout_rate_limit: {
+        Args: { max_attempts?: number; window_minutes?: number }
+        Returns: {
+          allowed: boolean
+          attempts_remaining: number
+          retry_after_seconds: number
+        }[]
+      }
+      cleanup_old_rate_limits: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
