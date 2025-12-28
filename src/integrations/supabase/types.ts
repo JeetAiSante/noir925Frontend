@@ -907,6 +907,7 @@ export type Database = {
       orders: {
         Row: {
           billing_address: Json | null
+          carrier: string | null
           created_at: string | null
           discount: number | null
           id: string
@@ -920,11 +921,14 @@ export type Database = {
           subtotal: number
           tax: number | null
           total: number
+          tracking_number: string | null
+          tracking_url: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           billing_address?: Json | null
+          carrier?: string | null
           created_at?: string | null
           discount?: number | null
           id?: string
@@ -938,11 +942,14 @@ export type Database = {
           subtotal: number
           tax?: number | null
           total: number
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           billing_address?: Json | null
+          carrier?: string | null
           created_at?: string | null
           discount?: number | null
           id?: string
@@ -956,6 +963,8 @@ export type Database = {
           subtotal?: number
           tax?: number | null
           total?: number
+          tracking_number?: string | null
+          tracking_url?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
