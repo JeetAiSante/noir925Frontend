@@ -1484,6 +1484,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      atomic_decrement_stock: {
+        Args: { product_id_input: string; quantity_input: number }
+        Returns: {
+          error_message: string
+          product_id: string
+          product_name: string
+          remaining_stock: number
+          success: boolean
+        }[]
+      }
+      atomic_rollback_coupon: {
+        Args: { coupon_code_input: string }
+        Returns: undefined
+      }
+      atomic_rollback_stock: {
+        Args: { product_id_input: string; quantity_input: number }
+        Returns: undefined
+      }
+      atomic_use_coupon: {
+        Args: { coupon_code_input: string }
+        Returns: {
+          code: string
+          discount_type: string
+          discount_value: number
+          error_message: string
+          id: string
+          max_discount_amount: number
+          min_order_value: number
+          success: boolean
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

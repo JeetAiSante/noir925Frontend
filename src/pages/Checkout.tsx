@@ -316,36 +316,82 @@ const Checkout = () => {
     setShowConfirmDialog(false);
     setIsProcessing(true);
 
+    // Track items with successfully decremented stock for potential rollback
+    const decrementedItems: { id: string; quantity: number }[] = [];
+    let couponUsed = false;
+
     try {
-      // Validate stock availability before placing order
-      for (const item of cartItems) {
-        const { data: product, error } = await supabase
-          .from('products')
-          .select('stock_quantity, name')
-          .eq('id', item.id)
-          .single();
+      // ATOMIC: Use coupon first if applied (before order creation)
+      if (appliedCoupon) {
+        const { data: couponResult, error: couponError } = await supabase
+          .rpc('atomic_use_coupon', { coupon_code_input: appliedCoupon.code });
 
-        if (error || !product) {
+        if (couponError || !couponResult || couponResult.length === 0) {
+          throw new Error('Failed to validate coupon');
+        }
+
+        const result = couponResult[0];
+        if (!result.success) {
           toast({
-            title: "Product Not Found",
-            description: `${item.name} is no longer available.`,
+            title: "Coupon Error",
+            description: result.error_message || 'This coupon is no longer available',
             variant: "destructive",
           });
           setIsProcessing(false);
           return;
         }
-
-        if (product.stock_quantity < item.quantity) {
-          toast({
-            title: "Insufficient Stock",
-            description: `Only ${product.stock_quantity} units of ${product.name} available.`,
-            variant: "destructive",
-          });
-          setIsProcessing(false);
-          return;
-        }
+        couponUsed = true;
       }
 
+      // ATOMIC: Decrement stock for all items atomically
+      for (const item of cartItems) {
+        const { data: stockResult, error: stockError } = await supabase
+          .rpc('atomic_decrement_stock', { 
+            product_id_input: item.id, 
+            quantity_input: item.quantity 
+          });
+
+        if (stockError || !stockResult || stockResult.length === 0) {
+          // Rollback previously decremented stock
+          for (const decremented of decrementedItems) {
+            await supabase.rpc('atomic_rollback_stock', { 
+              product_id_input: decremented.id, 
+              quantity_input: decremented.quantity 
+            });
+          }
+          // Rollback coupon if used
+          if (couponUsed && appliedCoupon) {
+            await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: appliedCoupon.code });
+          }
+          throw new Error('Failed to reserve stock');
+        }
+
+        const result = stockResult[0];
+        if (!result.success) {
+          // Rollback previously decremented stock
+          for (const decremented of decrementedItems) {
+            await supabase.rpc('atomic_rollback_stock', { 
+              product_id_input: decremented.id, 
+              quantity_input: decremented.quantity 
+            });
+          }
+          // Rollback coupon if used
+          if (couponUsed && appliedCoupon) {
+            await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: appliedCoupon.code });
+          }
+          toast({
+            title: "Insufficient Stock",
+            description: result.error_message || `${item.name} is not available in the requested quantity.`,
+            variant: "destructive",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        decrementedItems.push({ id: item.id, quantity: item.quantity });
+      }
+
+      // Now create the order - stock is already reserved
       const { data: order, error: orderError } = await supabase
         .from("orders")
         .insert({
@@ -377,7 +423,19 @@ const Checkout = () => {
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        // Rollback stock and coupon on order creation failure
+        for (const decremented of decrementedItems) {
+          await supabase.rpc('atomic_rollback_stock', { 
+            product_id_input: decremented.id, 
+            quantity_input: decremented.quantity 
+          });
+        }
+        if (couponUsed && appliedCoupon) {
+          await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: appliedCoupon.code });
+        }
+        throw orderError;
+      }
 
       const orderItems = cartItems.map((item) => ({
         order_id: order.id,
@@ -394,23 +452,21 @@ const Checkout = () => {
         .from("order_items")
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
-
-      // Update coupon usage count
-      if (appliedCoupon) {
-        const { data: coupon } = await supabase
-          .from('coupons')
-          .select('usage_count')
-          .eq('code', appliedCoupon.code)
-          .single();
-        
-        if (coupon) {
-          await supabase
-            .from('coupons')
-            .update({ usage_count: (coupon.usage_count || 0) + 1 })
-            .eq('code', appliedCoupon.code);
+      if (itemsError) {
+        // Rollback stock and coupon on order items insertion failure
+        for (const decremented of decrementedItems) {
+          await supabase.rpc('atomic_rollback_stock', { 
+            product_id_input: decremented.id, 
+            quantity_input: decremented.quantity 
+          });
         }
+        if (couponUsed && appliedCoupon) {
+          await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: appliedCoupon.code });
+        }
+        throw itemsError;
       }
+
+      // Coupon already atomically updated above, no need to update again
 
       // Redeem loyalty points if applied
       if (loyaltyDiscount > 0 && pointsToRedeem > 0) {
@@ -430,25 +486,7 @@ const Checkout = () => {
         }
       }
 
-      // Update stock quantities
-      for (const item of cartItems) {
-        try {
-          const { data: product } = await supabase
-            .from('products')
-            .select('stock_quantity')
-            .eq('id', item.id)
-            .single();
-          
-          if (product) {
-            await supabase
-              .from('products')
-              .update({ stock_quantity: Math.max(0, product.stock_quantity - item.quantity) })
-              .eq('id', item.id);
-          }
-        } catch (stockError) {
-          console.error('Error updating stock:', stockError);
-        }
-      }
+      // Stock already atomically decremented above, no need to update again
 
       // Send order confirmation email with invoice
       try {
