@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Package, Truck, CheckCircle, MapPin, Clock, Box, Home } from 'lucide-react';
+import { Search, Package, Truck, CheckCircle, MapPin, Clock, Box, Home, Bell, RefreshCw, Mail, MessageSquare } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { SEOHead } from '@/components/seo/SEOHead';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface OrderItem {
   id: string;
@@ -24,10 +27,21 @@ interface Order {
   order_number: string;
   status: string;
   created_at: string;
+  updated_at: string | null;
   total: number;
   shipping_address: any;
   items: OrderItem[];
 }
+
+const statusSteps = [
+  { key: 'pending', label: 'Order Placed', icon: Package, color: 'text-amber-500' },
+  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle, color: 'text-blue-500' },
+  { key: 'processing', label: 'Packed', icon: Box, color: 'text-purple-500' },
+  { key: 'shipped', label: 'Shipped', icon: Truck, color: 'text-indigo-500' },
+  { key: 'in_transit', label: 'In Transit', icon: MapPin, color: 'text-cyan-500' },
+  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck, color: 'text-teal-500' },
+  { key: 'delivered', label: 'Delivered', icon: Home, color: 'text-green-500' },
+];
 
 const TrackOrder = () => {
   const [searchParams] = useSearchParams();
@@ -35,6 +49,8 @@ const TrackOrder = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [orderDetails, setOrderDetails] = useState<Order | null>(null);
   const [error, setError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const { user } = useAuth();
 
   const trackOrderSchema = {
@@ -42,19 +58,39 @@ const TrackOrder = () => {
     "@type": "WebPage",
     "name": "Track Your Order - NOIR925",
     "description": "Track your NOIR925 silver jewellery order. Get real-time updates on your shipment status.",
-    "url": "https://noir925.com/track-order",
-    "mainEntity": {
-      "@type": "WebApplication",
-      "name": "NOIR925 Order Tracking",
-      "applicationCategory": "ShoppingApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "INR"
-      }
-    }
+    "url": "https://noir925.com/track-order"
   };
+
+  // Setup realtime subscription for order updates
+  useEffect(() => {
+    if (!orderDetails?.id) return;
+
+    const channel = supabase
+      .channel(`order-${orderDetails.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+          filter: `id=eq.${orderDetails.id}`
+        },
+        (payload) => {
+          console.log('Order updated:', payload);
+          const newStatus = (payload.new as any).status;
+          if (newStatus !== orderDetails.status) {
+            setOrderDetails(prev => prev ? { ...prev, status: newStatus, updated_at: (payload.new as any).updated_at } : null);
+            setLastUpdated(new Date());
+            toast.success(`Order status updated to: ${newStatus.replace('_', ' ').toUpperCase()}`);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [orderDetails?.id]);
 
   useEffect(() => {
     const orderFromUrl = searchParams.get('order');
@@ -84,7 +120,6 @@ const TrackOrder = () => {
         return;
       }
 
-      // Fetch order items
       const { data: items } = await supabase
         .from('order_items')
         .select('*')
@@ -94,6 +129,7 @@ const TrackOrder = () => {
         ...order,
         items: items || []
       });
+      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error tracking order:', err);
       setError('Unable to track order. Please try again.');
@@ -102,6 +138,13 @@ const TrackOrder = () => {
       setIsLoading(false);
     }
   };
+
+  const handleRefresh = useCallback(async () => {
+    if (!orderDetails?.order_number) return;
+    setIsRefreshing(true);
+    await handleTrackOrder(orderDetails.order_number);
+    setIsRefreshing(false);
+  }, [orderDetails?.order_number]);
 
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,35 +155,27 @@ const TrackOrder = () => {
     await handleTrackOrder(orderNumber);
   };
 
-  const getStatusTimeline = (status: string, createdAt: string) => {
-    const orderDate = new Date(createdAt);
-    const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'in_transit', 'delivered'];
-    const currentIndex = statuses.indexOf(status.toLowerCase());
+  const getCurrentStepIndex = (status: string) => {
+    const index = statusSteps.findIndex(s => s.key === status.toLowerCase());
+    return index >= 0 ? index : 0;
+  };
 
-    const addDays = (date: Date, days: number) => {
-      const result = new Date(date);
-      result.setDate(result.getDate() + days);
-      return result;
-    };
-
-    return [
-      { status: 'Order Placed', date: orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), completed: currentIndex >= 0, current: currentIndex === 0, icon: Package },
-      { status: 'Confirmed', date: addDays(orderDate, 0).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), completed: currentIndex >= 1, current: currentIndex === 1, icon: CheckCircle },
-      { status: 'Processing', date: addDays(orderDate, 1).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), completed: currentIndex >= 2, current: currentIndex === 2, icon: Box },
-      { status: 'Shipped', date: currentIndex >= 3 ? addDays(orderDate, 2).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Expected', completed: currentIndex >= 3, current: currentIndex === 3, icon: Truck },
-      { status: 'In Transit', date: currentIndex >= 4 ? addDays(orderDate, 4).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Expected', completed: currentIndex >= 4, current: currentIndex === 4, icon: MapPin },
-      { status: 'Delivered', date: currentIndex >= 5 ? addDays(orderDate, 7).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : `Expected ${addDays(orderDate, 7).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`, completed: currentIndex >= 5, current: currentIndex === 5, icon: Home },
-    ];
+  const getEstimatedDate = (createdAt: string, daysToAdd: number) => {
+    const date = new Date(createdAt);
+    date.setDate(date.getDate() + daysToAdd);
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'delivered': return 'bg-green-500/10 text-green-600';
-      case 'shipped':
-      case 'in_transit': return 'bg-blue-500/10 text-blue-600';
-      case 'processing': return 'bg-yellow-500/10 text-yellow-600';
-      case 'cancelled': return 'bg-red-500/10 text-red-600';
-      default: return 'bg-primary/10 text-primary';
+      case 'delivered': return 'bg-green-500/10 text-green-600 border-green-500/30';
+      case 'out_for_delivery': return 'bg-teal-500/10 text-teal-600 border-teal-500/30';
+      case 'in_transit':
+      case 'shipped': return 'bg-blue-500/10 text-blue-600 border-blue-500/30';
+      case 'processing': return 'bg-purple-500/10 text-purple-600 border-purple-500/30';
+      case 'confirmed': return 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30';
+      case 'cancelled': return 'bg-red-500/10 text-red-600 border-red-500/30';
+      default: return 'bg-amber-500/10 text-amber-600 border-amber-500/30';
     }
   };
 
@@ -208,98 +243,181 @@ const TrackOrder = () => {
           </Card>
 
           {/* Order Details */}
-          {orderDetails && (
-            <Card>
-              <CardHeader>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-lg">Order #{orderDetails.order_number}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Placed on {new Date(orderDetails.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    </p>
-                  </div>
-                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium w-fit ${getStatusColor(orderDetails.status)}`}>
-                    <Truck className="w-4 h-4" />
-                    {orderDetails.status.charAt(0).toUpperCase() + orderDetails.status.slice(1).replace('_', ' ')}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Items */}
-                {orderDetails.items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
-                    <img 
-                      src={item.product_image || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100'} 
-                      alt={item.product_name}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-foreground">{item.product_name}</p>
-                      <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+          <AnimatePresence>
+            {orderDetails && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-muted/30 border-b">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                      <div>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          Order #{orderDetails.order_number}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                          >
+                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                          </Button>
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Placed on {new Date(orderDetails.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </p>
+                        {lastUpdated && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Bell className="w-3 h-3" />
+                            Last updated: {lastUpdated.toLocaleTimeString('en-IN')}
+                          </p>
+                        )}
+                      </div>
+                      <Badge className={`text-sm px-4 py-2 border ${getStatusColor(orderDetails.status)}`}>
+                        {orderDetails.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
                     </div>
-                    <p className="font-semibold">₹{item.price.toLocaleString('en-IN')}</p>
-                  </div>
-                ))}
-
-                {/* Timeline */}
-                <div className="relative">
-                  <h3 className="font-display text-lg mb-4">Shipment Progress</h3>
-                  <div className="space-y-4">
-                    {getStatusTimeline(orderDetails.status, orderDetails.created_at).map((step, index, arr) => {
-                      const StepIcon = step.icon;
-                      return (
-                        <div key={index} className="flex gap-4">
-                          <div className="flex flex-col items-center">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              step.completed 
-                                ? step.current 
-                                  ? 'bg-primary text-primary-foreground' 
-                                  : 'bg-primary/20 text-primary' 
-                                : 'bg-muted text-muted-foreground'
-                            }`}>
-                              <StepIcon className="w-5 h-5" />
-                            </div>
-                            {index < arr.length - 1 && (
-                              <div className={`w-0.5 h-8 ${
-                                step.completed ? 'bg-primary/30' : 'bg-muted'
-                              }`} />
-                            )}
-                          </div>
-                          <div className="flex-1 pb-4">
-                            <p className={`font-medium ${step.current ? 'text-primary' : 'text-foreground'}`}>
-                              {step.status}
-                            </p>
-                            <p className="text-sm text-muted-foreground">{step.date}</p>
-                          </div>
+                  </CardHeader>
+                  
+                  <CardContent className="p-6 space-y-6">
+                    {/* Visual Progress Bar */}
+                    <div className="relative">
+                      <h3 className="font-display text-lg mb-6 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-primary" />
+                        Tracking Progress
+                      </h3>
+                      
+                      {/* Progress Steps */}
+                      <div className="relative">
+                        <div className="absolute top-5 left-5 right-5 h-1 bg-muted rounded-full">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full"
+                            initial={{ width: 0 }}
+                            animate={{ width: `${(getCurrentStepIndex(orderDetails.status) / (statusSteps.length - 1)) * 100}%` }}
+                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                          />
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                        
+                        <div className="relative flex justify-between">
+                          {statusSteps.map((step, index) => {
+                            const currentIndex = getCurrentStepIndex(orderDetails.status);
+                            const isCompleted = index <= currentIndex;
+                            const isCurrent = index === currentIndex;
+                            const StepIcon = step.icon;
+                            
+                            return (
+                              <div key={step.key} className="flex flex-col items-center" style={{ width: '14%' }}>
+                                <motion.div
+                                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
+                                    isCompleted
+                                      ? isCurrent
+                                        ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30'
+                                        : 'bg-primary/20 text-primary border-primary/50'
+                                      : 'bg-muted text-muted-foreground border-muted-foreground/30'
+                                  }`}
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  transition={{ delay: index * 0.1 }}
+                                >
+                                  <StepIcon className="w-4 h-4" />
+                                </motion.div>
+                                <p className={`text-[10px] mt-2 text-center font-medium ${
+                                  isCompleted ? 'text-foreground' : 'text-muted-foreground'
+                                }`}>
+                                  {step.label}
+                                </p>
+                                {isCurrent && (
+                                  <p className="text-[9px] text-primary mt-0.5">
+                                    {orderDetails.status === 'delivered' ? 'Complete' : 'Current'}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      
+                      {/* Estimated Delivery */}
+                      {orderDetails.status !== 'delivered' && orderDetails.status !== 'cancelled' && (
+                        <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/20 text-center">
+                          <p className="text-sm text-muted-foreground">Estimated Delivery</p>
+                          <p className="text-lg font-semibold text-primary">
+                            {getEstimatedDate(orderDetails.created_at, 5)} - {getEstimatedDate(orderDetails.created_at, 7)}
+                          </p>
+                        </div>
+                      )}
+                    </div>
 
-                {/* Shipping Address - Masked for privacy */}
-                {orderDetails.shipping_address && (
-                  <div className="p-4 bg-muted/50 rounded-lg">
-                    <h4 className="font-medium mb-2 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-primary" />
-                      Delivery Address
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {orderDetails.shipping_address.full_name}<br />
-                      {orderDetails.shipping_address.address_line1?.substring(0, 10)}***<br />
-                      {orderDetails.shipping_address.city}, {orderDetails.shipping_address.state} {orderDetails.shipping_address.postal_code?.substring(0, 3)}***
-                    </p>
-                  </div>
-                )}
+                    {/* Items */}
+                    <div>
+                      <h4 className="font-medium mb-3">Order Items</h4>
+                      <div className="space-y-3">
+                        {orderDetails.items.map((item) => (
+                          <div key={item.id} className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <img 
+                              src={item.product_image || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100'} 
+                              alt={item.product_name}
+                              className="w-14 h-14 rounded-lg object-cover"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-foreground truncate">{item.product_name}</p>
+                              <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                            </div>
+                            <p className="font-semibold">₹{item.price.toLocaleString('en-IN')}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Order Total */}
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <span className="font-medium">Order Total</span>
-                  <span className="text-xl font-bold text-primary">₹{orderDetails.total.toLocaleString('en-IN')}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    {/* Shipping Address */}
+                    {orderDetails.shipping_address && (
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-primary" />
+                          Delivery Address
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          {orderDetails.shipping_address.full_name}<br />
+                          {orderDetails.shipping_address.address_line1?.substring(0, 10)}***<br />
+                          {orderDetails.shipping_address.city}, {orderDetails.shipping_address.state} {orderDetails.shipping_address.postal_code?.substring(0, 3)}***
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Order Total */}
+                    <div className="flex justify-between items-center pt-4 border-t">
+                      <span className="font-medium">Order Total</span>
+                      <span className="text-xl font-bold text-primary">₹{orderDetails.total.toLocaleString('en-IN')}</span>
+                    </div>
+
+                    {/* Notification Preferences */}
+                    <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border border-primary/10">
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Bell className="w-4 h-4 text-primary" />
+                        Get Notified
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Receive updates about your order via email
+                      </p>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                          <Mail className="w-3 h-3" />
+                          Email Updates
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                          <MessageSquare className="w-3 h-3" />
+                          WhatsApp
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Help Section */}
           <div className="text-center mt-8 p-6 bg-muted/50 rounded-xl">
