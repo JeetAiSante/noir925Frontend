@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 
 const priceRanges = [
   { label: 'Under ₹299', max: 299, color: 'from-emerald-500 to-teal-500', image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=400' },
@@ -11,6 +12,8 @@ const priceRanges = [
 ];
 
 const PriceBasedProducts = () => {
+  const { settings } = useLayoutSettings();
+  
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-background via-muted/20 to-background">
       <div className="container mx-auto px-4">
@@ -34,7 +37,23 @@ const PriceBasedProducts = () => {
         </motion.div>
 
         {/* Price Category Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+        <style>{`
+          .price-grid { 
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(${settings.productsPerRowMobile}, 1fr);
+          }
+          @media (min-width: 640px) {
+            .price-grid { 
+              gap: 1.5rem;
+              grid-template-columns: repeat(${settings.productsPerRowTablet}, 1fr); 
+            }
+          }
+          @media (min-width: 1024px) {
+            .price-grid { grid-template-columns: repeat(${settings.productsPerRow}, 1fr); }
+          }
+        `}</style>
+        <div className="price-grid">
           {priceRanges.map((range, index) => (
             <motion.div
               key={range.max}
