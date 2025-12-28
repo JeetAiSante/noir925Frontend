@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown, Camera, MapPin, Gem, Crown, Sparkles, Gift, Home } from 'lucide-react';
+import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown, MapPin, Gem, Crown, Sparkles, Gift, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
@@ -115,16 +115,8 @@ const Header = () => {
                   placeholder="Search for silver jewellery, rings, earrings..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-14 h-11 rounded-full border-2 border-border/50 bg-muted/30 focus:border-primary/50 focus:bg-background transition-all"
+                  className="w-full pl-12 pr-4 h-11 rounded-full border-2 border-border/50 bg-muted/30 focus:border-primary/50 focus:bg-background transition-all"
                 />
-                <button
-                  type="button"
-                  onClick={() => setIsSearchOpen(true)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-muted transition-colors"
-                  aria-label="Visual search"
-                >
-                  <Camera className="w-5 h-5 text-muted-foreground" />
-                </button>
               </div>
             </form>
 

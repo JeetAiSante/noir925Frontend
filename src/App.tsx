@@ -68,6 +68,7 @@ const AdminPageContent = lazy(() => import("./pages/admin/AdminPageContent"));
 const AdminCurrencySettings = lazy(() => import("./pages/admin/AdminCurrencySettings"));
 const AdminPopupSettings = lazy(() => import("./pages/admin/AdminPopupSettings"));
 const AdminProductPopup = lazy(() => import("./pages/admin/AdminProductPopup"));
+const AdminLayoutSettings = lazy(() => import("./pages/admin/AdminLayoutSettings"));
 const AdminSiteContact = lazy(() => import("./pages/admin/AdminSiteContact"));
 const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
@@ -177,6 +178,7 @@ const App = memo(() => (
                     <Route path="currency-settings" element={<AdminCurrencySettings />} />
                     <Route path="popup-settings" element={<AdminPopupSettings />} />
                     <Route path="product-popup" element={<AdminProductPopup />} />
+                    <Route path="layout-settings" element={<AdminLayoutSettings />} />
                     <Route path="site-contact" element={<AdminSiteContact />} />
                     <Route path="spin-wheel" element={<AdminSpinWheel />} />
                     <Route path="messages" element={<AdminMessages />} />
