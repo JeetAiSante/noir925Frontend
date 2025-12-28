@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Filter, MoreHorizontal, Loader2, CheckSquare, Square, Power, PowerOff, Percent, X } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Filter, MoreHorizontal, Loader2, CheckSquare, Square, Power, PowerOff, Percent, X, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import ProductForm from '@/components/admin/ProductForm';
+import ProductCSVImport from '@/components/admin/ProductCSVImport';
 import { useDBProducts, useCategories, useCreateProduct, useUpdateProduct, useDeleteProduct, DBProduct } from '@/hooks/useAdminData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -47,6 +48,7 @@ const AdminProducts = () => {
   const [bulkPriceOpen, setBulkPriceOpen] = useState(false);
   const [bulkPriceAction, setBulkPriceAction] = useState<'increase' | 'decrease'>('increase');
   const [bulkPricePercent, setBulkPricePercent] = useState(10);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   const { data: products, isLoading, refetch } = useDBProducts();
@@ -236,10 +238,16 @@ const AdminProducts = () => {
           <h1 className="font-display text-3xl lg:text-4xl mb-2">Products</h1>
           <p className="text-muted-foreground">{products?.length || 0} products in catalog</p>
         </div>
-        <Button className="gap-2" onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
-          <Plus className="w-4 h-4" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setIsImportOpen(true)}>
+            <Upload className="w-4 h-4" />
+            Import CSV
+          </Button>
+          <Button className="gap-2" onClick={() => { setEditingProduct(null); setIsFormOpen(true); }}>
+            <Plus className="w-4 h-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Bulk Actions Bar */}
@@ -515,6 +523,14 @@ const AdminProducts = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* CSV Import Dialog */}
+      <ProductCSVImport
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onSuccess={() => refetch()}
+        categories={categories || []}
+      />
     </div>
   );
 };
