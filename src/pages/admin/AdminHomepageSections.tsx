@@ -12,8 +12,6 @@ import {
   EyeOff, 
   Save, 
   Settings,
-  ChevronUp,
-  ChevronDown,
   RotateCcw
 } from 'lucide-react';
 import {
@@ -22,6 +20,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface HomepageSection {
   id: string;
@@ -65,13 +80,96 @@ const defaultSections: Omit<HomepageSection, 'id'>[] = [
   { section_key: 'final_cta', section_name: 'Final CTA', is_visible: true, sort_order: 30, settings: null },
 ];
 
+// Sortable Item Component
+interface SortableItemProps {
+  section: HomepageSection;
+  index: number;
+  onVisibilityToggle: (id: string) => void;
+  onOpenSettings: (section: HomepageSection) => void;
+}
+
+const SortableItem = ({ section, index, onVisibilityToggle, onOpenSettings }: SortableItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: section.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
+        isDragging 
+          ? 'bg-accent border-primary shadow-lg z-50 opacity-90' 
+          : 'bg-background hover:bg-accent/50 border-border'
+      } ${!section.is_visible ? 'opacity-50' : ''}`}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="w-5 h-5 text-muted-foreground" />
+      </div>
+      
+      <span className="w-8 text-sm text-muted-foreground font-mono">
+        {String(index + 1).padStart(2, '0')}
+      </span>
+      
+      <div className="flex-1">
+        <span className="font-medium">{section.section_name}</span>
+        <span className="ml-2 text-xs text-muted-foreground">({section.section_key})</span>
+      </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onOpenSettings(section)}
+      >
+        <Settings className="w-4 h-4" />
+      </Button>
+
+      <div className="flex items-center gap-2">
+        {section.is_visible ? (
+          <Eye className="w-4 h-4 text-green-500" />
+        ) : (
+          <EyeOff className="w-4 h-4 text-muted-foreground" />
+        )}
+        <Switch
+          checked={section.is_visible}
+          onCheckedChange={() => onVisibilityToggle(section.id)}
+        />
+      </div>
+    </div>
+  );
+};
+
 const AdminHomepageSections = () => {
   const [sections, setSections] = useState<HomepageSection[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState<HomepageSection | null>(null);
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchSections();
@@ -92,7 +190,6 @@ const AdminHomepageSections = () => {
           settings: s.settings as Record<string, any> | null
         })));
       } else {
-        // Initialize with defaults
         await initializeDefaults();
       }
     } catch (error) {
@@ -129,45 +226,23 @@ const AdminHomepageSections = () => {
     ));
   };
 
-  const moveSection = (index: number, direction: 'up' | 'down') => {
-    const newSections = [...sections];
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    
-    if (newIndex < 0 || newIndex >= sections.length) return;
-    
-    [newSections[index], newSections[newIndex]] = [newSections[newIndex], newSections[index]];
-    
-    // Update sort orders
-    newSections.forEach((s, i) => {
-      s.sort_order = i + 1;
-    });
-    
-    setSections(newSections);
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedIndex === null || draggedIndex === index) return;
-
-    const newSections = [...sections];
-    const draggedSection = newSections[draggedIndex];
-    newSections.splice(draggedIndex, 1);
-    newSections.splice(index, 0, draggedSection);
-
-    newSections.forEach((s, i) => {
-      s.sort_order = i + 1;
-    });
-
-    setSections(newSections);
-    setDraggedIndex(index);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null);
+    if (over && active.id !== over.id) {
+      setSections((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        
+        const newItems = arrayMove(items, oldIndex, newIndex);
+        
+        // Update sort orders
+        return newItems.map((item, index) => ({
+          ...item,
+          sort_order: index + 1
+        }));
+      });
+    }
   };
 
   const saveChanges = async () => {
@@ -251,71 +326,34 @@ const AdminHomepageSections = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Section Order & Visibility</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Section Order & Visibility
+            <span className="text-xs font-normal text-muted-foreground bg-accent px-2 py-1 rounded">
+              Drag to reorder
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {sections.map((section, index) => (
-            <div
-              key={section.id}
-              draggable
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-              className={`flex items-center gap-4 p-3 rounded-lg border transition-all ${
-                draggedIndex === index ? 'bg-accent border-primary' : 'bg-background hover:bg-accent/50'
-              } ${!section.is_visible ? 'opacity-50' : ''}`}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={sections.map(s => s.id)}
+              strategy={verticalListSortingStrategy}
             >
-              <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab active:cursor-grabbing" />
-              
-              <span className="w-8 text-sm text-muted-foreground font-mono">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              
-              <div className="flex-1">
-                <span className="font-medium">{section.section_name}</span>
-                <span className="ml-2 text-xs text-muted-foreground">({section.section_key})</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => moveSection(index, 'up')}
-                  disabled={index === 0}
-                >
-                  <ChevronUp className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => moveSection(index, 'down')}
-                  disabled={index === sections.length - 1}
-                >
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => openSettings(section)}
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-
-              <div className="flex items-center gap-2">
-                {section.is_visible ? (
-                  <Eye className="w-4 h-4 text-green-500" />
-                ) : (
-                  <EyeOff className="w-4 h-4 text-muted-foreground" />
-                )}
-                <Switch
-                  checked={section.is_visible}
-                  onCheckedChange={() => handleVisibilityToggle(section.id)}
+              {sections.map((section, index) => (
+                <SortableItem
+                  key={section.id}
+                  section={section}
+                  index={index}
+                  onVisibilityToggle={handleVisibilityToggle}
+                  onOpenSettings={openSettings}
                 />
-              </div>
-            </div>
-          ))}
+              ))}
+            </SortableContext>
+          </DndContext>
         </CardContent>
       </Card>
 
@@ -327,7 +365,7 @@ const AdminHomepageSections = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-            {/* Universal settings for all sections */}
+            {/* Universal settings */}
             <div className="space-y-4 border-b pb-4">
               <h4 className="font-medium text-sm text-muted-foreground">Display Settings</h4>
               <div className="space-y-2">
