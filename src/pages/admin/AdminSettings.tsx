@@ -48,6 +48,12 @@ const settingsLinks = [
     href: '/admin/homepage-sections',
   },
   {
+    title: 'Layout Settings',
+    description: 'Product grid columns and display options',
+    icon: Settings,
+    href: '/admin/layout-settings',
+  },
+  {
     title: 'Festival Themes',
     description: 'Configure seasonal themes and banners',
     icon: Palette,

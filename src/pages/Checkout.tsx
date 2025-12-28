@@ -16,6 +16,7 @@ import { useLoyaltySettings, useUserLoyaltyPoints, useEarnPoints, useRedeemPoint
 import { z } from "zod";
 import { CreditCard, Truck, Shield, ChevronLeft, Smartphone, Banknote, CheckCircle, Lock, ArrowRight, Sparkles, Gift, Tag, MapPin, Plus, Star, Coins, AlertCircle } from "lucide-react";
 import GiftWrapping from "@/components/checkout/GiftWrapping";
+import OrderSuccessBanner from "@/components/checkout/OrderSuccessBanner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -98,6 +99,8 @@ const Checkout = () => {
   const [pointsToRedeem, setPointsToRedeem] = useState(0);
   const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
   const [taxSettings, setTaxSettings] = useState<{ tax_name: string; tax_percent: number; is_enabled: boolean; is_inclusive: boolean } | null>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [successOrderData, setSuccessOrderData] = useState<{ orderNumber: string; pointsEarned: number } | null>(null);
   
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
@@ -579,6 +582,19 @@ const Checkout = () => {
       }
 
       clearCart();
+      
+      // Calculate earned points
+      const earnedPoints = loyaltySettings?.is_enabled 
+        ? Math.floor(cartTotal * (loyaltySettings.points_per_rupee || 1)) 
+        : 0;
+      
+      // Show success banner
+      setSuccessOrderData({
+        orderNumber: order.order_number,
+        pointsEarned: earnedPoints,
+      });
+      setShowSuccessBanner(true);
+      
       toast({
         title: "🎉 Order Placed Successfully!",
         description: `Your order #${order.order_number} has been placed. Thank you for shopping with us!`,
@@ -589,10 +605,9 @@ const Checkout = () => {
         addr.postal_code === shippingInfo.postalCode
       );
       
+      // Don't navigate immediately - let user see the success banner first
       if (!isAddressSaved && shippingInfo.addressLine1) {
-        setShowSaveAddressDialog(true);
-      } else {
-        navigate("/account");
+        setTimeout(() => setShowSaveAddressDialog(true), 3000);
       }
     } catch (error) {
       console.error("Order error:", error);
@@ -1219,6 +1234,18 @@ const Checkout = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Order Success Banner */}
+      <OrderSuccessBanner
+        isOpen={showSuccessBanner}
+        onClose={() => {
+          setShowSuccessBanner(false);
+          navigate("/account");
+        }}
+        orderNumber={successOrderData?.orderNumber || ''}
+        pointsEarned={successOrderData?.pointsEarned || 0}
+        customerName={shippingInfo.fullName}
+      />
       
       <Footer />
     </div>
