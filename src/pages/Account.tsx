@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Package, MapPin, LogOut, Edit2, Save, ChevronRight } from 'lucide-react';
+import { User, Package, MapPin, LogOut, Edit2, Save, ChevronRight, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,7 @@ import Footer from '@/components/layout/Footer';
 import AddressManager from '@/components/account/AddressManager';
 import OrderHistory from '@/components/account/OrderHistory';
 import ProfileAvatar from '@/components/account/ProfileAvatar';
+import LoyaltyPointsCard from '@/components/account/LoyaltyPointsCard';
 
 const Account = () => {
   const { user, profile, isLoading, signOut, updateProfile } = useAuth();
@@ -126,18 +127,22 @@ const Account = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             <Tabs defaultValue="profile" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="profile" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Profile
+                  <span className="hidden sm:inline">Profile</span>
                 </TabsTrigger>
                 <TabsTrigger value="orders" className="flex items-center gap-2">
                   <Package className="w-4 h-4" />
-                  Orders
+                  <span className="hidden sm:inline">Orders</span>
+                </TabsTrigger>
+                <TabsTrigger value="rewards" className="flex items-center gap-2">
+                  <Award className="w-4 h-4" />
+                  <span className="hidden sm:inline">Rewards</span>
                 </TabsTrigger>
                 <TabsTrigger value="addresses" className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  Addresses
+                  <span className="hidden sm:inline">Addresses</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -217,6 +222,11 @@ const Account = () => {
               {/* Orders Tab */}
               <TabsContent value="orders">
                 <OrderHistory />
+              </TabsContent>
+
+              {/* Rewards Tab */}
+              <TabsContent value="rewards">
+                <LoyaltyPointsCard />
               </TabsContent>
 
               {/* Addresses Tab */}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles, ChevronLeft, ZoomIn } from 'lucide-react';
+import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileFooter from '@/components/layout/MobileFooter';
@@ -10,8 +10,8 @@ import { products } from '@/data/products';
 import { useCurrency } from '@/context/CurrencyContext';
 import ProductCard from '@/components/products/ProductCard';
 import ProductImageZoom from '@/components/products/ProductImageZoom';
+import SwipeableGallery from '@/components/products/SwipeableGallery';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
-import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { ProductSchema, BreadcrumbSchema } from '@/components/seo/ProductSchema';
@@ -20,8 +20,8 @@ const ProductPage = () => {
   const { id } = useParams();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
-  const [activeImage, setActiveImage] = useState(0);
   const [showZoom, setShowZoom] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const { formatPrice } = useCurrency();
 
@@ -59,7 +59,7 @@ const ProductPage = () => {
   const images = product.images || [product.image, product.image, product.image];
   const relatedProducts = products
     .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+    .slice(0, 8);
 
   const breadcrumbItems = [
     { name: 'Home', url: '/' },
@@ -167,77 +167,13 @@ const ProductPage = () => {
 
         {/* Product Section */}
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-12 mb-12 md:mb-24">
-          {/* Images */}
-          <div className="space-y-3 md:space-y-4">
-            {/* Main Image */}
-            <div className="relative aspect-square overflow-hidden rounded-2xl bg-muted group">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={activeImage}
-                  src={images[activeImage]}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </AnimatePresence>
-              
-              {/* Overlay Actions */}
-              <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-6 gap-3">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setShowZoom(true)}
-                >
-                  <ZoomIn className="w-4 h-4" />
-                  Zoom
-                </Button>
-              </div>
-
-              {/* Discount Badge */}
-              {product.discount && (
-                <span className="absolute top-3 left-3 md:top-4 md:left-4 px-3 py-1.5 md:px-4 md:py-2 bg-secondary text-secondary-foreground text-xs md:text-sm font-medium rounded-full">
-                  -{product.discount}% OFF
-                </span>
-              )}
-
-              {/* Navigation Arrows */}
-              {images.length > 1 && (
-                <>
-                  <button
-                    onClick={() => setActiveImage((prev) => (prev - 1 + images.length) % images.length)}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
-                  <button
-                    onClick={() => setActiveImage((prev) => (prev + 1) % images.length)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
-                  </button>
-                </>
-              )}
-            </div>
-
-            {/* Thumbnails */}
-            <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
-              {images.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveImage(index)}
-                  className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border-2 transition-all ${
-                    activeImage === index ? 'border-primary ring-2 ring-primary/20' : 'border-transparent hover:border-primary/50'
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Images - Swipeable Gallery */}
+          <SwipeableGallery
+            images={images}
+            alt={product.name}
+            discount={product.discount}
+            onZoomClick={() => setShowZoom(true)}
+          />
 
           {/* Details */}
           <div className="space-y-4 md:space-y-6">
@@ -422,14 +358,19 @@ const ProductPage = () => {
           </div>
         </div>
 
-        {/* Related Products */}
+        {/* Related Products - You May Also Like */}
         {relatedProducts.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center justify-between mb-6 md:mb-8">
               <h2 className="font-display text-xl md:text-2xl">You May Also Like</h2>
-              <Link to="/shop" className="text-primary text-sm hover:underline">View All</Link>
+              <Link 
+                to={`/shop?category=${product.category.toLowerCase()}`} 
+                className="text-primary text-sm hover:underline flex items-center gap-1"
+              >
+                View More <ChevronRight className="w-4 h-4" />
+              </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
               {relatedProducts.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

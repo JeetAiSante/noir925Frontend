@@ -39,6 +39,7 @@ const FestivalPage = lazy(() => import("./pages/FestivalPage"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const SizeGuide = lazy(() => import("./pages/SizeGuide"));
 const SearchResults = lazy(() => import("./pages/SearchResults"));
+const BridalCollection = lazy(() => import("./pages/BridalCollection"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages - lazy loaded
@@ -149,6 +150,7 @@ const App = memo(() => (
                   <Route path="/help" element={<HelpCenter />} />
                   <Route path="/size-guide" element={<SizeGuide />} />
                   <Route path="/search" element={<SearchResults />} />
+                  <Route path="/bridal-collection" element={<BridalCollection />} />
                   <Route path="/festival" element={<FestivalPage />} />
                   <Route path="/festival/:slug" element={<FestivalPage />} />
                   
