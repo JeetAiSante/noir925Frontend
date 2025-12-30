@@ -283,6 +283,8 @@ const Shop = () => {
                 totalProducts={totalCount}
                 filteredCount={filteredProducts.length}
                 onClearFilters={clearFilters}
+                minRating={minRating}
+                setMinRating={setMinRating}
               />
 
               <Button
