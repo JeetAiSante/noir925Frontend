@@ -160,41 +160,43 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               </motion.div>
             )}
 
-            {/* Wishlist button */}
+            {/* Wishlist button - responsive sizing */}
             <button
               onClick={handleWishlistClick}
-              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 z-10 ${
+              className={`absolute bottom-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${
                 inWishlist
                   ? 'bg-secondary text-secondary-foreground scale-100'
-                  : `bg-background/80 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`
+                  : `bg-background/90 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`
               }`}
+              aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
+              <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${inWishlist ? 'fill-current' : ''}`} />
             </button>
 
-            {/* Quick actions on hover */}
+            {/* Quick actions on hover - responsive layout */}
             <div
-              className={`absolute bottom-2 left-2 right-12 flex gap-1.5 transition-all duration-300 ${
+              className={`absolute bottom-2 left-2 right-10 sm:right-12 flex gap-1 sm:gap-1.5 transition-all duration-300 z-10 ${
                 isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
               }`}
             >
               <Button
                 variant="glass"
                 size="sm"
-                className="flex-1 h-8 text-xs"
+                className="flex-1 h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 min-w-0"
                 onClick={handleAddToCart}
               >
-                <ShoppingBag className="w-3.5 h-3.5 mr-1" />
-                Add to Cart
+                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                <span className="ml-1 truncate hidden xs:inline">Add to Cart</span>
+                <span className="ml-1 xs:hidden">Add</span>
               </Button>
               <Button 
                 variant="glass" 
                 size="icon" 
-                className="shrink-0 h-8 w-8"
+                className="shrink-0 h-7 w-7 sm:h-8 sm:w-8"
                 onClick={handleQuickView}
                 title="Quick View"
               >
-                <Eye className="w-3.5 h-3.5" />
+                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               </Button>
             </div>
 
