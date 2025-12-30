@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { Filter, Grid3X3, Grid2X2, X, ChevronRight } from 'lucide-react';
+import { Filter, Grid3X3, Grid2X2, X, ChevronRight, Star } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';
@@ -25,6 +25,7 @@ const Shop = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(categoryParam);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 20000]);
+  const [minRating, setMinRating] = useState<number>(0);
   const [showFilters, setShowFilters] = useState(false);
 
   // Sync URL params with state
@@ -71,6 +72,11 @@ const Shop = () => {
       (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
     );
 
+    // Filter by rating
+    if (minRating > 0) {
+      result = result.filter((p) => p.rating >= minRating);
+    }
+
     // Sort
     switch (sortBy) {
       case 'price-low':
@@ -88,13 +94,16 @@ const Shop = () => {
     }
 
     return result;
-  }, [selectedCategory, priceRange, sortBy]);
+  }, [selectedCategory, priceRange, minRating, sortBy]);
 
   const clearFilters = () => {
     setSelectedCategory(null);
     setPriceRange([0, 20000]);
+    setMinRating(0);
     setSortBy('featured');
   };
+
+  const hasActiveFilters = selectedCategory || priceRange[0] > 0 || priceRange[1] < 20000 || minRating > 0;
 
   const categoryTitle = selectedCategory 
     ? `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} - Silver Jewellery`
@@ -276,7 +285,6 @@ const Shop = () => {
                 onClearFilters={clearFilters}
               />
 
-              {/* Desktop Filter Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -285,12 +293,12 @@ const Shop = () => {
               >
                 <Filter className="w-4 h-4" />
                 Filters
-                {(selectedCategory || priceRange[0] > 0 || priceRange[1] < 20000) && (
+                {hasActiveFilters && (
                   <span className="w-2 h-2 bg-primary rounded-full" />
                 )}
               </Button>
 
-              {(selectedCategory || priceRange[0] > 0 || priceRange[1] < 20000) && (
+              {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground">
                   Clear All
                   <X className="w-3 h-3 ml-1" />
@@ -410,6 +418,42 @@ const Shop = () => {
                     onChange={(e) => setPriceRange([priceRange[0], +e.target.value])}
                     className="w-full accent-primary"
                   />
+                </div>
+              </div>
+
+              {/* Rating Filter */}
+              <div className="bg-card rounded-xl p-5 border border-border">
+                <h3 className="font-display text-base mb-4">Rating</h3>
+                <div className="space-y-2">
+                  {[4, 3, 2, 1].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => setMinRating(minRating === rating ? 0 : rating)}
+                      className={`flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                        minRating === rating
+                          ? 'bg-primary text-primary-foreground'
+                          : 'hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      <div className="flex items-center gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3.5 h-3.5 ${
+                              i < rating
+                                ? minRating === rating 
+                                  ? 'fill-primary-foreground text-primary-foreground' 
+                                  : 'fill-accent text-accent'
+                                : minRating === rating
+                                  ? 'text-primary-foreground/40'
+                                  : 'text-border'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="ml-1">{rating}+ stars</span>
+                    </button>
+                  ))}
                 </div>
               </div>
             </aside>
