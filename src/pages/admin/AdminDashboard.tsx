@@ -31,7 +31,9 @@ import {
   MessageSquare,
   Bell,
   Disc,
-  Sparkles
+  Sparkles,
+  PanelTop,
+  MessageCircle
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -43,8 +45,10 @@ const navItems = [
   { icon: FolderTree, label: 'Categories', path: '/admin/categories' },
   { icon: ShoppingCart, label: 'Orders', path: '/admin/orders' },
   { icon: Warehouse, label: 'Inventory', path: '/admin/inventory' },
+  { icon: MessageCircle, label: 'Reviews', path: '/admin/reviews' },
   { icon: Tag, label: 'Sales & Offers', path: '/admin/sales' },
   { icon: LayoutGrid, label: 'Homepage Sections', path: '/admin/homepage-sections' },
+  { icon: PanelTop, label: 'Header & Layout', path: '/admin/header-settings' },
   { icon: Image, label: 'Banners', path: '/admin/banners' },
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
   { icon: Palette, label: 'Festival Themes', path: '/admin/themes' },
