@@ -71,6 +71,7 @@ const AdminProductPopup = lazy(() => import("./pages/admin/AdminProductPopup"));
 const AdminLayoutSettings = lazy(() => import("./pages/admin/AdminLayoutSettings"));
 const AdminSiteContact = lazy(() => import("./pages/admin/AdminSiteContact"));
 const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 // Performance-optimized cursor - lazy load as non-critical

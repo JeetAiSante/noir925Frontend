@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Save, FileText, Settings, Plus, Trash2, GripVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import AboutPageEditor from '@/components/admin/AboutPageEditor';
 
 interface PageContent {
   id: string;
@@ -348,7 +349,13 @@ const AdminPageContent = () => {
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          {selectedPage === 'help-center' ? renderHelpCenterEditor() : renderGenericEditor()}
+                          {selectedPage === 'help-center' ? renderHelpCenterEditor() : 
+                           selectedPage === 'about' ? (
+                             <AboutPageEditor 
+                               content={editingContent?.content || currentPage.content || {}} 
+                               onChange={(content) => handleContentChange('content', content)} 
+                             />
+                           ) : renderGenericEditor()}
                         </CardContent>
                       </Card>
                     </TabsContent>

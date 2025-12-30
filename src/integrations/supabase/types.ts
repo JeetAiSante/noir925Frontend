@@ -126,6 +126,8 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          header_icon: string | null
+          header_sort_order: number | null
           icon: string | null
           id: string
           image_url: string | null
@@ -134,6 +136,7 @@ export type Database = {
           name: string
           parent_id: string | null
           product_count: number
+          show_in_header: boolean | null
           slug: string
           sort_order: number
           updated_at: string
@@ -141,6 +144,8 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          header_icon?: string | null
+          header_sort_order?: number | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -149,6 +154,7 @@ export type Database = {
           name: string
           parent_id?: string | null
           product_count?: number
+          show_in_header?: boolean | null
           slug: string
           sort_order?: number
           updated_at?: string
@@ -156,6 +162,8 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          header_icon?: string | null
+          header_sort_order?: number | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -164,6 +172,7 @@ export type Database = {
           name?: string
           parent_id?: string | null
           product_count?: number
+          show_in_header?: boolean | null
           slug?: string
           sort_order?: number
           updated_at?: string
@@ -1074,12 +1083,16 @@ export type Database = {
       }
       product_reviews: {
         Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
           content: string
           created_at: string
           helpful_count: number | null
           id: string
+          is_approved: boolean | null
           is_featured: boolean | null
           is_verified_purchase: boolean | null
+          order_id: string | null
           product_id: string | null
           rating: number
           reviewer_avatar: string | null
@@ -1089,12 +1102,16 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
           content: string
           created_at?: string
           helpful_count?: number | null
           id?: string
+          is_approved?: boolean | null
           is_featured?: boolean | null
           is_verified_purchase?: boolean | null
+          order_id?: string | null
           product_id?: string | null
           rating: number
           reviewer_avatar?: string | null
@@ -1104,12 +1121,16 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
           content?: string
           created_at?: string
           helpful_count?: number | null
           id?: string
+          is_approved?: boolean | null
           is_featured?: boolean | null
           is_verified_purchase?: boolean | null
+          order_id?: string | null
           product_id?: string | null
           rating?: number
           reviewer_avatar?: string | null
@@ -1271,6 +1292,38 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      review_images: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          review_id: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          review_id: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          review_id?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_images_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "product_reviews"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_contact: {
         Row: {
