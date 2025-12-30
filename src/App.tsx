@@ -70,6 +70,7 @@ const AdminPopupSettings = lazy(() => import("./pages/admin/AdminPopupSettings")
 const AdminProductPopup = lazy(() => import("./pages/admin/AdminProductPopup"));
 const AdminLayoutSettings = lazy(() => import("./pages/admin/AdminLayoutSettings"));
 const AdminSiteContact = lazy(() => import("./pages/admin/AdminSiteContact"));
+const AdminHeaderSettings = lazy(() => import("./pages/admin/AdminHeaderSettings"));
 const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
@@ -181,11 +182,13 @@ const App = memo(() => (
                     <Route path="product-popup" element={<AdminProductPopup />} />
                     <Route path="layout-settings" element={<AdminLayoutSettings />} />
                     <Route path="site-contact" element={<AdminSiteContact />} />
+                    <Route path="header-settings" element={<AdminHeaderSettings />} />
                     <Route path="spin-wheel" element={<AdminSpinWheel />} />
                     <Route path="messages" element={<AdminMessages />} />
                     <Route path="customers" element={<AdminCustomers />} />
                     <Route path="analytics" element={<AdminAnalytics />} />
                     <Route path="categories" element={<AdminCategories />} />
+                    <Route path="reviews" element={<AdminReviews />} />
                     <Route path="settings" element={<AdminSettings />} />
                   </Route>
                   

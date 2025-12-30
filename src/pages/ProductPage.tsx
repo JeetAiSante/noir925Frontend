@@ -12,6 +12,7 @@ import ProductCard from '@/components/products/ProductCard';
 import ProductImageZoom from '@/components/products/ProductImageZoom';
 import SwipeableGallery from '@/components/products/SwipeableGallery';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
+import ProductReviews from '@/components/products/ProductReviews';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { ProductSchema, BreadcrumbSchema } from '@/components/seo/ProductSchema';
@@ -357,6 +358,9 @@ const ProductPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Customer Reviews Section */}
+        <ProductReviews productId={product.id} productName={product.name} />
 
         {/* Related Products - You May Also Like */}
         {relatedProducts.length > 0 && (
