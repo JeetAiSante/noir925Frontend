@@ -40,6 +40,9 @@ export interface Category {
   is_featured: boolean;
   sort_order: number;
   product_count: number;
+  show_in_header: boolean | null;
+  header_sort_order: number | null;
+  header_icon: string | null;
 }
 
 export interface DBProduct {
