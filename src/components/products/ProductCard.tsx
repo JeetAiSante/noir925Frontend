@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Star, Sparkles, TrendingUp, Zap, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,12 +18,24 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isTouched, setIsTouched] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const { formatPrice } = useCurrency();
 
   // Use hoverImage from product if available, otherwise fallback to main image
   const hoverImage = (product as any).hoverImage || product.image;
+
+  // Combine hover and touch states for showing actions
+  const showActions = isHovered || isTouched;
+
+  // Reset touch state after delay
+  useEffect(() => {
+    if (isTouched) {
+      const timer = setTimeout(() => setIsTouched(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTouched]);
 
   if (isLoading) {
     return <ProductSkeleton className={className} />;
@@ -75,6 +87,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
         className={`group relative bg-card rounded-xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onTouchStart={() => setIsTouched(true)}
         data-cursor="product"
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2 }}
@@ -92,11 +105,11 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               priority={false}
               blurPlaceholder={true}
               className={`absolute inset-0 transition-all duration-700 ${
-                isHovered ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
+                showActions ? 'opacity-0 scale-110' : 'opacity-100 scale-100'
               }`}
             />
             
-            {/* Hover Image (shown on hover - selected in admin) */}
+            {/* Hover Image (shown on hover/touch - selected in admin) */}
             <OptimizedImage
               src={hoverImage}
               alt={`${product.name} - alternate view showing different angle`}
@@ -104,12 +117,12 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               priority={false}
               blurPlaceholder={false}
               className={`absolute inset-0 transition-all duration-700 ${
-                isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
+                showActions ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
               }`}
             />
 
-            {/* Gradient overlay on hover */}
-            <div className={`absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
+            {/* Gradient overlay on hover/touch */}
+            <div className={`absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent transition-opacity duration-300 ${showActions ? 'opacity-100' : 'opacity-0'}`} />
 
             {/* Compact Badges - Top Left */}
             <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
@@ -160,23 +173,23 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               </motion.div>
             )}
 
-            {/* Wishlist button - responsive sizing */}
+            {/* Wishlist button - always visible on mobile, hover on desktop */}
             <button
               onClick={handleWishlistClick}
               className={`absolute bottom-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${
                 inWishlist
                   ? 'bg-secondary text-secondary-foreground scale-100'
-                  : `bg-background/90 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${isHovered ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`
+                  : `bg-background/90 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${showActions ? 'opacity-100 scale-100' : 'md:opacity-0 opacity-100 scale-100 md:scale-90'}`
               }`}
               aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             >
               <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${inWishlist ? 'fill-current' : ''}`} />
             </button>
 
-            {/* Quick actions on hover - responsive layout */}
+            {/* Quick actions - always visible on mobile, hover on desktop */}
             <div
               className={`absolute bottom-2 left-2 right-10 sm:right-12 flex gap-1 sm:gap-1.5 transition-all duration-300 z-10 ${
-                isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+                showActions ? 'opacity-100 translate-y-0' : 'md:opacity-0 md:translate-y-4 opacity-100 translate-y-0'
               }`}
             >
               <Button
@@ -200,8 +213,8 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               </Button>
             </div>
 
-            {/* Subtle shimmer effect on hover */}
-            {isHovered && (
+            {/* Subtle shimmer effect on hover/touch */}
+            {showActions && (
               <div className="absolute inset-0 shimmer pointer-events-none opacity-50" />
             )}
           </div>
