@@ -63,36 +63,56 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Please login to submit a review');
+      if (!content.trim()) throw new Error('Please write a review');
 
+      // Get user profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, avatar_url')
         .eq('id', user.id)
         .single();
 
+      // Check if user has purchased this product (verified purchase)
+      const { data: orderItems } = await supabase
+        .from('order_items')
+        .select('id, orders!inner(user_id, status)')
+        .eq('product_id', productId)
+        .limit(1);
+      
+      const isVerifiedPurchase = orderItems && orderItems.length > 0;
+
+      // Insert the review
+      const reviewData = {
+        product_id: productId,
+        user_id: user.id,
+        rating,
+        title: title.trim() || null,
+        content: content.trim(),
+        reviewer_name: profile?.full_name || user.email?.split('@')[0] || 'Customer',
+        reviewer_avatar: profile?.avatar_url || null,
+        is_verified_purchase: isVerifiedPurchase,
+        is_approved: true, // Auto-approve for now, admin can change later
+        is_featured: false,
+        helpful_count: 0,
+      };
+
       const { data: review, error } = await supabase
         .from('product_reviews')
-        .insert({
-          product_id: productId,
-          user_id: user.id,
-          rating,
-          title: title || null,
-          content,
-          reviewer_name: profile?.full_name || user.email?.split('@')[0] || 'Customer',
-          reviewer_avatar: profile?.avatar_url,
-          is_verified_purchase: false, // Would check order history
-        })
+        .insert(reviewData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Review insert error:', error);
+        throw new Error(error.message || 'Failed to submit review');
+      }
 
       // Upload images if any
       if (images.length > 0 && review) {
         for (let i = 0; i < images.length; i++) {
           const file = images[i];
           const fileExt = file.name.split('.').pop();
-          const fileName = `${review.id}-${i}.${fileExt}`;
+          const fileName = `${review.id}-${i}-${Date.now()}.${fileExt}`;
 
           const { error: uploadError } = await supabase.storage
             .from('product-images')
@@ -112,11 +132,29 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
         }
       }
 
+      // Update product reviews count and rating
+      const { data: allReviews } = await supabase
+        .from('product_reviews')
+        .select('rating')
+        .eq('product_id', productId)
+        .eq('is_approved', true);
+
+      if (allReviews && allReviews.length > 0) {
+        const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+        await supabase
+          .from('products')
+          .update({ 
+            rating: Math.round(avgRating * 10) / 10, 
+            reviews_count: allReviews.length 
+          })
+          .eq('id', productId);
+      }
+
       return review;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['product-reviews', productId] });
-      toast.success('Review submitted successfully!');
+      toast.success('Review submitted successfully! Thank you for your feedback.');
       setShowForm(false);
       setRating(5);
       setTitle('');
@@ -124,7 +162,8 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
       setImages([]);
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to submit review');
+      console.error('Review submission error:', error);
+      toast.error(error.message || 'Failed to submit review. Please try again.');
     },
   });
 
