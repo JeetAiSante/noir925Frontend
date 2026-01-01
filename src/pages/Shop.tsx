@@ -1,12 +1,12 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Filter, Grid3X3, Grid2X2, X, ChevronRight, Star } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/products/ProductCard';
 import { Button } from '@/components/ui/button';
-import { products } from '@/data/products';
 import { useCategoriesWithCounts, useTotalProductCount } from '@/hooks/useProductCounts';
+import { useShopProducts } from '@/hooks/useShopProducts';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
@@ -46,7 +46,7 @@ const Shop = () => {
   };
 
   const { data: categories = [] } = useCategoriesWithCounts();
-  const { data: totalCount = products.length } = useTotalProductCount();
+  const { data: totalCount = 0 } = useTotalProductCount();
   const { formatPrice } = useCurrency();
 
   const sortOptions = [
@@ -57,44 +57,15 @@ const Shop = () => {
     { value: 'rating', label: 'Highest Rated' },
   ];
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    // Filter by category
-    if (selectedCategory) {
-      result = result.filter(
-        (p) => p.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
-    }
-
-    // Filter by price
-    result = result.filter(
-      (p) => p.price >= priceRange[0] && p.price <= priceRange[1]
-    );
-
-    // Filter by rating
-    if (minRating > 0) {
-      result = result.filter((p) => p.rating >= minRating);
-    }
-
-    // Sort
-    switch (sortBy) {
-      case 'price-low':
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        result.sort((a, b) => b.price - a.price);
-        break;
-      case 'newest':
-        result.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
-        break;
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
-        break;
-    }
-
-    return result;
-  }, [selectedCategory, priceRange, minRating, sortBy]);
+  // Use database-backed hook for filtering
+  const { data: filteredProducts = [], isLoading } = useShopProducts({
+    category: selectedCategory,
+    gender: genderParam,
+    minPrice: priceRange[0],
+    maxPrice: priceRange[1],
+    minRating: minRating,
+    sortBy: sortBy,
+  });
 
   const clearFilters = () => {
     setSelectedCategory(null);
@@ -221,11 +192,9 @@ const Shop = () => {
               </button>
               <button
                 onClick={() => {
-                  const discountProducts = products.filter(p => p.discount);
-                  if (discountProducts.length > 0) {
-                    setSelectedCategory(null);
-                    setSortBy('featured');
-                  }
+                  setSelectedCategory(null);
+                  setSortBy('featured');
+                  // Filter will show on-sale items from the filtered products
                 }}
                 className="shrink-0 px-4 py-2 rounded-full bg-gradient-to-r from-rose-500/10 to-pink-500/10 hover:from-rose-500/20 hover:to-pink-500/20 text-foreground text-sm font-medium transition-all border border-rose-500/20"
               >
@@ -462,7 +431,22 @@ const Shop = () => {
 
             {/* Products Grid */}
             <div className="flex-1">
-              {filteredProducts.length === 0 ? (
+              {isLoading ? (
+                <div className="shop-products-grid grid gap-4 md:gap-6">
+                  <style>{`
+                    .shop-products-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowMobile}, 1fr); }
+                    @media (min-width: 640px) {
+                      .shop-products-grid { grid-template-columns: repeat(${layoutSettings.productsPerRowTablet}, 1fr); }
+                    }
+                    @media (min-width: 1024px) {
+                      .shop-products-grid { grid-template-columns: repeat(${gridSize === 'large' ? Math.min(layoutSettings.productsPerRow, 3) : layoutSettings.productsPerRow}, 1fr); }
+                    }
+                  `}</style>
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="aspect-[3/4] bg-muted animate-pulse rounded-xl" />
+                  ))}
+                </div>
+              ) : filteredProducts.length === 0 ? (
                 <div className="text-center py-20 bg-muted/30 rounded-2xl">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <X className="w-8 h-8 text-muted-foreground" />
