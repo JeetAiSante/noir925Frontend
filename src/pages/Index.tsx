@@ -39,6 +39,7 @@ const InstagramFeed = lazy(() => import('@/components/home/InstagramFeed'));
 const NewsletterSection = lazy(() => import('@/components/home/NewsletterSection'));
 const RecentlyViewed = lazy(() => import('@/components/home/RecentlyViewed'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
+const GiftOfChoiceSection = lazy(() => import('@/components/home/GiftOfChoiceSection'));
 
 // Section loading placeholder
 const SectionLoader = memo(() => (
@@ -108,6 +109,7 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   // Other
   recently_viewed: RecentlyViewed,
   final_cta: FinalCTA,
+  gift_of_choice: GiftOfChoiceSection,
 };
 
 const Index = memo(() => {
@@ -119,7 +121,7 @@ const Index = memo(() => {
   // Default section order when DB not loaded yet
   const defaultOrder = [
     'video_hero', 'countdown_banner', 'festival_banner', 'trust_strip', 'categories_carousel', 'bestsellers',
-    'gender_shop', 'wedding_collection', 'parallax_banner', 'new_arrivals',
+    'gender_shop', 'gift_of_choice', 'wedding_collection', 'parallax_banner', 'new_arrivals',
     'trending_slider', 'editorial_section', 'video_showcase',
     'featured_categories', 'brand_story', 'collections_story',
     'shop_by_occasion', 'silver_care', 'brand_partners', 'reviews', 'instagram_feed', 'newsletter',
