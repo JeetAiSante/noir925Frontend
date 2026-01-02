@@ -53,14 +53,11 @@ const CollectionsStory = () => {
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-rotate collections
   useEffect(() => {
     if (!isAutoPlaying) return;
-    
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % collections.length);
     }, 5000);
-    
     return () => clearInterval(interval);
   }, [isAutoPlaying]);
 
@@ -76,20 +73,18 @@ const CollectionsStory = () => {
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="font-accent text-xs text-primary tracking-widest uppercase">
-              Curated Collections
-            </span>
+            <span className="font-accent text-xs text-primary tracking-widest uppercase">Curated Collections</span>
           </div>
           <h2 className="font-display text-3xl md:text-5xl lg:text-6xl text-foreground mb-4">
-            Discover Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary animate-shimmer bg-[length:200%_auto]">Signature</span> Lines
+            Discover Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary">Signature</span> Lines
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
             Each collection tells a unique story of craftsmanship, elegance, and timeless design
           </p>
         </motion.div>
 
-        {/* Collections Grid - Desktop - Luxury Oval Frames */}
-        <div className="hidden lg:grid lg:grid-cols-3 gap-8 xl:gap-10">
+        {/* Desktop Grid */}
+        <div className="hidden lg:grid lg:grid-cols-3 gap-8">
           {collections.map((collection, index) => (
             <motion.div
               key={collection.id}
@@ -97,83 +92,30 @@ const CollectionsStory = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.15 }}
-              className="group perspective-1000"
-              onMouseEnter={() => {
-                setActiveIndex(index);
-                setIsAutoPlaying(false);
-              }}
+              className="group"
+              onMouseEnter={() => { setActiveIndex(index); setIsAutoPlaying(false); }}
               onMouseLeave={() => setIsAutoPlaying(true)}
             >
               <Link to={`/collections/${collection.id}`}>
-                <div className={`relative transition-all duration-700 ${
-                  activeIndex === index 
-                    ? 'scale-[1.03]' 
-                    : 'hover:scale-[1.01]'
+                <div className={`relative rounded-2xl overflow-hidden border-2 transition-all duration-500 ${
+                  activeIndex === index ? 'border-primary/60 shadow-2xl scale-[1.02]' : 'border-border/50 hover:border-primary/40'
                 }`}>
-                  {/* Luxury Oval Frame */}
-                  <div className={`relative rounded-[60px] overflow-hidden border-4 ${
-                    activeIndex === index 
-                      ? 'border-primary/60 shadow-2xl shadow-primary/30' 
-                      : 'border-primary/20 hover:border-primary/40'
-                  } transition-all duration-500`}>
-                    {/* Decorative Corner Accents */}
-                    <div className="absolute top-2 left-2 w-8 h-8 border-t-2 border-l-2 border-primary/40 rounded-tl-[20px] z-10" />
-                    <div className="absolute top-2 right-2 w-8 h-8 border-t-2 border-r-2 border-primary/40 rounded-tr-[20px] z-10" />
-                    <div className="absolute bottom-2 left-2 w-8 h-8 border-b-2 border-l-2 border-primary/40 rounded-bl-[20px] z-10" />
-                    <div className="absolute bottom-2 right-2 w-8 h-8 border-b-2 border-r-2 border-primary/40 rounded-br-[20px] z-10" />
-                    
-                    {/* Image Container */}
-                    <div className="aspect-[3/4] overflow-hidden">
-                      <img
-                        src={collection.image}
-                        alt={collection.name}
-                        className={`w-full h-full object-cover transition-all duration-1000 ${
-                          activeIndex === index ? 'scale-110' : 'scale-100 group-hover:scale-105'
-                        }`}
-                        loading="lazy"
-                      />
-                    </div>
-                  
-                  {/* Gradient Overlay */}
+                  <div className="aspect-[3/4] overflow-hidden">
+                    <img src={collection.image} alt={collection.name} className={`w-full h-full object-cover transition-all duration-700 ${activeIndex === index ? 'scale-110' : 'group-hover:scale-105'}`} loading="lazy" />
+                  </div>
                   <div className={`absolute inset-0 bg-gradient-to-t ${collection.gradient} opacity-60`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/40 to-transparent" />
-
-                  {/* Floating Icon */}
-                  <div className={`absolute top-6 right-6 w-12 h-12 rounded-full bg-background/10 backdrop-blur-md flex items-center justify-center transition-all duration-500 ${
-                    activeIndex === index ? 'scale-110 rotate-12' : ''
-                  }`}>
+                  <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/20 backdrop-blur-md flex items-center justify-center">
                     <collection.icon className={`w-5 h-5 ${collection.accentColor}`} />
                   </div>
-
-                  {/* Content */}
                   <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                    <div className={`transform transition-all duration-500 ${
-                      activeIndex === index ? 'translate-y-0' : 'translate-y-4 group-hover:translate-y-0'
-                    }`}>
-                      <span className={`text-xs font-medium ${collection.accentColor} tracking-widest uppercase mb-2 block`}>
-                        {collection.subtitle}
-                      </span>
-                      <h3 className="font-display text-2xl xl:text-3xl text-background mb-2">
-                        {collection.name}
-                      </h3>
-                      <p className={`text-background/70 text-sm mb-4 line-clamp-2 transition-all duration-500 ${
-                        activeIndex === index ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                      }`}>
-                        {collection.description}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-background/50 text-xs">
-                          {collection.productCount} Pieces
-                        </span>
-                        <div className={`flex items-center gap-2 ${collection.accentColor} text-sm font-medium transition-all duration-300 ${
-                          activeIndex === index ? 'gap-3' : 'group-hover:gap-3'
-                        }`}>
-                          Explore
-                          <ArrowRight className="w-4 h-4" />
-                        </div>
-                      </div>
+                    <span className={`text-xs ${collection.accentColor} uppercase tracking-wider mb-1`}>{collection.subtitle}</span>
+                    <h3 className="font-display text-2xl text-background mb-2">{collection.name}</h3>
+                    <p className="text-background/70 text-sm mb-3 line-clamp-2">{collection.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-background/50 text-xs">{collection.productCount} Pieces</span>
+                      <div className={`flex items-center gap-2 ${collection.accentColor} text-sm font-medium`}>Explore <ArrowRight className="w-4 h-4" /></div>
                     </div>
-                  </div>
                   </div>
                 </div>
               </Link>
@@ -181,95 +123,41 @@ const CollectionsStory = () => {
           ))}
         </div>
 
-        {/* Collections Slider - Mobile/Tablet */}
+        {/* Mobile Slider */}
         <div ref={containerRef} className="lg:hidden">
           <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 snap-x snap-mandatory">
             {collections.map((collection, index) => (
-              <Link
-                key={collection.id}
-                to={`/collections/${collection.id}`}
-                className="group flex-shrink-0 w-[280px] sm:w-[320px] snap-start"
-                onClick={() => setActiveIndex(index)}
-              >
-                <div className="relative overflow-hidden rounded-2xl">
-                  {/* Image */}
+              <Link key={collection.id} to={`/collections/${collection.id}`} className="group flex-shrink-0 w-[280px] snap-start">
+                <div className="relative overflow-hidden rounded-2xl border border-border/50">
                   <div className="aspect-[3/4] overflow-hidden">
-                    <img
-                      src={collection.image}
-                      alt={collection.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      loading="lazy"
-                    />
+                    <img src={collection.image} alt={collection.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" />
                   </div>
-                  
-                  {/* Overlays */}
                   <div className={`absolute inset-0 bg-gradient-to-t ${collection.gradient} opacity-60`} />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/30 to-transparent" />
-
-                  {/* Icon */}
-                  <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/10 backdrop-blur-md flex items-center justify-center">
-                    <collection.icon className={`w-4 h-4 ${collection.accentColor}`} />
-                  </div>
-
-                  {/* Content */}
                   <div className="absolute inset-0 p-5 flex flex-col justify-end">
-                    <span className={`text-[10px] font-medium ${collection.accentColor} tracking-widest uppercase mb-1`}>
-                      {collection.subtitle}
-                    </span>
-                    <h3 className="font-display text-xl text-background mb-1">
-                      {collection.name}
-                    </h3>
-                    <p className="text-background/60 text-xs mb-3 line-clamp-2">
-                      {collection.description}
-                    </p>
+                    <span className={`text-[10px] ${collection.accentColor} uppercase tracking-wider mb-1`}>{collection.subtitle}</span>
+                    <h3 className="font-display text-xl text-background mb-1">{collection.name}</h3>
                     <div className="flex items-center justify-between">
-                      <span className="text-background/40 text-[10px]">
-                        {collection.productCount} Pieces
-                      </span>
-                      <div className={`flex items-center gap-1.5 ${collection.accentColor} text-xs font-medium`}>
-                        Explore
-                        <ArrowRight className="w-3 h-3" />
-                      </div>
+                      <span className="text-background/40 text-[10px]">{collection.productCount} Pieces</span>
+                      <div className={`flex items-center gap-1 ${collection.accentColor} text-xs`}>Explore <ArrowRight className="w-3 h-3" /></div>
                     </div>
                   </div>
                 </div>
               </Link>
             ))}
           </div>
-
-          {/* Mobile Indicators */}
           <div className="flex justify-center gap-2 mt-4">
             {collections.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveIndex(index)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === activeIndex
-                    ? 'w-8 bg-primary'
-                    : 'w-1.5 bg-muted-foreground/30'
-                }`}
-                aria-label={`Go to collection ${index + 1}`}
-              />
+              <button key={index} onClick={() => setActiveIndex(index)} className={`h-1.5 rounded-full transition-all ${index === activeIndex ? 'w-8 bg-primary' : 'w-1.5 bg-muted-foreground/30'}`} />
             ))}
           </div>
         </div>
 
         {/* CTA */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mt-12"
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mt-12">
           <Link to="/collections">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full font-medium text-sm md:text-base shadow-xl shadow-primary/30 hover:shadow-primary/40 transition-all duration-300"
-            >
-              <Sparkles className="w-4 h-4" />
-              Explore All Collections
-              <ArrowRight className="w-4 h-4" />
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full font-medium shadow-xl shadow-primary/30">
+              <Sparkles className="w-4 h-4" /> Explore All Collections <ArrowRight className="w-4 h-4" />
             </motion.button>
           </Link>
         </motion.div>

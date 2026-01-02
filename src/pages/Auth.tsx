@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, Sparkles, AlertTriangle } from 'lucide-react';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -35,12 +36,15 @@ const Auth = () => {
   
   const { user, signUp, signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
 
   useEffect(() => {
     if (user) {
-      navigate('/');
+      // Use replace to ensure back button works properly
+      navigate(redirectTo, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectTo]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -100,6 +104,9 @@ const Auth = () => {
         
         const { error } = await signIn(formData.email, formData.password);
         if (error) {
+          const newFailedAttempts = failedAttempts + 1;
+          setFailedAttempts(newFailedAttempts);
+          
           if (error.message?.includes('Invalid login')) {
             toast({
               title: "Invalid credentials",
@@ -150,6 +157,39 @@ const Auth = () => {
                 : 'Sign in to access your account'}
             </p>
           </div>
+
+          {/* Login Failure Message - Show after 2+ failed attempts */}
+          {failedAttempts >= 2 && !isSignUp && (
+            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                    Having trouble signing in?
+                  </h3>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mb-3">
+                    If you don't have an account yet, join our exclusive community and enjoy premium benefits.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSignUp(true);
+                      setFailedAttempts(0);
+                      setErrors({});
+                      setFormData({ fullName: '', email: formData.email, password: '' });
+                    }}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Create Your Account
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <Card className="border-border/50 shadow-elegant">
             <CardHeader className="space-y-1 pb-4">

@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles } from 'lucide-react';
+import { Heart, ShoppingBag, Truck, Shield, RotateCcw, Star, Minus, Plus, ChevronRight, Share2, Ruler, Sparkles, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import MobileFooter from '@/components/layout/MobileFooter';
 import { Button } from '@/components/ui/button';
 import { useCart, WishlistItem } from '@/context/CartContext';
-import { products } from '@/data/products';
 import { useCurrency } from '@/context/CurrencyContext';
 import ProductCard from '@/components/products/ProductCard';
 import ProductImageZoom from '@/components/products/ProductImageZoom';
@@ -16,6 +15,8 @@ import ProductReviews from '@/components/products/ProductReviews';
 import { toast } from 'sonner';
 import { SEOHead } from '@/components/seo/SEOHead';
 import { ProductSchema, BreadcrumbSchema } from '@/components/seo/ProductSchema';
+import { useProductById, useRelatedProducts } from '@/hooks/useProductById';
+import { products as staticProducts } from '@/data/products';
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -26,12 +27,30 @@ const ProductPage = () => {
   const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const { formatPrice } = useCurrency();
 
-  const product = products.find((p) => p.id === id);
+  // Fetch from database first
+  const { data: dbProduct, isLoading } = useProductById(id);
+  
+  // Fallback to static products if DB doesn't have it
+  const staticProduct = staticProducts.find((p) => p.id === id);
+  const product = dbProduct || staticProduct;
+  
+  // Fetch related products from DB
+  const { data: dbRelatedProducts } = useRelatedProducts(product?.category, product?.id, 8);
+  
+  // Fallback related products from static data
+  const staticRelatedProducts = staticProducts
+    .filter((p) => p.category === product?.category && p.id !== product?.id)
+    .slice(0, 8);
+  
+  const relatedProducts = dbRelatedProducts?.length ? dbRelatedProducts : staticRelatedProducts;
   
   // Stock status
   const stockQuantity = product?.stockQuantity ?? 10;
   const isLowStock = stockQuantity > 0 && stockQuantity <= 5;
   const isOutOfStock = stockQuantity === 0;
+
+  // Product images
+  const images = product?.images || [product?.image, product?.image, product?.image].filter(Boolean);
 
   useEffect(() => {
     if (product) {
@@ -42,12 +61,27 @@ const ProductPage = () => {
     }
   }, [product]);
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-24 text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading product...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!product) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <div className="container mx-auto px-4 py-24 text-center">
           <h1 className="font-display text-4xl mb-4">Product Not Found</h1>
+          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
           <Link to="/shop">
             <Button>Continue Shopping</Button>
           </Link>
@@ -56,11 +90,6 @@ const ProductPage = () => {
       </div>
     );
   }
-
-  const images = product.images || [product.image, product.image, product.image];
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 8);
 
   const breadcrumbItems = [
     { name: 'Home', url: '/' },
