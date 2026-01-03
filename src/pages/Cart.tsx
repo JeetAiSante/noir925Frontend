@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, X, ShoppingBag, ArrowRight, Truck, Shield, RotateCcw, Sparkles, Gift, CreditCard, Loader2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useAuth } from '@/context/AuthContext';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +14,8 @@ import { toast } from 'sonner';
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
   const { formatPrice } = useCurrency();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [isValidating, setIsValidating] = useState(false);
@@ -320,13 +323,23 @@ const Cart = () => {
                 )}
               </div>
 
-              <Link to="/checkout">
-                <Button variant="luxury" size="lg" className="w-full mb-3 group">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  Proceed to Checkout
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              <Button 
+                variant="luxury" 
+                size="lg" 
+                className="w-full mb-3 group"
+                onClick={() => {
+                  if (!user) {
+                    toast.info('Please login to continue to checkout');
+                    navigate('/auth?redirect=/checkout');
+                  } else {
+                    navigate('/checkout');
+                  }
+                }}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Proceed to Checkout
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
 
               {/* Trust Badges */}
               <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border">
