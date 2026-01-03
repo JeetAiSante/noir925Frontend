@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, Search, FolderTree, Gem, Crown, Heart, Star, Diamond, CircleDot, Sparkles, Flower2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, FolderTree, Gem, Crown, Heart, Star, Diamond, CircleDot, Sparkles, Flower2, Watch, Anchor, Moon, Sun, Zap, Hexagon, Circle, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import AdminSecurityWrapper from '@/components/admin/AdminSecurityWrapper';
 
-// Jewelry-related icons for header categories
+// Extended jewelry-related icons for header categories
 const headerIcons = [
   { value: 'gem', label: 'Gem', icon: Gem },
   { value: 'crown', label: 'Crown', icon: Crown },
@@ -27,6 +27,14 @@ const headerIcons = [
   { value: 'ring', label: 'Ring', icon: CircleDot },
   { value: 'sparkles', label: 'Sparkles', icon: Sparkles },
   { value: 'flower', label: 'Flower', icon: Flower2 },
+  { value: 'watch', label: 'Watch', icon: Watch },
+  { value: 'anchor', label: 'Anchor', icon: Anchor },
+  { value: 'moon', label: 'Moon', icon: Moon },
+  { value: 'sun', label: 'Sun', icon: Sun },
+  { value: 'zap', label: 'Zap', icon: Zap },
+  { value: 'hexagon', label: 'Hexagon', icon: Hexagon },
+  { value: 'circle', label: 'Circle', icon: Circle },
+  { value: 'gift', label: 'Gift', icon: Gift },
 ];
 
 const getIconComponent = (iconValue: string | null) => {
