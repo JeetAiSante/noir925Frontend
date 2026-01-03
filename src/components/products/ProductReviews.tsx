@@ -66,14 +66,17 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
     return uuidRegex.test(id);
   };
 
+  // Determine if reviews can be submitted (only for DB products with valid UUID)
+  const canSubmitReviews = isValidUUID(productId);
+
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Please login to submit a review');
       if (!content.trim()) throw new Error('Please write a review');
       
       // Validate that productId is a valid UUID before attempting database insert
-      if (!isValidUUID(productId)) {
-        throw new Error('Reviews are only available for products in our database. This product cannot receive reviews at this time.');
+      if (!canSubmitReviews) {
+        throw new Error('Reviews are only available for products in our catalog. Please visit the shop to find and review our products.');
       }
 
       // Get user profile
@@ -269,7 +272,11 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
           </div>
 
           <div className="flex flex-col justify-center">
-            {user ? (
+            {!canSubmitReviews ? (
+              <p className="text-muted-foreground text-sm">
+                Reviews are available for our catalog products. <a href="/shop" className="text-primary hover:underline">Browse our collection</a>
+              </p>
+            ) : user ? (
               <Button onClick={() => setShowForm(!showForm)} className="w-full md:w-auto">
                 Write a Review
               </Button>
@@ -282,7 +289,7 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
         </div>
 
         {/* Review Form */}
-        {showForm && (
+        {showForm && canSubmitReviews && (
           <Card className="mb-8">
             <CardContent className="p-6 space-y-4">
               <h3 className="font-display text-lg">Write Your Review</h3>

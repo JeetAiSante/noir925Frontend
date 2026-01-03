@@ -74,6 +74,35 @@ const calculateMatchScore = (text: string, query: string): number => {
   return (matchingWords / queryWords.length) * 40;
 };
 
+// Highlight matching text in product names - handles partial matching
+const HighlightedText = ({ text, query }: { text: string; query: string }) => {
+  if (!query.trim()) return <>{text}</>;
+  
+  const escapeRegex = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const queryWords = query.trim().split(/\s+/).filter(w => w.length > 0);
+  
+  // Create pattern that matches any of the query words
+  const pattern = queryWords.map(escapeRegex).join('|');
+  const regex = new RegExp(`(${pattern})`, 'gi');
+  
+  const parts = text.split(regex);
+  
+  return (
+    <>
+      {parts.map((part, i) => {
+        const isMatch = queryWords.some(w => part.toLowerCase() === w.toLowerCase());
+        return isMatch ? (
+          <span key={i} className="font-bold text-primary bg-primary/10 px-0.5 rounded">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        );
+      })}
+    </>
+  );
+};
+
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const { formatPrice } = useCurrency();
   const [query, setQuery] = useState('');
@@ -444,7 +473,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                             onClick={() => handleSearch(cat.name)}
                           >
                             <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs">
-                              {cat.name}
+                              <HighlightedText text={cat.name} query={query} />
                             </Badge>
                           </Link>
                         ))}
@@ -471,7 +500,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                             />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                                {product.name}
+                                <HighlightedText text={product.name} query={query} />
                               </p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <p className="text-sm font-semibold text-primary">

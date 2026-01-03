@@ -94,7 +94,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
         itemScope
         itemType="https://schema.org/Product"
       >
-        <Link to={`/product/${product.id}`} className="block" aria-label={`View ${product.name} - ${formatPrice(product.price)}`}>
+        <Link to={`/product/${(product as any).slug || product.id}`} className="block" aria-label={`View ${product.name} - ${formatPrice(product.price)}`}>
           {/* Image Container - Compact aspect ratio */}
           <div className="relative overflow-hidden aspect-square bg-muted">
             {/* Primary Image with OptimizedImage */}

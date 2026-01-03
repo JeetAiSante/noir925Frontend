@@ -58,28 +58,21 @@ const mapDbProductToProduct = (db: DbProduct): Product => {
   };
 };
 
+// Check if string is a valid UUID
+const isValidUUID = (str: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 export const useProductById = (id: string | undefined) => {
   return useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
       if (!id) return null;
       
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          id, name, slug, price, original_price, discount_percent, images, 
-          is_new, is_trending, is_bestseller, is_featured, is_active,
-          rating, reviews_count, description, short_description,
-          material, weight, dimensions, stock_quantity, hover_image_index, gender,
-          categories:category_id (name, slug)
-        `)
-        .eq('id', id)
-        .eq('is_active', true)
-        .single();
-
-      if (error) {
-        // Try fetching by slug if ID fails
-        const { data: slugData, error: slugError } = await supabase
+      // If it's a valid UUID, try fetching by ID first
+      if (isValidUUID(id)) {
+        const { data, error } = await supabase
           .from('products')
           .select(`
             id, name, slug, price, original_price, discount_percent, images, 
@@ -88,15 +81,34 @@ export const useProductById = (id: string | undefined) => {
             material, weight, dimensions, stock_quantity, hover_image_index, gender,
             categories:category_id (name, slug)
           `)
-          .eq('slug', id)
+          .eq('id', id)
           .eq('is_active', true)
-          .single();
-        
-        if (slugError) return null;
+          .maybeSingle();
+
+        if (data) {
+          return mapDbProductToProduct(data as DbProduct);
+        }
+      }
+      
+      // Try fetching by slug (handles both slug-based URLs and fallback)
+      const { data: slugData, error: slugError } = await supabase
+        .from('products')
+        .select(`
+          id, name, slug, price, original_price, discount_percent, images, 
+          is_new, is_trending, is_bestseller, is_featured, is_active,
+          rating, reviews_count, description, short_description,
+          material, weight, dimensions, stock_quantity, hover_image_index, gender,
+          categories:category_id (name, slug)
+        `)
+        .eq('slug', id)
+        .eq('is_active', true)
+        .maybeSingle();
+      
+      if (slugData) {
         return mapDbProductToProduct(slugData as DbProduct);
       }
-
-      return mapDbProductToProduct(data as DbProduct);
+      
+      return null;
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5,
