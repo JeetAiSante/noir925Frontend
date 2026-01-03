@@ -60,10 +60,21 @@ const ProductReviews = ({ productId, productName }: ProductReviewsProps) => {
     },
   });
 
+  // Check if productId is a valid UUID
+  const isValidUUID = (id: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   const submitReviewMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error('Please login to submit a review');
       if (!content.trim()) throw new Error('Please write a review');
+      
+      // Validate that productId is a valid UUID before attempting database insert
+      if (!isValidUUID(productId)) {
+        throw new Error('Reviews are only available for products in our database. This product cannot receive reviews at this time.');
+      }
 
       // Get user profile
       const { data: profile } = await supabase
