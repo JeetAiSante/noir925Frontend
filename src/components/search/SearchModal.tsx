@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { products, categories } from '@/data/products';
 import { useCurrency } from '@/context/CurrencyContext';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +12,25 @@ import { supabase } from '@/integrations/supabase/client';
 interface SearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface DbProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  original_price: number | null;
+  images: string[];
+  category_id: string | null;
+  is_new: boolean;
+  is_bestseller: boolean;
+}
+
+interface DbCategory {
+  id: string;
+  name: string;
+  slug: string;
+  image_url: string | null;
 }
 
 const trendingSearches = ['Silver Rings', 'Bridal Collection', 'Floral Earrings', 'Daily Wear', 'Oxidised Silver'];
@@ -25,235 +43,160 @@ const getRecentSearches = () => {
   }
 };
 
-// Smart search helpers
-const genderTerms = {
-  women: ['women', 'woman', 'ladies', 'lady', 'female', 'her', 'girls', 'girl'],
-  men: ['men', 'man', 'gents', 'gentleman', 'male', 'him', 'boys', 'boy'],
+// Fuzzy matching helper - checks if query words appear in text
+const fuzzyMatch = (text: string, query: string): boolean => {
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 0);
+  
+  // Check if all query words are in the text
+  return queryWords.every(word => textLower.includes(word));
 };
 
-const occasionTerms = ['bridal', 'wedding', 'party', 'daily', 'casual', 'formal', 'office', 'festive', 'traditional'];
-const materialTerms = ['silver', 'gold', 'oxidized', 'oxidised', 'antique', 'plated', 'rose gold'];
-
-// Parse query to extract filters
-const parseSearchQuery = (query: string) => {
-  const q = query.toLowerCase();
-  const words = q.split(/\s+/);
+// Calculate match score for sorting
+const calculateMatchScore = (text: string, query: string): number => {
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
   
-  let gender: 'women' | 'men' | null = null;
-  let occasion: string | null = null;
-  let material: string | null = null;
-  let categoryHint: string | null = null;
+  // Exact match gets highest score
+  if (textLower === queryLower) return 100;
   
-  // Detect gender
-  for (const word of words) {
-    if (genderTerms.women.includes(word)) { gender = 'women'; break; }
-    if (genderTerms.men.includes(word)) { gender = 'men'; break; }
-  }
+  // Starts with query gets high score
+  if (textLower.startsWith(queryLower)) return 80;
   
-  // Detect occasion
-  for (const term of occasionTerms) {
-    if (q.includes(term)) { occasion = term; break; }
-  }
+  // Contains exact query phrase
+  if (textLower.includes(queryLower)) return 60;
   
-  // Detect material
-  for (const term of materialTerms) {
-    if (q.includes(term)) { material = term; break; }
-  }
+  // Count matching words
+  const queryWords = queryLower.split(/\s+/);
+  const matchingWords = queryWords.filter(w => textLower.includes(w)).length;
   
-  // Detect category
-  for (const cat of categories) {
-    if (q.includes(cat.name.toLowerCase())) {
-      categoryHint = cat.name.toLowerCase();
-      break;
-    }
-  }
-  
-  // Check for common category plurals
-  const categoryAliases: Record<string, string> = {
-    'rings': 'rings', 'ring': 'rings',
-    'earrings': 'earrings', 'earring': 'earrings',
-    'necklaces': 'necklaces', 'necklace': 'necklaces',
-    'bracelets': 'bracelets', 'bracelet': 'bracelets',
-    'chains': 'chains', 'chain': 'chains',
-    'pendants': 'pendants', 'pendant': 'pendants',
-    'anklets': 'anklets', 'anklet': 'anklets',
-    'bangles': 'bangles', 'bangle': 'bangles',
-  };
-  
-  for (const word of words) {
-    if (categoryAliases[word]) {
-      categoryHint = categoryAliases[word];
-      break;
-    }
-  }
-  
-  return { gender, occasion, material, categoryHint, originalQuery: q };
-};
-
-// Generate local fallback suggestions with smart matching
-const generateLocalSuggestions = (query: string): string[] => {
-  if (query.length < 2) return [];
-  const { gender, occasion, material, categoryHint } = parseSearchQuery(query);
-  const suggestions = new Set<string>();
-  
-  // Build contextual suggestions
-  if (categoryHint) {
-    if (gender) suggestions.add(`${categoryHint} for ${gender}`);
-    if (occasion) suggestions.add(`${occasion} ${categoryHint}`);
-    if (material) suggestions.add(`${material} ${categoryHint}`);
-    suggestions.add(categoryHint.charAt(0).toUpperCase() + categoryHint.slice(1));
-  }
-  
-  // Add product names that match
-  const q = query.toLowerCase();
-  products.forEach(p => {
-    const nameMatch = p.name.toLowerCase().includes(q);
-    const catMatch = p.category.toLowerCase().includes(q);
-    const descMatch = p.description?.toLowerCase().includes(q);
-    
-    if (nameMatch || catMatch || descMatch) {
-      suggestions.add(p.name);
-    }
-  });
-  
-  // Add category-based suggestions
-  categories.forEach(c => {
-    if (c.name.toLowerCase().includes(q)) {
-      suggestions.add(c.name);
-      suggestions.add(`${c.name} for Women`);
-      suggestions.add(`${c.name} for Men`);
-    }
-  });
-
-  return Array.from(suggestions).slice(0, 6);
+  return (matchingWords / queryWords.length) * 40;
 };
 
 const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const { formatPrice } = useCurrency();
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<typeof products>([]);
-  const [categoryResults, setCategoryResults] = useState<typeof categories>([]);
+  const [dbProducts, setDbProducts] = useState<DbProduct[]>([]);
+  const [dbCategories, setDbCategories] = useState<DbCategory[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<DbProduct[]>([]);
+  const [filteredCategories, setFilteredCategories] = useState<DbCategory[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
-  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const aiRequestRef = useRef<AbortController | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Use local suggestions as fallback, prioritize AI suggestions when available
-  const suggestions = useMemo(() => {
-    if (aiSuggestions.length > 0) return aiSuggestions;
-    return generateLocalSuggestions(query);
-  }, [query, aiSuggestions]);
-
-  // Fetch AI suggestions
-  const fetchAISuggestions = useCallback(async (searchQuery: string) => {
-    if (searchQuery.length < 2) {
-      setAiSuggestions([]);
-      return;
-    }
-
-    // Cancel previous request
-    if (aiRequestRef.current) {
-      aiRequestRef.current.abort();
-    }
-
-    aiRequestRef.current = new AbortController();
-    setIsLoadingAI(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('ai-search-suggest', {
-        body: {
-          query: searchQuery,
-          products: products.slice(0, 20).map(p => p.name),
-          categories: categories.map(c => c.name),
-        },
-      });
-
-      if (error) throw error;
-      
-      if (data?.suggestions && Array.isArray(data.suggestions)) {
-        setAiSuggestions(data.suggestions);
-      }
-    } catch (err) {
-      // Use local suggestions as fallback
-      console.log('Using local suggestions fallback');
-      setAiSuggestions([]);
-    } finally {
-      setIsLoadingAI(false);
-    }
-  }, []);
-
+  // Fetch initial data on mount
   useEffect(() => {
+    const fetchData = async () => {
+      const [productsRes, categoriesRes] = await Promise.all([
+        supabase
+          .from('products')
+          .select('id, name, slug, price, original_price, images, category_id, is_new, is_bestseller')
+          .eq('is_active', true)
+          .order('is_bestseller', { ascending: false })
+          .limit(100),
+        supabase
+          .from('categories')
+          .select('id, name, slug, image_url')
+          .eq('is_active', true)
+          .order('sort_order')
+      ]);
+      
+      if (productsRes.data) {
+        setDbProducts(productsRes.data.map(p => ({
+          ...p,
+          images: Array.isArray(p.images) ? (p.images as string[]) : []
+        })) as DbProduct[]);
+      }
+      if (categoriesRes.data) {
+        setDbCategories(categoriesRes.data);
+      }
+    };
+    
     if (open) {
+      fetchData();
       setRecentSearches(getRecentSearches());
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       setQuery('');
-      setResults([]);
-      setCategoryResults([]);
+      setFilteredProducts([]);
+      setFilteredCategories([]);
       setSelectedSuggestion(-1);
-      setAiSuggestions([]);
+      setSuggestions([]);
     }
   }, [open]);
 
-  // Trigger AI suggestions when query changes
+  // Real-time search with debounce
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchAISuggestions(query);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [query, fetchAISuggestions]);
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
-  useEffect(() => {
-    setIsTyping(true);
-    setSelectedSuggestion(-1);
-    const timer = setTimeout(() => {
-      if (query.length > 1) {
-        const { gender, occasion, material, categoryHint, originalQuery } = parseSearchQuery(query);
-        
-        // Smart filtering with parsed context
-        const filtered = products.filter(p => {
-          const name = p.name.toLowerCase();
-          const category = p.category.toLowerCase();
-          const desc = p.description?.toLowerCase() || '';
-          
-          // Basic text match
-          const textMatch = name.includes(originalQuery) || 
-                           category.includes(originalQuery) || 
-                           desc.includes(originalQuery);
-          
-          // Category hint match
-          const categoryMatch = categoryHint ? category.includes(categoryHint) : false;
-          
-          // Material match
-          const materialMatch = !material || name.includes(material) || desc.includes(material);
-          
-          // Occasion match
-          const occasionMatch = !occasion || name.includes(occasion) || desc.includes(occasion);
-          
-          // Return if text matches OR category matches, AND other filters pass
-          return (textMatch || categoryMatch) && materialMatch && occasionMatch;
-        }).slice(0, 8);
-        
-        setResults(filtered);
-        
-        // Enhanced category filtering
-        const catFiltered = categories.filter(c => {
-          const catName = c.name.toLowerCase();
-          return catName.includes(originalQuery) || (categoryHint && catName.includes(categoryHint));
-        });
-        setCategoryResults(catFiltered);
-      } else {
-        setResults([]);
-        setCategoryResults([]);
-      }
-      setIsTyping(false);
+    if (query.length < 2) {
+      setFilteredProducts([]);
+      setFilteredCategories([]);
+      setSuggestions([]);
+      return;
+    }
+
+    setIsLoading(true);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      const queryLower = query.toLowerCase();
+      
+      // Filter products with fuzzy matching and scoring
+      const matchedProducts = dbProducts
+        .filter(p => fuzzyMatch(p.name, query))
+        .map(p => ({ ...p, score: calculateMatchScore(p.name, query) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8);
+      
+      // Filter categories
+      const matchedCategories = dbCategories
+        .filter(c => c.name.toLowerCase().includes(queryLower) || 
+                     c.slug.toLowerCase().includes(queryLower));
+      
+      // Generate smart suggestions
+      const newSuggestions = new Set<string>();
+      
+      // Add matching product names as suggestions
+      matchedProducts.slice(0, 3).forEach(p => {
+        newSuggestions.add(p.name);
+      });
+      
+      // Add matching category names
+      matchedCategories.forEach(c => {
+        newSuggestions.add(c.name);
+        newSuggestions.add(`${c.name} for Women`);
+        newSuggestions.add(`${c.name} for Men`);
+      });
+      
+      // Add common search patterns if query matches
+      const commonPatterns = [
+        'silver rings', 'gold plated', 'oxidized silver', 'bridal jewelry',
+        'daily wear', 'party wear', 'traditional', 'modern', 'minimalist'
+      ];
+      commonPatterns.forEach(pattern => {
+        if (pattern.includes(queryLower) || queryLower.split(' ').some(w => pattern.includes(w))) {
+          newSuggestions.add(pattern.charAt(0).toUpperCase() + pattern.slice(1));
+        }
+      });
+
+      setFilteredProducts(matchedProducts);
+      setFilteredCategories(matchedCategories);
+      setSuggestions(Array.from(newSuggestions).slice(0, 6));
+      setIsLoading(false);
     }, 150);
 
-    return () => clearTimeout(timer);
-  }, [query]);
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [query, dbProducts, dbCategories]);
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -283,7 +226,11 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
     setRecentSearches([]);
   };
 
-  const featuredProducts = products.slice(0, 4);
+  // Get featured products for initial state
+  const featuredProducts = useMemo(() => 
+    dbProducts.filter(p => p.is_bestseller || p.is_new).slice(0, 4),
+    [dbProducts]
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -302,6 +249,9 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
               placeholder="Search for silver jewellery..."
               className="border-0 focus-visible:ring-0 text-base py-5 bg-transparent placeholder:text-muted-foreground/60 flex-1"
             />
+            {isLoading && (
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mr-2" />
+            )}
             {query && (
               <Button variant="ghost" size="icon" onClick={() => setQuery('')} className="h-8 w-8 flex-shrink-0">
                 <X className="w-4 h-4" />
@@ -337,7 +287,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                         </span>
                       ))}
                     </span>
-                    <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100" />
+                    <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto" />
                   </button>
                 ))}
               </motion.div>
@@ -354,8 +304,8 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                   <Sparkles className="w-4 h-4 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-sm">AI-Powered Search</p>
-                  <p className="text-xs text-muted-foreground truncate">Find exactly what you're looking for</p>
+                  <p className="font-medium text-sm">Smart Search</p>
+                  <p className="text-xs text-muted-foreground truncate">Type to find products instantly</p>
                 </div>
               </div>
 
@@ -412,81 +362,85 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
               </div>
 
               {/* Featured Products - 2 column grid */}
-              <div>
-                <h4 className="text-xs font-medium text-foreground mb-2 flex items-center gap-1.5">
-                  <Star className="w-3.5 h-3.5 text-amber-500" /> Popular
-                </h4>
-                <div className="grid grid-cols-2 gap-2">
-                  {featuredProducts.map((product) => (
-                    <Link
-                      key={product.id}
-                      to={`/product/${product.id}`}
-                      onClick={() => handleSearch(product.name)}
-                      className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors group"
-                    >
-                      <img 
-                        src={product.images?.[0] || product.image} 
-                        alt={product.name}
-                        className="w-10 h-10 object-cover rounded-md flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">
-                          {product.name}
-                        </p>
-                        <p className="text-xs text-primary font-semibold">
-                          {formatPrice(product.price)}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
+              {featuredProducts.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-foreground mb-2 flex items-center gap-1.5">
+                    <Star className="w-3.5 h-3.5 text-amber-500" /> Popular
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {featuredProducts.map((product) => (
+                      <Link
+                        key={product.id}
+                        to={`/product/${product.slug || product.id}`}
+                        onClick={() => handleSearch(product.name)}
+                        className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors group"
+                      >
+                        <img 
+                          src={product.images?.[0] || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100'} 
+                          alt={product.name}
+                          className="w-10 h-10 object-cover rounded-md flex-shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate group-hover:text-primary transition-colors">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-primary font-semibold">
+                            {formatPrice(product.price)}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Popular Categories - 3 column grid */}
-              <div>
-                <h4 className="text-xs font-medium text-foreground mb-2">Categories</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  {categories.slice(0, 6).map((cat) => (
-                    <Link
-                      key={cat.id}
-                      to={`/shop?category=${cat.name.toLowerCase()}`}
-                      onClick={() => onOpenChange(false)}
-                      className="group relative aspect-[4/3] rounded-lg overflow-hidden"
-                    >
-                      <img 
-                        src={cat.image} 
-                        alt={cat.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                      <span className="absolute bottom-1.5 left-1.5 right-1.5 text-white text-[10px] font-medium text-center truncate">
-                        {cat.name}
-                      </span>
-                    </Link>
-                  ))}
+              {dbCategories.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-foreground mb-2">Categories</h4>
+                  <div className="grid grid-cols-3 gap-2">
+                    {dbCategories.slice(0, 6).map((cat) => (
+                      <Link
+                        key={cat.id}
+                        to={`/shop?category=${cat.slug}`}
+                        onClick={() => onOpenChange(false)}
+                        className="group relative aspect-[4/3] rounded-lg overflow-hidden"
+                      >
+                        <img 
+                          src={cat.image_url || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=200'} 
+                          alt={cat.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                        <span className="absolute bottom-1.5 left-1.5 right-1.5 text-white text-[10px] font-medium text-center truncate">
+                          {cat.name}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="p-4 space-y-4">
               {/* Loading State */}
-              {isTyping && (
+              {isLoading && (
                 <div className="flex items-center justify-center py-6">
                   <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
               )}
 
-              {!isTyping && (
+              {!isLoading && (
                 <>
                   {/* Categories */}
-                  {categoryResults.length > 0 && (
+                  {filteredCategories.length > 0 && (
                     <div>
                       <h4 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Categories</h4>
                       <div className="flex flex-wrap gap-1.5">
-                        {categoryResults.map((cat) => (
+                        {filteredCategories.map((cat) => (
                           <Link
                             key={cat.id}
-                            to={`/shop?category=${cat.name.toLowerCase()}`}
+                            to={`/shop?category=${cat.slug}`}
                             onClick={() => handleSearch(cat.name)}
                           >
                             <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground text-xs">
@@ -499,19 +453,19 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                   )}
 
                   {/* Products */}
-                  {results.length > 0 ? (
+                  {filteredProducts.length > 0 ? (
                     <div>
                       <h4 className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Products</h4>
                       <div className="space-y-1">
-                        {results.map((product) => (
+                        {filteredProducts.map((product) => (
                           <Link
                             key={product.id}
-                            to={`/product/${product.id}`}
+                            to={`/product/${product.slug || product.id}`}
                             onClick={() => handleSearch(product.name)}
                             className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted transition-colors group"
                           >
                             <img 
-                              src={product.images?.[0] || product.image} 
+                              src={product.images?.[0] || 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=100'} 
                               alt={product.name}
                               className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
                             />
@@ -519,14 +473,13 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                               <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
                                 {product.name}
                               </p>
-                              <p className="text-xs text-muted-foreground">{product.category}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <p className="text-sm font-semibold text-primary">
                                   {formatPrice(product.price)}
                                 </p>
-                                {product.originalPrice && (
+                                {product.original_price && (
                                   <span className="text-xs text-muted-foreground line-through">
-                                    {formatPrice(product.originalPrice)}
+                                    {formatPrice(product.original_price)}
                                   </span>
                                 )}
                               </div>
@@ -552,7 +505,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
                     </div>
                   )}
 
-                  {results.length > 0 && (
+                  {filteredProducts.length > 0 && (
                     <Link 
                       to={`/shop?search=${encodeURIComponent(query)}`}
                       onClick={() => handleSearch(query)}

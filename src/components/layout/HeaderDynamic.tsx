@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User, Menu, X, Gem, Crown, Sparkles, Gift, Star } from 'lucide-react';
+import { Search, Heart, ShoppingBag, User, Menu, X, Gem, Crown, Sparkles, Gift, Star, Diamond, CircleDot, Flower2, Watch, Anchor, Moon, Sun, Zap, Hexagon, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
@@ -10,6 +10,7 @@ import CurrencySelector from '@/components/header/CurrencySelector';
 import { useHeaderCategories } from '@/hooks/useHeaderCategories';
 import { useFeatureToggles } from '@/hooks/useFeatureToggles';
 
+// Extended icon map with jewelry-related icons
 const iconMap: Record<string, React.ReactNode> = {
   gem: <Gem className="w-4 h-4" />,
   crown: <Crown className="w-4 h-4" />,
@@ -17,15 +18,25 @@ const iconMap: Record<string, React.ReactNode> = {
   gift: <Gift className="w-4 h-4" />,
   heart: <Heart className="w-4 h-4 fill-current" />,
   star: <Star className="w-4 h-4" />,
+  diamond: <Diamond className="w-4 h-4" />,
+  ring: <CircleDot className="w-4 h-4" />,
+  flower: <Flower2 className="w-4 h-4" />,
+  watch: <Watch className="w-4 h-4" />,
+  anchor: <Anchor className="w-4 h-4" />,
+  moon: <Moon className="w-4 h-4" />,
+  sun: <Sun className="w-4 h-4" />,
+  zap: <Zap className="w-4 h-4" />,
+  hexagon: <Hexagon className="w-4 h-4" />,
+  circle: <Circle className="w-4 h-4" />,
 };
 
 // Default categories when DB is empty
 const defaultCategories = [
   { name: 'All Jewellery', slug: 'all', header_icon: 'gem' },
-  { name: 'Rings', slug: 'rings', header_icon: 'crown' },
+  { name: 'Rings', slug: 'rings', header_icon: 'ring' },
   { name: 'Earrings', slug: 'earrings', header_icon: 'sparkles' },
-  { name: 'Necklaces', slug: 'necklaces', header_icon: 'gem' },
-  { name: 'Bracelets', slug: 'bracelets', header_icon: 'gift' },
+  { name: 'Necklaces', slug: 'necklaces', header_icon: 'diamond' },
+  { name: 'Bracelets', slug: 'bracelets', header_icon: 'circle' },
   { name: 'Collections', slug: 'collections', header_icon: 'crown' },
 ];
 
