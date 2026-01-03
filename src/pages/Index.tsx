@@ -27,7 +27,7 @@ const TrendingSlider = lazy(() => import('@/components/home/TrendingSlider'));
 const DailywearSection = lazy(() => import('@/components/home/DailywearSection'));
 const RandomReviewsCarousel = lazy(() => import('@/components/home/RandomReviewsCarousel'));
 const LuxuryEditorialSection = lazy(() => import('@/components/home/LuxuryEditorialSection'));
-const VideoShowcase = lazy(() => import('@/components/home/VideoShowcase'));
+const ReelsSection = lazy(() => import('@/components/home/ReelsSection'));
 const FeaturedCategories = lazy(() => import('@/components/home/FeaturedCategories'));
 const BrandStorySection = lazy(() => import('@/components/home/BrandStorySection'));
 const CollectionsStory = lazy(() => import('@/components/home/CollectionsStory'));
@@ -84,7 +84,8 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   // Editorial and showcase
   editorial_section: LuxuryEditorialSection,
   editorial: LuxuryEditorialSection,
-  video_showcase: VideoShowcase,
+  video_showcase: ReelsSection,
+  reels_section: ReelsSection,
   featured_categories: FeaturedCategories,
   
   // Story and brand
