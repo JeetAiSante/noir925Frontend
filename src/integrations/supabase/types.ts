@@ -559,6 +559,59 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_reels: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          linked_product_id: string | null
+          linked_product_image: string | null
+          linked_product_name: string | null
+          sort_order: number | null
+          subtitle: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          linked_product_id?: string | null
+          linked_product_image?: string | null
+          linked_product_name?: string | null
+          sort_order?: number | null
+          subtitle?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          linked_product_id?: string | null
+          linked_product_image?: string | null
+          linked_product_name?: string | null
+          sort_order?: number | null
+          subtitle?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homepage_reels_linked_product_id_fkey"
+            columns: ["linked_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homepage_sections: {
         Row: {
           created_at: string

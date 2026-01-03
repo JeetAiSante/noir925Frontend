@@ -74,6 +74,7 @@ const AdminSiteContact = lazy(() => import("./pages/admin/AdminSiteContact"));
 const AdminHeaderSettings = lazy(() => import("./pages/admin/AdminHeaderSettings"));
 const AdminSpinWheel = lazy(() => import("./pages/admin/AdminSpinWheel"));
 const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminReels = lazy(() => import("./pages/admin/AdminReels"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
 // Performance-optimized cursor - lazy load as non-critical
@@ -191,6 +192,7 @@ const App = memo(() => (
                     <Route path="analytics" element={<AdminAnalytics />} />
                     <Route path="categories" element={<AdminCategories />} />
                     <Route path="reviews" element={<AdminReviews />} />
+                    <Route path="reels" element={<AdminReels />} />
                     <Route path="settings" element={<AdminSettings />} />
                   </Route>
                   
