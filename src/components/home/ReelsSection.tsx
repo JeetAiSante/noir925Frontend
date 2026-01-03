@@ -21,8 +21,10 @@ const ReelsSection = () => {
   const [activeIndex, setActiveIndex] = useState(2);
   const [isMuted, setIsMuted] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { data: reels = [] } = useQuery({
     queryKey: ['homepage-reels'],
@@ -38,6 +40,21 @@ const ReelsSection = () => {
     },
   });
 
+  // Auto-rotation timer (6 seconds)
+  useEffect(() => {
+    if (reels.length <= 1 || isPaused) return;
+
+    autoPlayIntervalRef.current = setInterval(() => {
+      setActiveIndex((prev) => (prev === reels.length - 1 ? 0 : prev + 1));
+    }, 6000);
+
+    return () => {
+      if (autoPlayIntervalRef.current) {
+        clearInterval(autoPlayIntervalRef.current);
+      }
+    };
+  }, [reels.length, isPaused]);
+
   // Play active video, pause others
   useEffect(() => {
     Object.entries(videoRefs.current).forEach(([index, video]) => {
@@ -51,6 +68,9 @@ const ReelsSection = () => {
       }
     });
   }, [activeIndex]);
+
+  const handleMouseEnter = () => setIsPaused(true);
+  const handleMouseLeave = () => setIsPaused(false);
 
   const handlePrev = () => {
     setActiveIndex((prev) => (prev === 0 ? reels.length - 1 : prev - 1));
@@ -97,7 +117,14 @@ const ReelsSection = () => {
   const activeReel = reels[activeIndex];
 
   return (
-    <section className="py-12 md:py-20 bg-background relative overflow-hidden" aria-label="Featured Reels">
+    <section 
+      className="py-12 md:py-20 bg-background relative overflow-hidden" 
+      aria-label="Featured Reels"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onTouchStart={handleMouseEnter}
+      onTouchEnd={handleMouseLeave}
+    >
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-muted/20 via-transparent to-muted/20" />
       
