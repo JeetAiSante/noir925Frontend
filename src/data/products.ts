@@ -1,5 +1,6 @@
 export interface Product {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   originalPrice?: number;
@@ -21,6 +22,7 @@ export interface Product {
   purity: string;
   stockQuantity?: number;
 }
+
 
 export const products: Product[] = [
   {

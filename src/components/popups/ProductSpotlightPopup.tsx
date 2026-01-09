@@ -224,7 +224,7 @@ const ProductSpotlightPopup = memo(() => {
 
         {/* Product Card - Compact */}
         <Link 
-          to={`/product/${product.slug}`} 
+          to={`/product/${product.slug || product.id}`} 
           onClick={handleClose}
           className="block group"
         >
@@ -304,7 +304,7 @@ const ProductSpotlightPopup = memo(() => {
             </div>
             
             <Link 
-              to={`/product/${product.slug}`} 
+              to={`/product/${product.slug || product.id}`} 
               onClick={handleClose}
               className="text-[10px] font-medium text-primary hover:underline"
             >
