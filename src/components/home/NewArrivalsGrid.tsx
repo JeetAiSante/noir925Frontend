@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import ProductQuickView from '@/components/products/ProductQuickView';
 import { useProducts } from '@/hooks/useProducts';
-import { products as staticProducts, Product } from '@/data/products';
+import { Product } from '@/data/products';
 import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 
 const NewArrivalsGrid = () => {
@@ -15,12 +15,7 @@ const NewArrivalsGrid = () => {
   const gridRef = useRef<HTMLDivElement>(null);
   const { settings: layoutSettings } = useLayoutSettings();
 
-  const { data: dbProducts, isLoading } = useProducts({ new: true, limit: 6 });
-
-  // Use database products if available, fallback to static
-  const newProducts = dbProducts && dbProducts.length > 0 
-    ? dbProducts 
-    : staticProducts.filter((p) => p.isNew).slice(0, 6);
+  const { data: newProducts = [], isLoading } = useProducts({ new: true, limit: 6 });
 
   useEffect(() => {
     const observer = new IntersectionObserver(

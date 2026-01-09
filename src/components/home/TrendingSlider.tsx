@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Flame, Star } from 'lucide-react';
-import { products } from '@/data/products';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useProducts } from '@/hooks/useProducts';
 
 const TrendingSlider = () => {
   const { formatPrice } = useCurrency();
@@ -10,7 +10,13 @@ const TrendingSlider = () => {
   const [isPaused, setIsPaused] = useState(false);
   const animationRef = useRef<number>();
 
-  const trendingProducts = products.filter((p) => p.isTrending || p.isBestseller).slice(0, 12);
+  const { data: dbProducts = [] } = useProducts({ trending: true, limit: 12 });
+  const { data: dbBestsellers = [] } = useProducts({ bestseller: true, limit: 12 });
+  
+  // Merge trending and bestsellers, remove duplicates by id
+  const trendingProducts = [...dbProducts, ...dbBestsellers]
+    .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i)
+    .slice(0, 12);
   
   // Double the products for seamless infinite scroll
   const displayProducts = [...trendingProducts, ...trendingProducts];
@@ -105,7 +111,7 @@ const TrendingSlider = () => {
           {displayProducts.map((product, index) => (
             <Link
               key={`${product.id}-${index}`}
-              to={`/product/${product.id}`}
+              to={`/product/${product.slug || product.id}`}
               className="group flex-shrink-0 w-[200px] sm:w-[240px] md:w-[280px]"
             >
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-background/10 to-background/5 backdrop-blur-sm border border-background/10 p-3 transition-all duration-500 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10">

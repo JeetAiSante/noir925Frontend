@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import { useProducts } from '@/hooks/useProducts';
-import { products as staticProducts } from '@/data/products';
 import { useLayoutSettings } from '@/hooks/useLayoutSettings';
 
 const BestsellersGrid = () => {
   const [filter, setFilter] = useState('all');
-  const { data: dbProducts, isLoading } = useProducts({ limit: 12 });
+  const { data: allProducts = [], isLoading } = useProducts({ limit: 12 });
+  const { data: bestsellers = [] } = useProducts({ bestseller: true, limit: 12 });
+  const { data: newProducts = [] } = useProducts({ new: true, limit: 12 });
+  const { data: trendingProducts = [] } = useProducts({ trending: true, limit: 12 });
   const { settings: layoutSettings } = useLayoutSettings();
 
   const filters = [
@@ -18,16 +20,20 @@ const BestsellersGrid = () => {
     { id: 'trending', name: 'Trending' },
   ];
 
-  // Use database products if available, fallback to static
-  const allProducts = dbProducts && dbProducts.length > 0 ? dbProducts : staticProducts;
+  const getFilteredProducts = () => {
+    switch (filter) {
+      case 'bestseller':
+        return bestsellers.length > 0 ? bestsellers : allProducts.filter(p => p.isBestseller);
+      case 'new':
+        return newProducts.length > 0 ? newProducts : allProducts.filter(p => p.isNew);
+      case 'trending':
+        return trendingProducts.length > 0 ? trendingProducts : allProducts.filter(p => p.isTrending);
+      default:
+        return allProducts;
+    }
+  };
 
-  const filteredProducts = allProducts.filter((product) => {
-    if (filter === 'all') return true;
-    if (filter === 'bestseller') return product.isBestseller;
-    if (filter === 'new') return product.isNew;
-    if (filter === 'trending') return product.isTrending;
-    return true;
-  });
+  const filteredProducts = getFilteredProducts();
 
   return (
     <section className="py-12 md:py-16 bg-muted/30">
