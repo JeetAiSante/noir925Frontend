@@ -34,6 +34,7 @@ const mapDbProductToProduct = (db: DbProduct): Product => {
   
   return {
     id: db.id,
+    slug: db.slug,
     name: db.name,
     price: db.price,
     originalPrice: db.original_price || undefined,

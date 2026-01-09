@@ -37,6 +37,7 @@ const mapDbProductToProduct = (db: DbProduct): Product => {
   
   return {
     id: db.id,
+    slug: db.slug,
     name: db.name,
     price: db.price,
     originalPrice: db.original_price || undefined,
@@ -83,13 +84,13 @@ export const useShopProducts = (options: UseShopProductsOptions = {}) => {
 
         // Filter by category (using category slug)
         if (options.category) {
-          const { data: categoryData } = await supabase
+          const { data: categoryData, error: categoryError } = await supabase
             .from('categories')
             .select('id')
             .ilike('name', options.category)
-            .single();
+            .maybeSingle();
           
-          if (categoryData) {
+          if (!categoryError && categoryData?.id) {
             query = query.eq('category_id', categoryData.id);
           }
         }
