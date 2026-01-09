@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize2, MoreVertical } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Reel {
   id: string;
@@ -40,7 +41,7 @@ const ReelsSection = () => {
     },
   });
 
-  // Auto-rotation timer (6 seconds)
+  // Smooth auto-rotation timer (6 seconds) with easing
   useEffect(() => {
     if (reels.length <= 1 || isPaused) return;
 
@@ -54,6 +55,44 @@ const ReelsSection = () => {
       }
     };
   }, [reels.length, isPaused]);
+
+  // Smooth transition for slide change
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 100 : -100,
+      opacity: 0,
+      scale: 0.9,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    },
+    exit: (direction: number) => ({
+      x: direction < 0 ? 100 : -100,
+      opacity: 0,
+      scale: 0.9,
+      transition: {
+        duration: 0.4,
+        ease: [0.25, 0.1, 0.25, 1],
+      },
+    }),
+  };
+
+  const [[slideDirection], setSlideDirection] = useState([0]);
+
+  const paginate = useCallback((newDirection: number) => {
+    setSlideDirection([newDirection]);
+    if (newDirection > 0) {
+      setActiveIndex((prev) => (prev === reels.length - 1 ? 0 : prev + 1));
+    } else {
+      setActiveIndex((prev) => (prev === 0 ? reels.length - 1 : prev - 1));
+    }
+  }, [reels.length]);
 
   // Play active video, pause others
   useEffect(() => {
@@ -73,11 +112,11 @@ const ReelsSection = () => {
   const handleMouseLeave = () => setIsPaused(false);
 
   const handlePrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? reels.length - 1 : prev - 1));
+    paginate(-1);
   };
 
   const handleNext = () => {
-    setActiveIndex((prev) => (prev === reels.length - 1 ? 0 : prev + 1));
+    paginate(1);
   };
 
   const toggleMute = () => {
@@ -162,31 +201,43 @@ const ReelsSection = () => {
             <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
           </Button>
 
-          {/* Reels Carousel */}
+          {/* Reels Carousel with Smooth Animation */}
           <div className="flex items-center justify-center gap-2 md:gap-4 perspective-1000">
-            {visibleReels.map((reel, idx) => {
-              const isActive = reel.displayIndex === 0;
-              const isAdjacent = Math.abs(reel.displayIndex) === 1;
-              const isEdge = Math.abs(reel.displayIndex) === 2;
+            <AnimatePresence mode="popLayout" custom={slideDirection}>
+              {visibleReels.map((reel, idx) => {
+                const isActive = reel.displayIndex === 0;
+                const isAdjacent = Math.abs(reel.displayIndex) === 1;
+                const isEdge = Math.abs(reel.displayIndex) === 2;
 
-              return (
-                <article
-                  key={`${reel.id}-${idx}`}
-                  onClick={() => !isActive && setActiveIndex(reel.originalIndex)}
-                  className={`
-                    relative rounded-2xl md:rounded-3xl overflow-hidden transition-all duration-500 ease-out cursor-pointer
-                    ${isActive 
-                      ? 'w-[220px] md:w-[320px] h-[380px] md:h-[520px] z-20 shadow-2xl scale-100' 
-                      : isAdjacent 
-                        ? 'w-[160px] md:w-[240px] h-[280px] md:h-[400px] z-10 opacity-80 scale-95' 
-                        : 'w-[100px] md:w-[180px] h-[200px] md:h-[320px] z-0 opacity-50 scale-90 hidden sm:block'
-                    }
-                    ${isEdge ? 'blur-[1px]' : ''}
-                  `}
-                  style={{
-                    transform: `translateX(${reel.displayIndex * (isActive ? 0 : 10)}px) rotateY(${reel.displayIndex * -5}deg)`,
-                  }}
-                >
+                return (
+                  <motion.article
+                    key={`${reel.id}-${reel.displayIndex}`}
+                    custom={slideDirection}
+                    initial={{ opacity: 0, scale: 0.8, x: reel.displayIndex * 50 }}
+                    animate={{ 
+                      opacity: isEdge ? 0.5 : isAdjacent ? 0.8 : 1, 
+                      scale: isActive ? 1 : isAdjacent ? 0.95 : 0.9,
+                      x: reel.displayIndex * (isActive ? 0 : 10),
+                      rotateY: reel.displayIndex * -5,
+                      filter: isEdge ? 'blur(1px)' : 'blur(0px)',
+                    }}
+                    transition={{ 
+                      duration: 0.6, 
+                      ease: [0.25, 0.1, 0.25, 1],
+                      opacity: { duration: 0.4 },
+                      scale: { duration: 0.5 },
+                    }}
+                    onClick={() => !isActive && setActiveIndex(reel.originalIndex)}
+                    className={`
+                      relative rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer
+                      ${isActive 
+                        ? 'w-[220px] md:w-[320px] h-[380px] md:h-[520px] z-20 shadow-2xl' 
+                        : isAdjacent 
+                          ? 'w-[160px] md:w-[240px] h-[280px] md:h-[400px] z-10' 
+                          : 'w-[100px] md:w-[180px] h-[200px] md:h-[320px] z-0 hidden sm:block'
+                      }
+                    `}
+                  >
                   {/* Video/Thumbnail */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20">
                     {isActive ? (
@@ -277,9 +328,10 @@ const ReelsSection = () => {
                       </div>
                     </>
                   )}
-                </article>
-              );
-            })}
+                  </motion.article>
+                );
+              })}
+            </AnimatePresence>
           </div>
         </div>
 

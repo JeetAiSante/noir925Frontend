@@ -2,56 +2,69 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, Crown, Heart } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { products } from '@/data/products';
-
-// Calculate real product counts
-const getProductCount = (categoryFilter: string) => {
-  return products.filter(p => 
-    p.category.toLowerCase().includes(categoryFilter.toLowerCase()) ||
-    p.subcategory?.toLowerCase().includes(categoryFilter.toLowerCase())
-  ).length;
-};
-
-const collections = [
-  {
-    id: 'bridal-heritage',
-    name: 'Bridal Heritage',
-    subtitle: 'For Your Special Day',
-    description: 'Exquisite bridal pieces handcrafted with love, featuring intricate designs that celebrate the beauty of your union.',
-    image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=1000&fit=crop',
-    icon: Crown,
-    gradient: 'from-rose-500/20 via-pink-500/10 to-transparent',
-    accentColor: 'text-rose-400',
-    productCount: getProductCount('bridal') || products.filter(p => p.category === 'Rings' || p.category === 'Necklaces').length,
-  },
-  {
-    id: 'limited-edition',
-    name: 'Limited Edition',
-    subtitle: 'Exclusive Designs',
-    description: 'One-of-a-kind masterpieces that define luxury. Each piece is a rare treasure, limited in quantity.',
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1000&fit=crop',
-    icon: Sparkles,
-    gradient: 'from-amber-500/20 via-yellow-500/10 to-transparent',
-    accentColor: 'text-amber-400',
-    productCount: products.filter(p => p.isTrending).length,
-  },
-  {
-    id: 'everyday-elegance',
-    name: 'Everyday Elegance',
-    subtitle: 'Daily Luxury',
-    description: 'Understated sophistication for your everyday moments. Pieces that seamlessly blend with your lifestyle.',
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=1000&fit=crop',
-    icon: Heart,
-    gradient: 'from-purple-500/20 via-violet-500/10 to-transparent',
-    accentColor: 'text-purple-400',
-    productCount: products.filter(p => p.price < 4000).length,
-  },
-];
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 const CollectionsStory = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Fetch product counts from database
+  const { data: productCounts } = useQuery({
+    queryKey: ['collection-product-counts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, price, is_trending, category_id')
+        .eq('is_active', true);
+      
+      if (error) return { bridal: 0, trending: 0, everyday: 0 };
+      
+      const bridalCount = data?.filter(p => p.category_id).length || 0;
+      const trendingCount = data?.filter(p => p.is_trending).length || 0;
+      const everydayCount = data?.filter(p => (p.price || 0) < 4000).length || 0;
+      
+      return { bridal: bridalCount, trending: trendingCount, everyday: everydayCount };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const collections = [
+    {
+      id: 'bridal-heritage',
+      name: 'Bridal Heritage',
+      subtitle: 'For Your Special Day',
+      description: 'Exquisite bridal pieces handcrafted with love, featuring intricate designs that celebrate the beauty of your union.',
+      image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&h=1000&fit=crop',
+      icon: Crown,
+      gradient: 'from-rose-500/20 via-pink-500/10 to-transparent',
+      accentColor: 'text-rose-400',
+      productCount: productCounts?.bridal || 24,
+    },
+    {
+      id: 'limited-edition',
+      name: 'Limited Edition',
+      subtitle: 'Exclusive Designs',
+      description: 'One-of-a-kind masterpieces that define luxury. Each piece is a rare treasure, limited in quantity.',
+      image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=1000&fit=crop',
+      icon: Sparkles,
+      gradient: 'from-amber-500/20 via-yellow-500/10 to-transparent',
+      accentColor: 'text-amber-400',
+      productCount: productCounts?.trending || 18,
+    },
+    {
+      id: 'everyday-elegance',
+      name: 'Everyday Elegance',
+      subtitle: 'Daily Luxury',
+      description: 'Understated sophistication for your everyday moments. Pieces that seamlessly blend with your lifestyle.',
+      image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&h=1000&fit=crop',
+      icon: Heart,
+      gradient: 'from-purple-500/20 via-violet-500/10 to-transparent',
+      accentColor: 'text-purple-400',
+      productCount: productCounts?.everyday || 32,
+    },
+  ];
 
   useEffect(() => {
     if (!isAutoPlaying) return;
