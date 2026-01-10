@@ -7,6 +7,7 @@ import ProductQuickView from '@/components/products/ProductQuickView';
 import { useProducts } from '@/hooks/useProducts';
 import { Product } from '@/data/products';
 import { useLayoutSettings } from '@/hooks/useLayoutSettings';
+import { useHomepageSections } from '@/hooks/useHomepageSections';
 
 const NewArrivalsGrid = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -16,6 +17,10 @@ const NewArrivalsGrid = () => {
   const { settings: layoutSettings } = useLayoutSettings();
 
   const { data: newProducts = [], isLoading } = useProducts({ new: true, limit: 6 });
+  
+  // Get section settings for custom title/subtitle
+  const { getSectionSettings } = useHomepageSections();
+  const sectionSettings = getSectionSettings('new_arrivals');
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -55,11 +60,11 @@ const NewArrivalsGrid = () => {
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-5 h-5 text-accent" />
               <p className="font-accent text-sm text-primary tracking-widest uppercase">
-                Just Landed
+                {sectionSettings?.customSubtitle || 'Just Landed'}
               </p>
             </div>
             <h2 className="font-display text-3xl md:text-5xl text-foreground">
-              New Arrivals
+              {sectionSettings?.customTitle || 'New Arrivals'}
             </h2>
           </div>
           <Link to="/shop?filter=new" className="mt-4 md:mt-0">

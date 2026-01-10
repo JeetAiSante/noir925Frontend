@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Flame, Star } from 'lucide-react';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useProducts } from '@/hooks/useProducts';
+import { useHomepageSections } from '@/hooks/useHomepageSections';
 
 const TrendingSlider = () => {
   const { formatPrice } = useCurrency();
@@ -12,6 +13,10 @@ const TrendingSlider = () => {
 
   const { data: dbProducts = [] } = useProducts({ trending: true, limit: 12 });
   const { data: dbBestsellers = [] } = useProducts({ bestseller: true, limit: 12 });
+  
+  // Get section settings for custom title/subtitle
+  const { getSectionSettings } = useHomepageSections();
+  const sectionSettings = getSectionSettings('trending');
   
   // Merge trending and bestsellers, remove duplicates by id
   const trendingProducts = [...dbProducts, ...dbBestsellers]
@@ -87,12 +92,12 @@ const TrendingSlider = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
             <Flame className="w-4 h-4 text-accent animate-pulse" />
             <span className="font-accent text-xs text-accent tracking-widest uppercase">
-              What's Hot Right Now
+              {sectionSettings?.customSubtitle || "What's Hot Right Now"}
             </span>
             <Flame className="w-4 h-4 text-accent animate-pulse" />
           </div>
           <h2 className="font-display text-3xl md:text-5xl text-background mb-3">
-            Trending Now
+            {sectionSettings?.customTitle || 'Trending Now'}
           </h2>
           <p className="text-background/60 max-w-md mx-auto text-sm md:text-base">
             Discover our most loved pieces that everyone's talking about
