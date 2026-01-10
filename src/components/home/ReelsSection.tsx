@@ -180,10 +180,12 @@ const ReelsSection = () => {
         {/* Header */}
         <header className="text-center mb-8 md:mb-12">
           <h2 className="font-display text-2xl md:text-4xl lg:text-5xl text-foreground mb-3">
-            Styling 101 With <span className="text-primary">Silver</span>
+            {sectionSettings?.customTitle || (
+              <>Styling 101 With <span className="text-primary">Silver</span></>
+            )}
           </h2>
           <p className="font-body text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
-            Trendsetting silver jewellery suited for every occasion
+            {sectionSettings?.customSubtitle || 'Trendsetting silver jewellery suited for every occasion'}
           </p>
         </header>
 
