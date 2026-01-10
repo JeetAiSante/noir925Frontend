@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize2, MoreVertical } 
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useHomepageSections } from '@/hooks/useHomepageSections';
 
 interface Reel {
   id: string;
@@ -27,6 +28,14 @@ const ReelsSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const autoPlayIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Get section settings from homepage_sections
+  const { getSectionSettings, isSectionVisible } = useHomepageSections();
+  const sectionSettings = getSectionSettings('reels');
+  const autoRotationSpeed = (sectionSettings?.autoRotationSpeed ?? 6) * 1000;
+  const pauseOnHover = sectionSettings?.pauseOnHover ?? true;
+  const showArrows = sectionSettings?.showArrows ?? true;
+  const showDots = sectionSettings?.showDots ?? true;
+
   const { data: reels = [] } = useQuery({
     queryKey: ['homepage-reels'],
     queryFn: async () => {
@@ -41,20 +50,20 @@ const ReelsSection = () => {
     },
   });
 
-  // Smooth auto-rotation timer (6 seconds) with easing
+  // Smooth auto-rotation timer with configurable speed
   useEffect(() => {
     if (reels.length <= 1 || isPaused) return;
 
     autoPlayIntervalRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev === reels.length - 1 ? 0 : prev + 1));
-    }, 6000);
+    }, autoRotationSpeed);
 
     return () => {
       if (autoPlayIntervalRef.current) {
         clearInterval(autoPlayIntervalRef.current);
       }
     };
-  }, [reels.length, isPaused]);
+  }, [reels.length, isPaused, autoRotationSpeed]);
 
   // Smooth transition for slide change
   const slideVariants = {
@@ -108,8 +117,8 @@ const ReelsSection = () => {
     });
   }, [activeIndex]);
 
-  const handleMouseEnter = () => setIsPaused(true);
-  const handleMouseLeave = () => setIsPaused(false);
+  const handleMouseEnter = () => pauseOnHover && setIsPaused(true);
+  const handleMouseLeave = () => pauseOnHover && setIsPaused(false);
 
   const handlePrev = () => {
     paginate(-1);
@@ -181,25 +190,29 @@ const ReelsSection = () => {
         {/* Carousel Container */}
         <div ref={containerRef} className="relative flex items-center justify-center min-h-[400px] md:min-h-[550px]">
           {/* Navigation Arrows */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handlePrev}
-            className="absolute left-0 md:left-4 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg border border-border"
-            aria-label="Previous reel"
-          >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
-          </Button>
+          {showArrows && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handlePrev}
+                className="absolute left-0 md:left-4 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg border border-border"
+                aria-label="Previous reel"
+              >
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNext}
-            className="absolute right-0 md:right-4 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg border border-border"
-            aria-label="Next reel"
-          >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
-          </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNext}
+                className="absolute right-0 md:right-4 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-lg border border-border"
+                aria-label="Next reel"
+              >
+                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              </Button>
+            </>
+          )}
 
           {/* Reels Carousel with Smooth Animation */}
           <div className="flex items-center justify-center gap-2 md:gap-4 perspective-1000">
@@ -363,22 +376,24 @@ const ReelsSection = () => {
         )}
 
         {/* Pagination Dots */}
-        <div className="flex items-center justify-center gap-2 mt-6" role="tablist" aria-label="Reel pagination">
-          {reels.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveIndex(index)}
-              className={`h-1 rounded-full transition-all duration-300 ${
-                index === activeIndex 
-                  ? 'w-8 bg-foreground' 
-                  : 'w-4 bg-muted-foreground/30 hover:bg-muted-foreground/50'
-              }`}
-              role="tab"
-              aria-selected={index === activeIndex}
-              aria-label={`Go to reel ${index + 1}`}
-            />
-          ))}
-        </div>
+        {showDots && (
+          <div className="flex items-center justify-center gap-2 mt-6" role="tablist" aria-label="Reel pagination">
+            {reels.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className={`h-1 rounded-full transition-all duration-300 ${
+                  index === activeIndex 
+                    ? 'w-8 bg-foreground' 
+                    : 'w-4 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+                role="tab"
+                aria-selected={index === activeIndex}
+                aria-label={`Go to reel ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

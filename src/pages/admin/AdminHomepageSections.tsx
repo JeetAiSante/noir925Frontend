@@ -49,8 +49,9 @@ interface HomepageSection {
 
 const defaultSections: Omit<HomepageSection, 'id'>[] = [
   { section_key: 'hero', section_name: 'Hero Section', is_visible: true, sort_order: 1, settings: { showVideo: true } },
-  { section_key: 'countdown', section_name: 'Countdown Banner', is_visible: true, sort_order: 2, settings: null },
-  { section_key: 'festival', section_name: 'Festival Banner', is_visible: true, sort_order: 3, settings: null },
+  { section_key: 'reels', section_name: 'Reels Section', is_visible: true, sort_order: 2, settings: { autoRotationSpeed: 6 } },
+  { section_key: 'countdown', section_name: 'Countdown Banner', is_visible: true, sort_order: 3, settings: null },
+  { section_key: 'festival', section_name: 'Festival Banner', is_visible: true, sort_order: 4, settings: null },
   { section_key: 'trust_strip', section_name: 'Trust Strip', is_visible: true, sort_order: 4, settings: null },
   { section_key: 'categories', section_name: 'Categories Carousel', is_visible: true, sort_order: 5, settings: { limit: 10 } },
   { section_key: 'bestsellers', section_name: 'Bestsellers Grid', is_visible: true, sort_order: 6, settings: { limit: 8 } },
@@ -471,6 +472,44 @@ const AdminHomepageSections = () => {
                   <Switch
                     checked={selectedSection?.settings?.showViewAll ?? true}
                     onCheckedChange={(v) => updateSectionSettings('showViewAll', v)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {selectedSection?.section_key === 'reels' && (
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Reels Settings</h4>
+                <div className="space-y-2">
+                  <Label>Auto-Rotation Speed (seconds)</Label>
+                  <Input
+                    type="number"
+                    min={3}
+                    max={15}
+                    value={selectedSection?.settings?.autoRotationSpeed ?? 6}
+                    onChange={(e) => updateSectionSettings('autoRotationSpeed', parseInt(e.target.value))}
+                  />
+                  <p className="text-xs text-muted-foreground">Time between automatic reel transitions (3-15 seconds)</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Pause on Hover</Label>
+                  <Switch
+                    checked={selectedSection?.settings?.pauseOnHover ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('pauseOnHover', v)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Show Navigation Arrows</Label>
+                  <Switch
+                    checked={selectedSection?.settings?.showArrows ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('showArrows', v)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Show Pagination Dots</Label>
+                  <Switch
+                    checked={selectedSection?.settings?.showDots ?? true}
+                    onCheckedChange={(v) => updateSectionSettings('showDots', v)}
                   />
                 </div>
               </div>
