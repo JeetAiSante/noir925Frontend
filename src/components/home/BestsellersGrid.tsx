@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/products/ProductCard';
 import { useProducts } from '@/hooks/useProducts';
 import { useLayoutSettings } from '@/hooks/useLayoutSettings';
+import { useHomepageSections } from '@/hooks/useHomepageSections';
 
 const BestsellersGrid = () => {
   const [filter, setFilter] = useState('all');
@@ -12,6 +13,10 @@ const BestsellersGrid = () => {
   const { data: newProducts = [] } = useProducts({ new: true, limit: 12 });
   const { data: trendingProducts = [] } = useProducts({ trending: true, limit: 12 });
   const { settings: layoutSettings } = useLayoutSettings();
+  
+  // Get section settings for custom title/subtitle
+  const { getSectionSettings } = useHomepageSections();
+  const sectionSettings = getSectionSettings('bestsellers');
 
   const filters = [
     { id: 'all', name: 'All' },
@@ -41,10 +46,10 @@ const BestsellersGrid = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <p className="font-accent text-sm text-primary tracking-widest uppercase mb-2">
-            Curated Selection
+            {sectionSettings?.customSubtitle || 'Curated Selection'}
           </p>
           <h2 className="font-display text-3xl md:text-5xl text-foreground mb-6">
-            Our Finest Pieces
+            {sectionSettings?.customTitle || 'Our Finest Pieces'}
           </h2>
           <p className="font-body text-lg text-muted-foreground max-w-2xl mx-auto">
             Handpicked treasures that have captured hearts across India. Each piece embodies 
