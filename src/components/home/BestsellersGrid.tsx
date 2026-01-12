@@ -52,8 +52,7 @@ const BestsellersGrid = () => {
             {sectionSettings?.customTitle || 'Our Finest Pieces'}
           </h2>
           <p className="font-body text-lg text-muted-foreground max-w-2xl mx-auto">
-            Handpicked treasures that have captured hearts across India. Each piece embodies 
-            the perfect blend of traditional craftsmanship and contemporary design.
+            {sectionSettings?.customDescription || 'Handpicked treasures that have captured hearts across India. Each piece embodies the perfect blend of traditional craftsmanship and contemporary design.'}
           </p>
         </div>
 

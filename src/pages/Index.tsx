@@ -86,6 +86,7 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   editorial: LuxuryEditorialSection,
   video_showcase: ReelsSection,
   reels_section: ReelsSection,
+  reels: ReelsSection,
   featured_categories: FeaturedCategories,
   
   // Story and brand

@@ -49,7 +49,7 @@ interface HomepageSection {
 
 const defaultSections: Omit<HomepageSection, 'id'>[] = [
   { section_key: 'hero', section_name: 'Hero Section', is_visible: true, sort_order: 1, settings: { showVideo: true } },
-  { section_key: 'reels', section_name: 'Reels Section', is_visible: true, sort_order: 2, settings: { autoRotationSpeed: 6 } },
+  { section_key: 'reels', section_name: 'Reels Section', is_visible: true, sort_order: 2, settings: { scrollSpeed: 1, pauseOnHover: true } },
   { section_key: 'countdown', section_name: 'Countdown Banner', is_visible: true, sort_order: 3, settings: null },
   { section_key: 'festival', section_name: 'Festival Banner', is_visible: true, sort_order: 4, settings: null },
   { section_key: 'trust_strip', section_name: 'Trust Strip', is_visible: true, sort_order: 4, settings: null },
@@ -385,6 +385,17 @@ const AdminHomepageSections = () => {
                   onChange={(e) => updateSectionSettings('customSubtitle', e.target.value)}
                 />
               </div>
+              {['bestsellers', 'new_arrivals', 'reviews', 'brand_story', 'silver_care'].includes(selectedSection?.section_key || '') && (
+                <div className="space-y-2">
+                  <Label>Custom Description (optional)</Label>
+                  <textarea
+                    placeholder="Leave empty for default description"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={selectedSection?.settings?.customDescription ?? ''}
+                    onChange={(e) => updateSectionSettings('customDescription', e.target.value)}
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Background Color</Label>
                 <div className="flex gap-2">
@@ -481,35 +492,22 @@ const AdminHomepageSections = () => {
               <div className="space-y-4">
                 <h4 className="font-medium text-sm text-muted-foreground">Reels Settings</h4>
                 <div className="space-y-2">
-                  <Label>Auto-Rotation Speed (seconds)</Label>
+                  <Label>Scroll Speed (pixels per frame)</Label>
                   <Input
                     type="number"
-                    min={3}
-                    max={15}
-                    value={selectedSection?.settings?.autoRotationSpeed ?? 6}
-                    onChange={(e) => updateSectionSettings('autoRotationSpeed', parseInt(e.target.value))}
+                    min={0.5}
+                    max={5}
+                    step={0.5}
+                    value={selectedSection?.settings?.scrollSpeed ?? 1}
+                    onChange={(e) => updateSectionSettings('scrollSpeed', parseFloat(e.target.value))}
                   />
-                  <p className="text-xs text-muted-foreground">Time between automatic reel transitions (3-15 seconds)</p>
+                  <p className="text-xs text-muted-foreground">Controls how fast the reels scroll horizontally (0.5-5, lower = slower)</p>
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>Pause on Hover</Label>
                   <Switch
                     checked={selectedSection?.settings?.pauseOnHover ?? true}
                     onCheckedChange={(v) => updateSectionSettings('pauseOnHover', v)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Show Navigation Arrows</Label>
-                  <Switch
-                    checked={selectedSection?.settings?.showArrows ?? true}
-                    onCheckedChange={(v) => updateSectionSettings('showArrows', v)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label>Show Pagination Dots</Label>
-                  <Switch
-                    checked={selectedSection?.settings?.showDots ?? true}
-                    onCheckedChange={(v) => updateSectionSettings('showDots', v)}
                   />
                 </div>
               </div>
