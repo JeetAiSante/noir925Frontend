@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCategories } from '@/hooks/useAdminData';
-import { MapPin, Grid3X3, LayoutGrid, ArrowUpDown, Save, Eye, EyeOff, Gem, Crown, Sparkles, Gift, Heart, Star } from 'lucide-react';
+import { Grid3X3, LayoutGrid, Save, Eye, EyeOff, Gem, Crown, Sparkles, Gift, Heart, Star } from 'lucide-react';
 
 const iconOptions = [
   { value: 'gem', label: 'Gem', icon: Gem },
@@ -25,7 +25,6 @@ const AdminHeaderSettings = () => {
   const queryClient = useQueryClient();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   
-  const [locationEnabled, setLocationEnabled] = useState(true);
   const [categoriesEnabled, setCategoriesEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
   const [gridSettings, setGridSettings] = useState({
@@ -43,13 +42,10 @@ const AdminHeaderSettings = () => {
     const { data: features } = await supabase
       .from('feature_toggles')
       .select('*')
-      .in('feature_key', ['location_dropdown', 'header_categories']);
+      .eq('feature_key', 'header_categories');
 
     if (features) {
-      const locationFeature = features.find(f => f.feature_key === 'location_dropdown');
       const categoriesFeature = features.find(f => f.feature_key === 'header_categories');
-      
-      if (locationFeature) setLocationEnabled(locationFeature.is_enabled);
       if (categoriesFeature) setCategoriesEnabled(categoriesFeature.is_enabled);
     }
 
@@ -75,7 +71,6 @@ const AdminHeaderSettings = () => {
     if (error) {
       toast.error('Failed to update setting');
     } else {
-      if (featureKey === 'location_dropdown') setLocationEnabled(enabled);
       if (featureKey === 'header_categories') setCategoriesEnabled(enabled);
       toast.success('Setting updated');
     }
@@ -141,28 +136,12 @@ const AdminHeaderSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" />
+                <LayoutGrid className="w-5 h-5 text-primary" />
                 Header Features
               </CardTitle>
               <CardDescription>Enable or disable header components</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${locationEnabled ? 'bg-green-500/10' : 'bg-muted'}`}>
-                    <MapPin className={`w-5 h-5 ${locationEnabled ? 'text-green-500' : 'text-muted-foreground'}`} />
-                  </div>
-                  <div>
-                    <p className="font-medium">Location Dropdown</p>
-                    <p className="text-sm text-muted-foreground">Show city selection in header</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={locationEnabled}
-                  onCheckedChange={(checked) => handleToggleFeature('location_dropdown', checked)}
-                />
-              </div>
-
               <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${categoriesEnabled ? 'bg-green-500/10' : 'bg-muted'}`}>

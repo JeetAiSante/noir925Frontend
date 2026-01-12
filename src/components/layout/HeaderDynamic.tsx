@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useCart } from '@/context/CartContext';
 import SearchModal from '@/components/search/SearchModal';
-import LocationDropdown from '@/components/header/LocationDropdown';
 import CurrencySelector from '@/components/header/CurrencySelector';
 import { useHeaderCategories } from '@/hooks/useHeaderCategories';
 import { useFeatureToggles } from '@/hooks/useFeatureToggles';
@@ -52,7 +51,6 @@ const HeaderDynamic = () => {
   const { categories: dbCategories, loading: categoriesLoading } = useHeaderCategories();
   const { isEnabled } = useFeatureToggles();
 
-  const showLocationDropdown = isEnabled('location_dropdown');
   const showHeaderCategories = isEnabled('header_categories');
 
   // Use DB categories or fallback to defaults
@@ -127,11 +125,6 @@ const HeaderDynamic = () => {
                 <CurrencySelector />
               </div>
 
-              {showLocationDropdown && (
-                <div className="hidden lg:block">
-                  <LocationDropdown />
-                </div>
-              )}
 
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsSearchOpen(true)}>
                 <Search className="w-5 h-5" />
@@ -197,9 +190,8 @@ const HeaderDynamic = () => {
         {isMobileMenuOpen && (
           <div className="lg:hidden bg-background border-t border-border animate-fade-in">
             <nav className="container mx-auto px-4 py-4 space-y-1">
-              <div className="flex items-center justify-between py-3 border-b border-border/50">
+              <div className="flex items-center justify-center py-3 border-b border-border/50">
                 <CurrencySelector />
-                {showLocationDropdown && <LocationDropdown />}
               </div>
 
               <form onSubmit={handleSearch} className="py-3 border-b border-border/50">
