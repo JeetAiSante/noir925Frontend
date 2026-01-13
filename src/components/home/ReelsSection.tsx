@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronLeft, ChevronRight, Volume2, VolumeX, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Volume2, VolumeX, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useHomepageSections } from '@/hooks/useHomepageSections';
+import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 
 interface Reel {
   id: string;
@@ -21,20 +22,13 @@ interface Reel {
 const ReelsSection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
-  const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const autoPlayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
-  // Swipe gesture tracking
-  const dragX = useMotionValue(0);
-  const dragProgress = useTransform(dragX, [-200, 0, 200], [-1, 0, 1]);
-
-  // Get section settings from homepage_sections
   const { getSectionSettings, isSectionVisible } = useHomepageSections();
   const sectionSettings = getSectionSettings('reels');
-
-  // Check visibility
   const isVisible = isSectionVisible('reels');
 
   const { data: reels = [] } = useQuery({
@@ -51,435 +45,368 @@ const ReelsSection = () => {
     },
   });
 
-  // Auto-advance carousel
+  const goToPrevious = useCallback(() => {
+    if (reels.length === 0) return;
+    setActiveIndex((prev) => (prev - 1 + reels.length) % reels.length);
+  }, [reels.length]);
+
+  const goToNext = useCallback(() => {
+    if (reels.length === 0) return;
+    setActiveIndex((prev) => (prev + 1) % reels.length);
+  }, [reels.length]);
+
+  const goToSlide = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
+
+  // Swipe gesture support
+  const swipeHandlers = useSwipeGesture({
+    onSwipeLeft: goToNext,
+    onSwipeRight: goToPrevious,
+    threshold: 40,
+  });
+
+  // Keyboard navigation
   useEffect(() => {
-    if (reels.length <= 1 || isDragging) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!sectionRef.current?.contains(document.activeElement) && 
+          document.activeElement !== sectionRef.current) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToPrevious();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        goToNext();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToPrevious, goToNext]);
+
+  // Auto-advance carousel with slow timing
+  useEffect(() => {
+    if (reels.length <= 1 || isHovered) return;
 
     autoPlayTimerRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % reels.length);
-    }, 6000);
+    }, 5000);
 
     return () => {
       if (autoPlayTimerRef.current) {
         clearInterval(autoPlayTimerRef.current);
       }
     };
-  }, [reels.length, isDragging]);
+  }, [reels.length, isHovered]);
 
   // Play active video
   useEffect(() => {
     if (videoRef.current) {
+      videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
   }, [activeIndex]);
 
-  const goToPrevious = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + reels.length) % reels.length);
-    resetAutoPlay();
-  }, [reels.length]);
-
-  const goToNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % reels.length);
-    resetAutoPlay();
-  }, [reels.length]);
-
-  const goToSlide = useCallback((index: number) => {
-    setActiveIndex(index);
-    resetAutoPlay();
-  }, []);
-
-  const resetAutoPlay = useCallback(() => {
-    if (autoPlayTimerRef.current) {
-      clearInterval(autoPlayTimerRef.current);
-      autoPlayTimerRef.current = setInterval(() => {
-        setActiveIndex((prev) => (prev + 1) % reels.length);
-      }, 6000);
-    }
-  }, [reels.length]);
-
-  const toggleMute = () => {
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsMuted(!isMuted);
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
     }
   };
 
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (!document.fullscreenElement) {
-        videoRef.current.requestFullscreen?.();
-      } else {
-        document.exitFullscreen?.();
-      }
-    }
-  };
-
-  // Handle swipe gestures
-  const handleDragStart = () => {
-    setIsDragging(true);
-    if (autoPlayTimerRef.current) {
-      clearInterval(autoPlayTimerRef.current);
-    }
-  };
-
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setIsDragging(false);
-    const threshold = 50;
-    const velocity = info.velocity.x;
-    const offset = info.offset.x;
-
-    if (offset < -threshold || velocity < -500) {
-      goToNext();
-    } else if (offset > threshold || velocity > 500) {
-      goToPrevious();
-    }
-    
-    dragX.set(0);
-    resetAutoPlay();
-  };
-
-  // Get visible reels (previous, current, next)
-  const getVisibleReels = () => {
-    if (reels.length === 0) return [];
-    if (reels.length === 1) return [{ reel: reels[0], position: 'center' as const, originalIndex: 0 }];
-    if (reels.length === 2) {
-      return [
-        { reel: reels[(activeIndex - 1 + reels.length) % reels.length], position: 'left' as const, originalIndex: (activeIndex - 1 + reels.length) % reels.length },
-        { reel: reels[activeIndex], position: 'center' as const, originalIndex: activeIndex },
-        { reel: reels[(activeIndex + 1) % reels.length], position: 'right' as const, originalIndex: (activeIndex + 1) % reels.length },
-      ];
-    }
-    
-    const prevIndex = (activeIndex - 1 + reels.length) % reels.length;
-    const nextIndex = (activeIndex + 1) % reels.length;
-    const farPrevIndex = (activeIndex - 2 + reels.length) % reels.length;
-    const farNextIndex = (activeIndex + 2) % reels.length;
-    
-    return [
-      { reel: reels[farPrevIndex], position: 'far-left' as const, originalIndex: farPrevIndex },
-      { reel: reels[prevIndex], position: 'left' as const, originalIndex: prevIndex },
-      { reel: reels[activeIndex], position: 'center' as const, originalIndex: activeIndex },
-      { reel: reels[nextIndex], position: 'right' as const, originalIndex: nextIndex },
-      { reel: reels[farNextIndex], position: 'far-right' as const, originalIndex: farNextIndex },
-    ];
-  };
-
   if (!isVisible || reels.length === 0) return null;
 
-  const visibleReels = getVisibleReels();
   const activeReel = reels[activeIndex];
+
+  // Calculate positions for the 3-card view
+  const getCardPosition = (index: number) => {
+    const diff = index - activeIndex;
+    const wrappedDiff = ((diff + reels.length) % reels.length);
+    
+    if (wrappedDiff === 0) return 'center';
+    if (wrappedDiff === 1 || (diff === -(reels.length - 1))) return 'right';
+    if (wrappedDiff === reels.length - 1 || diff === -1) return 'left';
+    return 'hidden';
+  };
 
   return (
     <section 
-      ref={containerRef}
-      className="py-10 md:py-16 lg:py-20 bg-gradient-to-b from-muted/20 via-background to-muted/20 relative overflow-hidden" 
+      ref={sectionRef}
+      tabIndex={0}
+      className="py-8 sm:py-12 md:py-16 bg-gradient-to-b from-background via-muted/10 to-background relative overflow-hidden outline-none" 
       aria-label="Featured Reels"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      {...swipeHandlers}
     >
-      <div className="max-w-[1920px] mx-auto px-2 sm:px-4 relative mb-6 md:mb-10">
-        {/* Header */}
+      {/* Subtle Background Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-primary/5 blur-[100px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-accent/5 blur-[120px]" />
+      </div>
+
+      {/* Header - Compact */}
+      <div className="max-w-7xl mx-auto px-4 relative mb-6 md:mb-8">
         <header className="text-center">
-          <h2 className="font-display text-2xl md:text-4xl lg:text-5xl text-foreground mb-3">
-            {sectionSettings?.customTitle || (
-              <>Styling 101 With <span className="text-primary">Silver</span></>
-            )}
-          </h2>
-          <p className="font-body text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
-            {sectionSettings?.customSubtitle || 'Trendsetting silver jewellery suited for every occasion'}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-3">
+              <Play className="w-3 h-3 text-primary fill-primary" />
+              <span className="font-accent text-[10px] sm:text-xs text-primary tracking-widest uppercase">Style Stories</span>
+            </span>
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl lg:text-4xl text-foreground mb-2">
+              {sectionSettings?.customTitle || (
+                <>Styling 101 With <span className="text-primary">Silver</span></>
+              )}
+            </h2>
+            <p className="font-body text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+              {sectionSettings?.customSubtitle || 'Discover trending styles & inspiration'}
+            </p>
+          </motion.div>
         </header>
       </div>
 
-      {/* 3D Stacked Carousel - Wider Layout */}
-      <motion.div 
-        className="relative h-[420px] sm:h-[480px] md:h-[580px] lg:h-[680px] xl:h-[720px] flex items-center justify-center"
-        style={{ perspective: 1200 }}
-      >
-        {/* Navigation Arrows */}
-        <button
-          onClick={goToPrevious}
-          className="absolute left-1 sm:left-4 md:left-8 lg:left-12 xl:left-20 z-30 p-2 md:p-3 lg:p-4 rounded-full bg-background/90 backdrop-blur-md border border-border/50 hover:bg-background hover:scale-110 active:scale-95 transition-all duration-300 shadow-xl group"
-          aria-label="Previous reel"
+      {/* Carousel Container - Compact Height */}
+      <div className="relative w-full max-w-6xl mx-auto px-4">
+        <div 
+          className="relative h-[320px] sm:h-[380px] md:h-[440px] lg:h-[480px] flex items-center justify-center"
+          style={{ perspective: '1000px' }}
         >
-          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-foreground group-hover:text-primary transition-colors" />
-        </button>
+          {/* Navigation Arrows - Elegant */}
+          <motion.button
+            onClick={goToPrevious}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute left-0 sm:left-2 md:left-4 z-30 p-2 sm:p-2.5 md:p-3 rounded-full bg-background/80 backdrop-blur-md border border-border/40 hover:bg-background hover:border-primary/30 transition-all duration-500 shadow-lg group"
+            aria-label="Previous reel"
+          >
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-foreground/70 group-hover:text-primary transition-colors duration-300" />
+          </motion.button>
 
-        <button
-          onClick={goToNext}
-          className="absolute right-1 sm:right-4 md:right-8 lg:right-12 xl:right-20 z-30 p-2 md:p-3 lg:p-4 rounded-full bg-background/90 backdrop-blur-md border border-border/50 hover:bg-background hover:scale-110 active:scale-95 transition-all duration-300 shadow-xl group"
-          aria-label="Next reel"
-        >
-          <ChevronRight className="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-foreground group-hover:text-primary transition-colors" />
-        </button>
+          <motion.button
+            onClick={goToNext}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="absolute right-0 sm:right-2 md:right-4 z-30 p-2 sm:p-2.5 md:p-3 rounded-full bg-background/80 backdrop-blur-md border border-border/40 hover:bg-background hover:border-primary/30 transition-all duration-500 shadow-lg group"
+            aria-label="Next reel"
+          >
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-foreground/70 group-hover:text-primary transition-colors duration-300" />
+          </motion.button>
 
-        {/* Swipeable Cards Container */}
-        <motion.div 
-          className="relative w-full max-w-[1800px] h-full flex items-center justify-center touch-pan-y"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.1}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-          style={{ x: dragX }}
-        >
-          <AnimatePresence mode="popLayout">
-            {visibleReels.map(({ reel, position, originalIndex }) => {
-              const isActive = position === 'center';
-              
-              // Position and style configurations - Wider spacing
-              const positionStyles = {
-                'far-left': {
-                  x: '-95%',
-                  scale: 0.5,
-                  zIndex: 5,
-                  opacity: 0.25,
-                  rotateY: 30,
-                },
-                'left': {
-                  x: '-58%',
-                  scale: 0.72,
-                  zIndex: 10,
-                  opacity: 0.55,
-                  rotateY: 18,
-                },
-                'center': {
-                  x: '0%',
-                  scale: 1,
-                  zIndex: 20,
-                  opacity: 1,
-                  rotateY: 0,
-                },
-                'right': {
-                  x: '58%',
-                  scale: 0.72,
-                  zIndex: 10,
-                  opacity: 0.55,
-                  rotateY: -18,
-                },
-                'far-right': {
-                  x: '95%',
-                  scale: 0.5,
-                  zIndex: 5,
-                  opacity: 0.25,
-                  rotateY: -30,
-                },
-              };
+          {/* Cards */}
+          <div className="relative w-full h-full flex items-center justify-center">
+            <AnimatePresence mode="popLayout">
+              {reels.map((reel, index) => {
+                const position = getCardPosition(index);
+                if (position === 'hidden') return null;
+                
+                const isActive = position === 'center';
+                
+                const variants = {
+                  center: {
+                    x: 0,
+                    scale: 1,
+                    zIndex: 20,
+                    opacity: 1,
+                    rotateY: 0,
+                    filter: 'brightness(1)',
+                  },
+                  left: {
+                    x: '-45%',
+                    scale: 0.75,
+                    zIndex: 10,
+                    opacity: 0.7,
+                    rotateY: 12,
+                    filter: 'brightness(0.8)',
+                  },
+                  right: {
+                    x: '45%',
+                    scale: 0.75,
+                    zIndex: 10,
+                    opacity: 0.7,
+                    rotateY: -12,
+                    filter: 'brightness(0.8)',
+                  },
+                };
 
-              const style = positionStyles[position];
-
-              return (
-                <motion.article
-                  key={`${reel.id}-${position}`}
-                  className="absolute cursor-pointer select-none"
-                  initial={{ opacity: 0, scale: 0.4, rotateY: 0 }}
-                  animate={{
-                    x: style.x,
-                    scale: style.scale,
-                    zIndex: style.zIndex,
-                    opacity: style.opacity,
-                    rotateY: style.rotateY,
-                  }}
-                  exit={{ opacity: 0, scale: 0.4 }}
-                  transition={{ 
-                    type: 'spring',
-                    stiffness: 260,
-                    damping: 30,
-                    mass: 1,
-                  }}
-                  onClick={() => !isActive && !isDragging && goToSlide(originalIndex)}
-                  style={{
-                    transformStyle: 'preserve-3d',
-                  }}
-                  whileHover={!isActive ? { scale: style.scale * 1.05 } : {}}
-                >
-                  <div 
-                    className={`relative overflow-hidden rounded-2xl md:rounded-3xl lg:rounded-[2rem] ${
-                      isActive 
-                        ? 'w-[220px] sm:w-[260px] md:w-[340px] lg:w-[400px] xl:w-[440px] h-[360px] sm:h-[400px] md:h-[500px] lg:h-[580px] xl:h-[620px]' 
-                        : 'w-[180px] sm:w-[200px] md:w-[280px] lg:w-[320px] xl:w-[360px] h-[300px] sm:h-[340px] md:h-[420px] lg:h-[500px] xl:h-[540px]'
-                    }`}
-                    style={{
-                      boxShadow: isActive 
-                        ? '0 30px 80px -20px rgba(0, 0, 0, 0.5), 0 15px 40px -15px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
-                        : '0 20px 50px -15px rgba(0, 0, 0, 0.35)',
+                return (
+                  <motion.article
+                    key={reel.id}
+                    className="absolute cursor-pointer select-none"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={variants[position]}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ 
+                      duration: 0.7,
+                      ease: [0.22, 1, 0.36, 1],
                     }}
+                    onClick={() => !isActive && goToSlide(index)}
+                    style={{ transformStyle: 'preserve-3d' }}
+                    whileHover={!isActive ? { scale: 0.78, opacity: 0.85 } : {}}
                   >
-                    {/* Video/Thumbnail */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20">
-                      {isActive ? (
-                        <video
-                          ref={videoRef}
-                          src={reel.video_url}
-                          poster={reel.thumbnail_url || undefined}
-                          className="w-full h-full object-cover"
-                          muted={isMuted}
-                          loop
-                          playsInline
-                          autoPlay
-                        />
-                      ) : (
-                        <img
-                          src={reel.thumbnail_url || 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&h=600&fit=crop'}
-                          alt={reel.title}
-                          className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                          loading="lazy"
-                        />
-                      )}
-                    </div>
+                    <div 
+                      className={`relative overflow-hidden rounded-xl sm:rounded-2xl md:rounded-3xl transition-all duration-700 ${
+                        isActive 
+                          ? 'w-[180px] sm:w-[220px] md:w-[280px] lg:w-[320px] h-[280px] sm:h-[340px] md:h-[400px] lg:h-[440px]' 
+                          : 'w-[140px] sm:w-[180px] md:w-[220px] lg:w-[260px] h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px]'
+                      }`}
+                      style={{
+                        boxShadow: isActive 
+                          ? '0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset'
+                          : '0 15px 40px -10px rgba(0, 0, 0, 0.25)',
+                      }}
+                    >
+                      {/* Video/Thumbnail */}
+                      <div className="absolute inset-0 bg-muted">
+                        {isActive ? (
+                          <video
+                            ref={videoRef}
+                            src={reel.video_url}
+                            poster={reel.thumbnail_url || undefined}
+                            className="w-full h-full object-cover"
+                            muted={isMuted}
+                            loop
+                            playsInline
+                            autoPlay
+                          />
+                        ) : (
+                          <img
+                            src={reel.thumbnail_url || 'https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=400&h=600&fit=crop'}
+                            alt={reel.title}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        )}
+                      </div>
 
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-foreground/95 via-foreground/20 to-transparent" />
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/10 to-transparent" />
 
-                    {/* Top Bar - Only on Active */}
-                    {isActive && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2, duration: 0.4 }}
-                        className="absolute top-0 left-0 right-0 p-3 md:p-4 flex items-center justify-between bg-gradient-to-b from-foreground/70 to-transparent"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-background/20 backdrop-blur-sm flex items-center justify-center gap-0.5">
-                            <div className="w-1 h-1 bg-background rounded-full" />
-                            <div className="w-1 h-1 bg-background rounded-full" />
-                            <div className="w-1 h-1 bg-background rounded-full" />
-                          </div>
-                          <p className="text-xs md:text-sm text-background/90 truncate max-w-[150px] sm:max-w-[180px] md:max-w-[260px]">
-                            {reel.subtitle || 'Discover the beauty of silver artistry'}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1 md:gap-2">
+                      {/* Active Controls */}
+                      {isActive && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3, duration: 0.5 }}
+                          className="absolute top-3 right-3 z-10"
+                        >
                           <button
-                            onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                            className="p-1.5 md:p-2 rounded-full bg-background/20 backdrop-blur-sm hover:bg-background/40 transition-all duration-200 hover:scale-110"
+                            onClick={toggleMute}
+                            className="p-2 rounded-full bg-foreground/20 backdrop-blur-md hover:bg-foreground/30 transition-all duration-300"
                             aria-label={isMuted ? 'Unmute' : 'Mute'}
                           >
                             {isMuted ? (
-                              <VolumeX className="w-4 h-4 md:w-5 md:h-5 text-background" />
+                              <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-background" />
                             ) : (
-                              <Volume2 className="w-4 h-4 md:w-5 md:h-5 text-background" />
+                              <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-background" />
                             )}
                           </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-                            className="p-1.5 md:p-2 rounded-full bg-background/20 backdrop-blur-sm hover:bg-background/40 transition-all duration-200 hover:scale-110"
-                            aria-label="Fullscreen"
+                        </motion.div>
+                      )}
+
+                      {/* Content */}
+                      <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-5">
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: isActive ? 0.2 : 0, duration: 0.5 }}
+                        >
+                          <h3 className={`font-display text-background mb-1 line-clamp-2 ${
+                            isActive 
+                              ? 'text-sm sm:text-base md:text-lg lg:text-xl' 
+                              : 'text-xs sm:text-sm'
+                          }`}>
+                            {reel.title}
+                          </h3>
+                          {isActive && reel.subtitle && (
+                            <p className="font-body text-[10px] sm:text-xs text-background/70 line-clamp-1">
+                              {reel.subtitle}
+                            </p>
+                          )}
+                        </motion.div>
+
+                        {/* Product Link - Active Only */}
+                        {isActive && reel.linked_product_id && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4, duration: 0.5 }}
                           >
-                            <Maximize2 className="w-4 h-4 md:w-5 md:h-5 text-background" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
+                            <Link
+                              to={`/product/${reel.linked_product_id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-2 mt-2 sm:mt-3 px-3 py-1.5 sm:px-4 sm:py-2 bg-background/20 backdrop-blur-md rounded-full border border-background/30 hover:bg-background/30 transition-all duration-300 group"
+                            >
+                              {reel.linked_product_image && (
+                                <img 
+                                  src={reel.linked_product_image} 
+                                  alt="" 
+                                  className="w-5 h-5 sm:w-6 sm:h-6 rounded-full object-cover border border-background/50"
+                                />
+                              )}
+                              <span className="text-[10px] sm:text-xs font-medium text-background truncate max-w-[80px] sm:max-w-[100px]">
+                                {reel.linked_product_name || 'Shop Now'}
+                              </span>
+                              <ChevronRight className="w-3 h-3 text-background/70 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
+                          </motion.div>
+                        )}
+                      </div>
 
-                    {/* Center Content */}
-                    <motion.div 
-                      className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 pointer-events-none"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1, duration: 0.5 }}
-                    >
-                      <h3 className={`font-display uppercase tracking-wider text-background drop-shadow-lg ${
-                        isActive ? 'text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl' : 'text-sm md:text-lg lg:text-xl'
-                      }`}>
-                        {reel.title}
-                      </h3>
-                    </motion.div>
-
-                    {/* Bottom Title */}
-                    {isActive && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
-                        className="absolute bottom-16 sm:bottom-20 md:bottom-24 lg:bottom-28 left-0 right-0 text-center"
-                      >
-                        <p className="font-display text-sm sm:text-base md:text-xl lg:text-2xl text-background/90 drop-shadow-lg">
-                          {reel.subtitle || 'Explore Now'}
-                        </p>
-                      </motion.div>
-                    )}
-
-                    {/* Shine Effect on Active */}
-                    {isActive && (
-                      <motion.div
-                        className="absolute inset-0 pointer-events-none"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: [0, 0.15, 0] }}
-                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                        style={{
-                          background: 'linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%)',
-                        }}
-                      />
-                    )}
-                  </div>
-                </motion.article>
-              );
-            })}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Swipe Hint for Mobile */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 md:hidden">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.6 }}
-            transition={{ delay: 1 }}
-            className="flex items-center gap-2 text-xs text-muted-foreground"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            <span>Swipe to explore</span>
-            <ChevronRight className="w-4 h-4" />
-          </motion.div>
-        </div>
-      </motion.div>
-
-      {/* Product Cards Strip */}
-      {activeReel && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="max-w-[1600px] mx-auto px-4 mt-2 md:mt-4"
-        >
-          <div className="flex justify-center gap-2 md:gap-3 lg:gap-4 flex-wrap">
-            {reels.slice(0, 4).map((reel, idx) => (
-              <Link
-                key={reel.id}
-                to={reel.linked_product_id ? `/product/${reel.linked_product_id}` : '/shop'}
-                className={`flex items-center gap-2 px-3 py-2 md:px-4 md:py-2.5 bg-background rounded-full border shadow-sm hover:shadow-lg transition-all duration-300 group ${
-                  idx === activeIndex % 4 ? 'border-primary ring-1 ring-primary/20' : 'border-border hover:border-primary/50'
-                }`}
-              >
-                {reel.linked_product_image && (
-                  <img 
-                    src={reel.linked_product_image} 
-                    alt={reel.linked_product_name || ''} 
-                    className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-full object-cover border border-muted group-hover:scale-110 transition-transform duration-300"
-                  />
-                )}
-                <span className="text-xs md:text-sm font-medium text-foreground truncate max-w-[80px] sm:max-w-[100px] md:max-w-[140px] lg:max-w-[180px]">
-                  {reel.linked_product_name || 'View Product'}
-                </span>
-                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300" />
-              </Link>
-            ))}
+                      {/* Subtle Shine */}
+                      {isActive && (
+                        <motion.div
+                          className="absolute inset-0 pointer-events-none"
+                          initial={{ x: '-100%' }}
+                          animate={{ x: '200%' }}
+                          transition={{ 
+                            duration: 3,
+                            ease: 'linear',
+                            repeat: Infinity,
+                            repeatDelay: 4,
+                          }}
+                          style={{
+                            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)',
+                            width: '50%',
+                          }}
+                        />
+                      )}
+                    </div>
+                  </motion.article>
+                );
+              })}
+            </AnimatePresence>
           </div>
-        </motion.div>
-      )}
+        </div>
 
-      {/* Indicator Dots */}
-      <div className="flex justify-center gap-2 md:gap-3 mt-6 md:mt-8">
-        {reels.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => goToSlide(idx)}
-            className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ease-out ${
-              idx === activeIndex 
-                ? 'w-8 md:w-10 bg-primary shadow-lg shadow-primary/30' 
-                : 'w-4 md:w-5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
-            }`}
-            aria-label={`Go to reel ${idx + 1}`}
-          />
-        ))}
+        {/* Indicator Dots - Minimal */}
+        <div className="flex justify-center gap-1.5 sm:gap-2 mt-4 sm:mt-6">
+          {reels.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => goToSlide(idx)}
+              className={`rounded-full transition-all duration-500 ease-out ${
+                idx === activeIndex 
+                  ? 'w-6 sm:w-8 h-1.5 bg-primary' 
+                  : 'w-1.5 h-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              }`}
+              aria-label={`Go to reel ${idx + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* Keyboard Hint */}
+        <div className="hidden md:flex justify-center mt-3">
+          <span className="text-[10px] text-muted-foreground/50">
+            Use ← → arrow keys to navigate
+          </span>
+        </div>
       </div>
     </section>
   );
