@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Filter, Grid3X3, Grid2X2, X, ChevronRight, Star } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -13,6 +13,9 @@ import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import MobileFilterDrawer from '@/components/shop/MobileFilterDrawer';
 import { SEOHead, CollectionSchema, ItemListSchema } from '@/components/seo/SEOHead';
 import { BreadcrumbSchema } from '@/components/seo/ProductSchema';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator, PullToRefreshWrapper } from '@/components/ui/pull-to-refresh';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +23,7 @@ const Shop = () => {
   const categoryParam = searchParams.get('category');
   const genderParam = searchParams.get('gender');
   const { settings: layoutSettings } = useLayoutSettings();
+  const isMobile = useIsMobile();
   
   const [gridSize, setGridSize] = useState<'large' | 'small'>('large');
   const [sortBy, setSortBy] = useState('featured');
@@ -58,13 +62,30 @@ const Shop = () => {
   ];
 
   // Use database-backed hook for filtering
-  const { data: filteredProducts = [], isLoading } = useShopProducts({
+  const { data: filteredProducts = [], isLoading, refetch } = useShopProducts({
     category: selectedCategory,
     gender: genderParam,
     minPrice: priceRange[0],
     maxPrice: priceRange[1],
     minRating: minRating,
     sortBy: sortBy,
+  });
+
+  // Pull to refresh functionality
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
+
+  const {
+    pullDistance,
+    isRefreshing,
+    canRefresh,
+    pullProgress,
+    handlers: pullHandlers,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    disabled: !isMobile,
   });
 
   const clearFilters = () => {
@@ -91,7 +112,20 @@ const Shop = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen bg-background"
+      {...(isMobile ? pullHandlers : {})}
+    >
+      {/* Pull to Refresh Indicator - Mobile Only */}
+      {isMobile && (
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          canRefresh={canRefresh}
+          pullProgress={pullProgress}
+        />
+      )}
+      
       <SEOHead 
         title={categoryTitle}
         description={categoryDescription}
@@ -118,8 +152,11 @@ const Shop = () => {
         />
       )}
       <Header />
-
-      <main className="pt-4 pb-16">
+      <PullToRefreshWrapper 
+        pullDistance={isMobile ? pullDistance : 0} 
+        isRefreshing={isRefreshing}
+      >
+        <main className="pt-4 pb-16">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4">
           <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
@@ -481,6 +518,7 @@ const Shop = () => {
           </div>
         </div>
       </main>
+      </PullToRefreshWrapper>
 
       <FloatingSpinWheel />
       <Footer />
