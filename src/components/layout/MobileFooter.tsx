@@ -22,7 +22,7 @@ const MobileFooter = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border md:hidden safe-area-inset-bottom">
-      <div className="flex items-center justify-around h-16 px-2">
+      <div className="flex items-center justify-around h-14 xs:h-16 px-1 xs:px-2">
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -35,23 +35,23 @@ const MobileFooter = () => {
                 {active && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute -inset-2 bg-primary/10 rounded-xl"
+                    className="absolute -inset-1.5 xs:-inset-2 bg-primary/10 rounded-lg xs:rounded-xl"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}
                 <item.icon
-                  className={`w-5 h-5 relative z-10 transition-colors ${
+                  className={`w-4 h-4 xs:w-5 xs:h-5 relative z-10 transition-colors ${
                     active ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
                   }`}
                 />
                 {item.badge ? (
-                  <span className="absolute -top-2 -right-2 min-w-[16px] h-4 px-1 bg-primary text-primary-foreground text-[10px] font-medium rounded-full flex items-center justify-center z-20">
+                  <span className="absolute -top-1.5 -right-1.5 xs:-top-2 xs:-right-2 min-w-[14px] xs:min-w-[16px] h-3.5 xs:h-4 px-0.5 xs:px-1 bg-primary text-primary-foreground text-[8px] xs:text-[10px] font-medium rounded-full flex items-center justify-center z-20">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 ) : null}
               </div>
               <span
-                className={`text-[10px] mt-1 font-medium transition-colors ${
+                className={`text-[9px] xs:text-[10px] mt-0.5 xs:mt-1 font-medium transition-colors ${
                   active ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
