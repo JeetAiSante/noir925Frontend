@@ -84,7 +84,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
   return (
     <>
       <motion.article
-        className={`group relative bg-card rounded-xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl ${className}`}
+        className={`group relative bg-card rounded-lg sm:rounded-xl overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-xl ${className}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={() => setIsTouched(true)}
@@ -125,14 +125,14 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             <div className={`absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent transition-opacity duration-300 ${showActions ? 'opacity-100' : 'opacity-0'}`} />
 
             {/* Compact Badges - Top Left */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-10">
+            <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-1 sm:gap-1.5 z-10">
               {product.isNew && (
                 <motion.span 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
+                  className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
                 >
-                  <Sparkles className="w-2.5 h-2.5" />
+                  <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                   NEW
                 </motion.span>
               )}
@@ -141,9 +141,9 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1 }}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
+                  className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground text-[8px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md"
                 >
-                  <TrendingUp className="w-2.5 h-2.5" />
+                  <TrendingUp className="w-2 h-2 sm:w-2.5 sm:h-2.5" />
                   HOT
                 </motion.span>
               )}
@@ -154,18 +154,18 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
               <motion.div
                 initial={{ scale: 0, rotate: -12 }}
                 animate={{ scale: 1, rotate: 0 }}
-                className="absolute top-2 right-2 z-10"
+                className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10"
               >
                 <div className="relative">
-                  <div className="bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground px-2.5 py-1 rounded-lg shadow-lg">
-                    <div className="flex items-center gap-1">
-                      <Zap className="w-3 h-3" />
-                      <span className="text-sm font-bold">-{product.discount}%</span>
+                  <div className="bg-gradient-to-br from-destructive to-destructive/80 text-destructive-foreground px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg shadow-lg">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
+                      <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      <span className="text-xs sm:text-sm font-bold">-{product.discount}%</span>
                     </div>
                   </div>
                   {/* Savings amount */}
                   {product.originalPrice && (
-                    <div className="absolute -bottom-5 right-0 bg-background/90 backdrop-blur-sm text-[9px] font-medium px-1.5 py-0.5 rounded text-foreground whitespace-nowrap">
+                    <div className="absolute -bottom-4 sm:-bottom-5 right-0 bg-background/90 backdrop-blur-sm text-[8px] sm:text-[9px] font-medium px-1 sm:px-1.5 py-0.5 rounded text-foreground whitespace-nowrap">
                       Save {formatPrice(product.originalPrice - product.price)}
                     </div>
                   )}
@@ -176,40 +176,40 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             {/* Wishlist button - always visible on mobile, hover on desktop */}
             <button
               onClick={handleWishlistClick}
-              className={`absolute bottom-2 right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${
+              className={`absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${
                 inWishlist
                   ? 'bg-secondary text-secondary-foreground scale-100'
                   : `bg-background/90 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${showActions ? 'opacity-100 scale-100' : 'md:opacity-0 opacity-100 scale-100 md:scale-90'}`
               }`}
               aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${inWishlist ? 'fill-current' : ''}`} />
+              <Heart className={`w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 ${inWishlist ? 'fill-current' : ''}`} />
             </button>
 
             {/* Quick actions - always visible on mobile, hover on desktop */}
             <div
-              className={`absolute bottom-2 left-2 right-10 sm:right-12 flex gap-1 sm:gap-1.5 transition-all duration-300 z-10 ${
+              className={`absolute bottom-1.5 left-1.5 right-8 sm:bottom-2 sm:left-2 sm:right-10 md:right-12 flex gap-1 sm:gap-1.5 transition-all duration-300 z-10 ${
                 showActions ? 'opacity-100 translate-y-0' : 'md:opacity-0 md:translate-y-4 opacity-100 translate-y-0'
               }`}
             >
               <Button
                 variant="glass"
                 size="sm"
-                className="flex-1 h-7 sm:h-8 text-[10px] sm:text-xs px-2 sm:px-3 min-w-0"
+                className="flex-1 h-6 sm:h-7 md:h-8 text-[9px] sm:text-[10px] md:text-xs px-1.5 sm:px-2 md:px-3 min-w-0"
                 onClick={handleAddToCart}
               >
-                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
-                <span className="ml-1 truncate hidden xs:inline">Add to Cart</span>
-                <span className="ml-1 xs:hidden">Add</span>
+                <ShoppingBag className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 shrink-0" />
+                <span className="ml-0.5 sm:ml-1 truncate hidden xs:inline">Add to Cart</span>
+                <span className="ml-0.5 xs:hidden">Add</span>
               </Button>
               <Button 
                 variant="glass" 
                 size="icon" 
-                className="shrink-0 h-7 w-7 sm:h-8 sm:w-8"
+                className="shrink-0 h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8"
                 onClick={handleQuickView}
                 title="Quick View"
               >
-                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5" />
               </Button>
             </div>
 
@@ -220,19 +220,19 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
           </div>
 
           {/* Product Info - Compact layout with microdata */}
-          <div className="p-3 space-y-1.5">
+          <div className="p-2 sm:p-3 space-y-1 sm:space-y-1.5">
             {/* Category */}
-            <p className="font-body text-[10px] text-muted-foreground uppercase tracking-widest">
+            <p className="font-body text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-widest">
               <span itemProp="category">{product.category}</span>
             </p>
             
             {/* Name */}
-            <h3 className="font-display text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight" itemProp="name">
+            <h3 className="font-display text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors line-clamp-1 leading-tight" itemProp="name">
               {product.name}
             </h3>
 
             {/* Rating - Compact with microdata */}
-            <div className="flex items-center gap-1.5" itemProp="aggregateRating" itemScope itemType="https://schema.org/AggregateRating">
+            <div className="flex items-center gap-1 sm:gap-1.5" itemProp="aggregateRating" itemScope itemType="https://schema.org/AggregateRating">
               <meta itemProp="ratingValue" content={product.rating.toString()} />
               <meta itemProp="reviewCount" content={product.reviews.toString()} />
               <meta itemProp="bestRating" content="5" />
@@ -240,7 +240,7 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`w-2.5 h-2.5 ${
+                    className={`w-2 h-2 sm:w-2.5 sm:h-2.5 ${
                       i < Math.floor(product.rating)
                         ? 'fill-accent text-accent'
                         : 'text-border'
@@ -249,20 +249,20 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
                   />
                 ))}
               </div>
-              <span className="font-body text-[10px] text-muted-foreground">
+              <span className="font-body text-[8px] sm:text-[10px] text-muted-foreground">
                 ({product.reviews})
               </span>
             </div>
 
             {/* Price - Enhanced styling with microdata */}
-            <div className="flex items-baseline gap-2 pt-1" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+            <div className="flex items-baseline gap-1.5 sm:gap-2 pt-0.5 sm:pt-1" itemProp="offers" itemScope itemType="https://schema.org/Offer">
               <meta itemProp="priceCurrency" content="INR" />
               <meta itemProp="availability" content="https://schema.org/InStock" />
-              <span className="font-display text-base font-semibold text-foreground" itemProp="price" content={product.price.toString()}>
+              <span className="font-display text-sm sm:text-base font-semibold text-foreground" itemProp="price" content={product.price.toString()}>
                 {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
-                <span className="font-body text-xs text-muted-foreground line-through">
+                <span className="font-body text-[10px] sm:text-xs text-muted-foreground line-through">
                   {formatPrice(product.originalPrice)}
                 </span>
               )}

@@ -126,14 +126,40 @@
 
   html {
     scroll-behavior: smooth;
+    /* Mobile-first responsive font sizing */
+    font-size: 14px;
+  }
+
+  @media (min-width: 400px) {
+    html {
+      font-size: 15px;
+    }
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
   }
 
   body {
     @apply bg-background text-foreground font-body antialiased;
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+  }
+
+  /* Mobile-optimized touch targets */
+  @media (max-width: 639px) {
+    button, a, [role="button"] {
+      min-height: 36px;
+    }
+    
+    input, select, textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
   }
 }
 
@@ -390,4 +416,108 @@
 ::selection {
   background: hsl(var(--primary) / 0.2);
   color: hsl(var(--foreground));
+}
+
+/* ============================================
+   MOBILE RESPONSIVE SCALING SYSTEM
+   Optimized for all screen sizes
+   ============================================ */
+
+/* Mobile-specific compact sizing */
+@media (max-width: 639px) {
+  /* Headers and titles scale down */
+  .font-display {
+    letter-spacing: -0.01em;
+  }
+  
+  /* Compact padding and margins */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Section vertical spacing */
+  section {
+    --section-py: 2rem;
+  }
+  
+  /* Card scaling */
+  .rounded-2xl {
+    border-radius: 0.75rem;
+  }
+  
+  .rounded-xl {
+    border-radius: 0.625rem;
+  }
+  
+  /* Icon sizing */
+  .lucide {
+    stroke-width: 2;
+  }
+  
+  /* Badge scaling */
+  .badge, [class*="badge"] {
+    font-size: 0.625rem;
+    padding: 0.125rem 0.5rem;
+  }
+  
+  /* Button compact mode */
+  .btn-compact {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Extra small screens (< 400px) */
+@media (max-width: 399px) {
+  html {
+    font-size: 13px;
+  }
+  
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+  
+  /* Even tighter spacing */
+  .gap-4 {
+    gap: 0.75rem;
+  }
+  
+  .gap-6 {
+    gap: 1rem;
+  }
+  
+  .p-4 {
+    padding: 0.75rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+}
+
+/* Safe area for notched devices */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets on touch devices */
+  button:not(.btn-icon-sm),
+  [role="button"]:not(.btn-icon-sm) {
+    min-height: 40px;
+  }
+  
+  /* Remove hover effects that don't apply on touch */
+  .hover\:scale-105:active {
+    transform: scale(1.02);
+  }
 }
