@@ -34,7 +34,8 @@ import {
   Sparkles,
   PanelTop,
   MessageCircle,
-  Film
+  Film,
+  Edit3
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ const navItems = [
   { icon: MessageCircle, label: 'Reviews', path: '/admin/reviews' },
   { icon: Tag, label: 'Sales & Offers', path: '/admin/sales' },
   { icon: LayoutGrid, label: 'Homepage Sections', path: '/admin/homepage-sections' },
+  { icon: Edit3, label: 'Homepage Content', path: '/admin/homepage-content' },
   { icon: PanelTop, label: 'Header & Layout', path: '/admin/header-settings' },
   { icon: Image, label: 'Banners', path: '/admin/banners' },
   { icon: Timer, label: 'Timers', path: '/admin/timers' },
@@ -77,34 +79,23 @@ const AdminDashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
 
-  // Add noindex meta tags to prevent search engine crawling of admin pages
   useEffect(() => {
-    // Create noindex meta tag
     const noindexMeta = document.createElement('meta');
     noindexMeta.name = 'robots';
     noindexMeta.content = 'noindex, nofollow, noarchive, nosnippet';
     noindexMeta.setAttribute('data-admin', 'true');
     document.head.appendChild(noindexMeta);
-
-    // Set neutral title that doesn't reveal admin access
     document.title = 'Dashboard | NOIR925';
 
     return () => {
-      // Cleanup on unmount
       const adminMetas = document.querySelectorAll('meta[data-admin="true"]');
       adminMetas.forEach(meta => meta.remove());
       document.title = 'NOIR925 | Premium 925 Sterling Silver Jewellery';
     };
   }, []);
 
-  const handleSignOut = () => {
-    setShowSignOutDialog(true);
-  };
-
-  const confirmSignOut = () => {
-    signOut();
-    setShowSignOutDialog(false);
-  };
+  const handleSignOut = () => setShowSignOutDialog(true);
+  const confirmSignOut = () => { signOut(); setShowSignOutDialog(false); };
 
   if (isLoading) {
     return (
@@ -114,63 +105,34 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!user || !isAdmin) {
-    return <Navigate to="/auth" replace />;
-  }
+  if (!user || !isAdmin) return <Navigate to="/auth" replace />;
 
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Mobile Header */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b border-border px-4 py-3">
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-5 h-5" />
-          </Button>
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}><Menu className="w-5 h-5" /></Button>
           <span className="font-display text-lg">NOIR925 Admin</span>
           <div className="w-10" />
         </div>
       </header>
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {sidebarOpen && <div className="lg:hidden fixed inset-0 z-50 bg-foreground/50 backdrop-blur-sm" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Sidebar */}
-      <aside className={cn(
-        "fixed top-0 left-0 z-50 h-full w-72 bg-background border-r border-border transition-transform duration-300 lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside className={cn("fixed top-0 left-0 z-50 h-full w-72 bg-background border-r border-border transition-transform duration-300 lg:translate-x-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
         <div className="flex flex-col h-full">
-          {/* Logo */}
           <div className="flex items-center justify-between p-6 border-b border-border">
             <Link to="/" className="font-display text-xl">NOIR925</Link>
-            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
-              <X className="w-5 h-5" />
-            </Button>
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></Button>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path || 
-                (item.path !== '/admin' && location.pathname.startsWith(item.path));
-              
+              const isActive = location.pathname === item.path || (item.path !== '/admin' && location.pathname.startsWith(item.path));
               return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                    isActive 
-                      ? "bg-primary text-primary-foreground" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
+                <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
+                  className={cn("flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                    isActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}>
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
                   {isActive && <ChevronRight className="w-4 h-4 ml-auto" />}
@@ -179,33 +141,21 @@ const AdminDashboard = () => {
             })}
           </nav>
 
-          {/* Footer */}
           <div className="p-4 border-t border-border">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
-              onClick={handleSignOut}
-            >
-              <LogOut className="w-5 h-5" />
-              Sign Out
+            <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive" onClick={handleSignOut}>
+              <LogOut className="w-5 h-5" />Sign Out
             </Button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="lg:ml-72 min-h-screen pt-16 lg:pt-0">
-        <Outlet />
-      </main>
+      <main className="lg:ml-72 min-h-screen pt-16 lg:pt-0"><Outlet /></main>
 
-      {/* Sign Out Confirmation */}
       <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to sign out of the admin panel?
-            </AlertDialogDescription>
+            <AlertDialogDescription>Are you sure you want to sign out of the admin panel?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

@@ -64,6 +64,7 @@ const AdminFeatureToggles = lazy(() => import("./pages/admin/AdminFeatureToggles
 const AdminGiftCards = lazy(() => import("./pages/admin/AdminGiftCards"));
 const AdminTrustBadges = lazy(() => import("./pages/admin/AdminTrustBadges"));
 const AdminHomepageSections = lazy(() => import("./pages/admin/AdminHomepageSections"));
+const AdminHomepageContent = lazy(() => import("./pages/admin/AdminHomepageContent"));
 const AdminTaxSettings = lazy(() => import("./pages/admin/AdminTaxSettings"));
 const AdminPageContent = lazy(() => import("./pages/admin/AdminPageContent"));
 const AdminCurrencySettings = lazy(() => import("./pages/admin/AdminCurrencySettings"));
@@ -178,6 +179,7 @@ const App = memo(() => (
                     <Route path="gift-cards" element={<AdminGiftCards />} />
                     <Route path="trust-badges" element={<AdminTrustBadges />} />
                     <Route path="homepage-sections" element={<AdminHomepageSections />} />
+                    <Route path="homepage-content" element={<AdminHomepageContent />} />
                     <Route path="tax-settings" element={<AdminTaxSettings />} />
                     <Route path="page-content" element={<AdminPageContent />} />
                     <Route path="currency-settings" element={<AdminCurrencySettings />} />
