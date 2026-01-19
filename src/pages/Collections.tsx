@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { useCallback } from 'react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { products } from '@/data/products';
@@ -8,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { useCollectionCounts } from '@/hooks/useProductCounts';
 import FloatingSpinWheel from '@/components/shop/FloatingSpinWheel';
 import { useLayoutSettings } from '@/hooks/useLayoutSettings';
-
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator, PullToRefreshWrapper } from '@/components/ui/pull-to-refresh';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 const collectionData = [
   {
     slug: 'bridal-heritage',
@@ -62,10 +66,29 @@ const collectionData = [
 
 const Collections = () => {
   const { slug } = useParams();
-  const { data: collectionCounts = [] } = useCollectionCounts();
+  const { data: collectionCounts = [], refetch } = useCollectionCounts();
   const { settings } = useLayoutSettings();
+  const isMobile = useIsMobile();
   
   const collection = slug ? collectionData.find(c => c.slug === slug) : null;
+
+  // Pull to refresh
+  const handleRefresh = useCallback(async () => {
+    await refetch();
+    toast.success('Collections refreshed', { duration: 2000 });
+  }, [refetch]);
+
+  const {
+    pullDistance,
+    isRefreshing,
+    canRefresh,
+    pullProgress,
+    handlers: pullHandlers,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    disabled: !isMobile,
+  });
 
   // Merge counts with collection data
   const collectionsWithCounts = collectionData.map(col => {
@@ -80,7 +103,18 @@ const Collections = () => {
     const collectionProducts = collection.getProducts();
     
     return (
-      <div className="min-h-screen bg-background">
+      <div 
+        className="min-h-screen bg-background"
+        {...(isMobile ? pullHandlers : {})}
+      >
+        {isMobile && (
+          <PullToRefreshIndicator
+            pullDistance={pullDistance}
+            isRefreshing={isRefreshing}
+            canRefresh={canRefresh}
+            pullProgress={pullProgress}
+          />
+        )}
         <Header />
         
         <main>
@@ -167,7 +201,18 @@ const Collections = () => {
 
   // Collections Overview
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen bg-background"
+      {...(isMobile ? pullHandlers : {})}
+    >
+      {isMobile && (
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          canRefresh={canRefresh}
+          pullProgress={pullProgress}
+        />
+      )}
       <Header />
       
       <main>
