@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingBag, Trash2, ArrowRight, Sparkles, Share2 } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -5,14 +6,51 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { useCurrency } from '@/context/CurrencyContext';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/ui/pull-to-refresh';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
 const Wishlist = () => {
   const { wishlistItems, removeFromWishlist, moveToCart, wishlistCount } = useCart();
   const { formatPrice } = useCurrency();
+  const isMobile = useIsMobile();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Pull to refresh - simulates refresh by triggering re-render
+  const handleRefresh = useCallback(async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setRefreshKey(k => k + 1);
+    toast.success('Wishlist refreshed', { duration: 2000 });
+  }, []);
+
+  const {
+    pullDistance,
+    isRefreshing,
+    canRefresh,
+    pullProgress,
+    handlers: pullHandlers,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    disabled: !isMobile,
+  });
 
   if (wishlistItems.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <div 
+        className="min-h-screen bg-background"
+        {...(isMobile ? pullHandlers : {})}
+      >
+        {isMobile && (
+          <PullToRefreshIndicator
+            pullDistance={pullDistance}
+            isRefreshing={isRefreshing}
+            canRefresh={canRefresh}
+            pullProgress={pullProgress}
+          />
+        )}
+        <Header />
         <Header />
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto text-center">
@@ -40,7 +78,19 @@ const Wishlist = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen bg-background"
+      key={refreshKey}
+      {...(isMobile ? pullHandlers : {})}
+    >
+      {isMobile && (
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          canRefresh={canRefresh}
+          pullProgress={pullProgress}
+        />
+      )}
       <Header />
 
       <main className="container mx-auto px-4 py-6 md:py-8">

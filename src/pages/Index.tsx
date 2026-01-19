@@ -51,7 +51,7 @@ SectionLoader.displayName = 'SectionLoader';
 
 // Section component mapping - keys match database section_key values
 const sectionComponents: Record<string, React.LazyExoticComponent<React.ComponentType<any>> | React.ComponentType<any>> = {
-  // Critical sections
+  // Critical sections (eagerly loaded)
   video_hero: LuxuryHeroSection,
   hero: LuxuryHeroSection,
   countdown_banner: CountdownBanner,
@@ -70,6 +70,8 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   gender_shop: GenderShopSection,
   wedding_collection: WeddingCollectionShowcase,
   wedding: WeddingCollectionShowcase,
+  gift_of_choice: GiftOfChoiceSection,
+  gift_box: GiftOfChoiceSection,
   
   // Banners
   parallax_banner: ParallaxBanner,
@@ -80,6 +82,7 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   trending_slider: TrendingSlider,
   trending: TrendingSlider,
   dailywear: DailywearSection,
+  dailywear_section: DailywearSection,
   
   // Editorial and showcase
   editorial_section: LuxuryEditorialSection,
@@ -102,16 +105,17 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   // Reviews
   reviews: PremiumReviewsSection,
   reviews_carousel: RandomReviewsCarousel,
+  customer_reviews: PremiumReviewsSection,
   
   // Social and newsletter
   instagram_feed: InstagramFeed,
   instagram: InstagramFeed,
   newsletter: NewsletterSection,
+  newsletter_section: NewsletterSection,
   
   // Other
   recently_viewed: RecentlyViewed,
   final_cta: FinalCTA,
-  gift_of_choice: GiftOfChoiceSection,
 };
 
 const Index = memo(() => {

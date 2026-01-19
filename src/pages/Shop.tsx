@@ -16,6 +16,7 @@ import { BreadcrumbSchema } from '@/components/seo/ProductSchema';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator, PullToRefreshWrapper } from '@/components/ui/pull-to-refresh';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
 const Shop = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -74,6 +75,7 @@ const Shop = () => {
   // Pull to refresh functionality
   const handleRefresh = useCallback(async () => {
     await refetch();
+    toast.success('Products refreshed', { duration: 2000 });
   }, [refetch]);
 
   const {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Package, MapPin, LogOut, Edit2, Save, ChevronRight, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,15 @@ import AddressManager from '@/components/account/AddressManager';
 import OrderHistory from '@/components/account/OrderHistory';
 import ProfileAvatar from '@/components/account/ProfileAvatar';
 import LoyaltyPointsCard from '@/components/account/LoyaltyPointsCard';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { PullToRefreshIndicator } from '@/components/ui/pull-to-refresh';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { toast } from 'sonner';
 
 const Account = () => {
   const { user, profile, isLoading, signOut, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -27,6 +32,25 @@ const Account = () => {
     phone: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Pull to refresh - simulates a refresh
+  const handleRefresh = useCallback(async () => {
+    // Small delay to simulate network request
+    await new Promise(resolve => setTimeout(resolve, 500));
+    toast.success('Account refreshed', { duration: 2000 });
+  }, []);
+
+  const {
+    pullDistance,
+    isRefreshing,
+    canRefresh,
+    pullProgress,
+    handlers: pullHandlers,
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    disabled: !isMobile,
+  });
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -81,7 +105,18 @@ const Account = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen bg-background"
+      {...(isMobile ? pullHandlers : {})}
+    >
+      {isMobile && (
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          isRefreshing={isRefreshing}
+          canRefresh={canRefresh}
+          pullProgress={pullProgress}
+        />
+      )}
       <Header />
       
       <main className="container mx-auto px-4 py-8">
