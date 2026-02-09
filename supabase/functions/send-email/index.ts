@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
@@ -13,8 +14,27 @@ const getCorsHeaders = (origin: string | null) => {
   const isAllowed = origin && (allowedOrigins.includes(origin) || origin.includes('lovable.app') || origin.includes('lovableproject.com'));
   return {
     "Access-Control-Allow-Origin": isAllowed ? origin : allowedOrigins[0],
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   };
+};
+
+// Validate email addresses to prevent abuse
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 320;
+};
+
+// Sanitize text content for HTML injection prevention
+const escapeHtml = (text: string | null | undefined): string => {
+  if (text == null) return '';
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return String(text).replace(/[&<>"']/g, (char) => map[char]);
 };
 
 const sendEmail = async (payload: { from: string; to: string[]; subject: string; html: string }) => {
@@ -225,7 +245,7 @@ const getOrderStatusContent = (data: any) => `
   ` : ''}
 `;
 
-// Contact Form Email
+// Contact Form Email - with sanitized inputs
 const getContactEmailHtml = (name: string, email: string, subject: string, message: string) => `
 <!DOCTYPE html>
 <html>
@@ -235,11 +255,11 @@ const getContactEmailHtml = (name: string, email: string, subject: string, messa
     <p style="color: #999; margin: 5px 0 0;">New Contact Form Submission</p>
   </div>
   <div style="background: #f9f9f9; padding: 20px; border-radius: 12px;">
-    <p><strong>Name:</strong> ${name}</p>
-    <p><strong>Email:</strong> ${email}</p>
-    <p><strong>Subject:</strong> ${subject}</p>
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
     <p><strong>Message:</strong></p>
-    <p style="white-space: pre-wrap;">${message}</p>
+    <p style="white-space: pre-wrap;">${escapeHtml(message)}</p>
   </div>
 </body>
 </html>`;
@@ -253,71 +273,111 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    
     const { type, data } = await req.json();
     console.log("Processing email type:", type);
 
     const fromEmail = "NOIR925 <onboarding@resend.dev>";
 
+    // Contact form is public but requires validation
     if (type === 'contact') {
+      // Validate contact form inputs
+      if (!data.name || !data.email || !data.subject || !data.message) {
+        throw new Error('Missing required fields');
+      }
+      if (!isValidEmail(data.email)) {
+        throw new Error('Invalid email address');
+      }
+      // Length limits
+      if (data.name.length > 100 || data.subject.length > 200 || data.message.length > 5000) {
+        throw new Error('Input exceeds maximum length');
+      }
+      
       await sendEmail({
         from: fromEmail,
         to: ["hello@noir925.com"],
-        subject: `New Contact: ${data.subject}`,
+        subject: `New Contact: ${data.subject.substring(0, 100)}`,
         html: getContactEmailHtml(data.name, data.email, data.subject, data.message),
       });
       console.log("Contact email sent successfully");
-    } else if (type === 'order_confirmation') {
-      const content = getOrderConfirmationContent(data);
-      await sendEmail({
-        from: fromEmail,
-        to: [data.customerEmail],
-        subject: `Order Confirmed - #${data.orderNumber}`,
-        html: getEmailTemplate(content, data.companyName, data.companyLogo),
+    } else {
+      // All other email types require authentication
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        throw new Error('Unauthorized');
+      }
+
+      const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } }
       });
-      console.log("Order confirmation email sent successfully");
-    } else if (type === 'shipping_update') {
-      const content = getShippingUpdateContent(data);
-      await sendEmail({
-        from: fromEmail,
-        to: [data.to],
-        subject: `Your Order #${data.orderNumber} Has Shipped!`,
-        html: getEmailTemplate(content, data.companyName, data.companyLogo),
-      });
-      console.log("Shipping update email sent successfully");
-    } else if (type === 'delivery_notification') {
-      const content = getDeliveryNotificationContent(data);
-      await sendEmail({
-        from: fromEmail,
-        to: [data.to],
-        subject: `Order #${data.orderNumber} Delivered Successfully!`,
-        html: getEmailTemplate(content, data.companyName, data.companyLogo),
-      });
-      console.log("Delivery notification email sent successfully");
-    } else if (type === 'order_status') {
-      const content = getOrderStatusContent(data);
-      await sendEmail({
-        from: fromEmail,
-        to: [data.to],
-        subject: `Order #${data.orderNumber} - Status Update: ${data.status.toUpperCase()}`,
-        html: getEmailTemplate(content, data.companyName, data.companyLogo),
-      });
-      console.log("Order status email sent successfully");
-    } else if (type === 'invoice') {
-      await sendEmail({
-        from: fromEmail,
-        to: [data.to],
-        subject: data.subject,
-        html: data.html,
-      });
-      console.log("Invoice email sent successfully");
-    } else if (type === 'generic') {
-      await sendEmail({
-        from: fromEmail,
-        to: [data.to],
-        subject: data.subject,
-        html: data.html,
-      });
-      console.log("Generic email sent successfully");
+
+      const token = authHeader.replace('Bearer ', '');
+      const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+      if (claimsError || !claimsData?.claims) {
+        throw new Error('Invalid token');
+      }
+
+      // Validate email recipients
+      const targetEmail = data.to || data.customerEmail;
+      if (targetEmail && !isValidEmail(targetEmail)) {
+        throw new Error('Invalid recipient email');
+      }
+      
+      if (type === 'order_confirmation') {
+        const content = getOrderConfirmationContent(data);
+        await sendEmail({
+          from: fromEmail,
+          to: [data.customerEmail],
+          subject: `Order Confirmed - #${data.orderNumber}`,
+          html: getEmailTemplate(content, data.companyName, data.companyLogo),
+        });
+        console.log("Order confirmation email sent successfully");
+      } else if (type === 'shipping_update') {
+        const content = getShippingUpdateContent(data);
+        await sendEmail({
+          from: fromEmail,
+          to: [data.to],
+          subject: `Your Order #${data.orderNumber} Has Shipped!`,
+          html: getEmailTemplate(content, data.companyName, data.companyLogo),
+        });
+        console.log("Shipping update email sent successfully");
+      } else if (type === 'delivery_notification') {
+        const content = getDeliveryNotificationContent(data);
+        await sendEmail({
+          from: fromEmail,
+          to: [data.to],
+          subject: `Order #${data.orderNumber} Delivered Successfully!`,
+          html: getEmailTemplate(content, data.companyName, data.companyLogo),
+        });
+        console.log("Delivery notification email sent successfully");
+      } else if (type === 'order_status') {
+        const content = getOrderStatusContent(data);
+        await sendEmail({
+          from: fromEmail,
+          to: [data.to],
+          subject: `Order #${data.orderNumber} - Status Update: ${data.status.toUpperCase()}`,
+          html: getEmailTemplate(content, data.companyName, data.companyLogo),
+        });
+        console.log("Order status email sent successfully");
+      } else if (type === 'invoice') {
+        await sendEmail({
+          from: fromEmail,
+          to: [data.to],
+          subject: data.subject,
+          html: data.html,
+        });
+        console.log("Invoice email sent successfully");
+      } else if (type === 'generic') {
+        await sendEmail({
+          from: fromEmail,
+          to: [data.to],
+          subject: data.subject,
+          html: data.html,
+        });
+        console.log("Generic email sent successfully");
+      }
     }
 
     return new Response(JSON.stringify({ success: true }), {
