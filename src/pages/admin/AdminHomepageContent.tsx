@@ -18,8 +18,11 @@ import {
   Trash2,
   Plus,
   Eye,
+  EyeOff,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  PanelRightOpen,
+  PanelRightClose
 } from 'lucide-react';
 import {
   Accordion,
@@ -34,6 +37,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import HomepageLivePreview from '@/components/admin/HomepageLivePreview';
+import { cn } from '@/lib/utils';
 
 interface SectionContent {
   id: string;
@@ -245,6 +250,9 @@ const AdminHomepageContent = () => {
   const [saving, setSaving] = useState(false);
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
+  const [previewFullscreen, setPreviewFullscreen] = useState(false);
+  const [expandedAccordion, setExpandedAccordion] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetchSections();
@@ -400,28 +408,62 @@ const AdminHomepageContent = () => {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b bg-background shrink-0">
         <div>
           <h1 className="text-2xl font-bold">Homepage Content Editor</h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Manage images, text, and links for each homepage section
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={fetchSections}>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? (
+              <>
+                <PanelRightClose className="w-4 h-4 mr-2" />
+                Hide Preview
+              </>
+            ) : (
+              <>
+                <PanelRightOpen className="w-4 h-4 mr-2" />
+                Show Preview
+              </>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchSections}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
-          <Button onClick={saveAllChanges} disabled={saving}>
+          <Button size="sm" onClick={saveAllChanges} disabled={saving}>
             <Save className="w-4 h-4 mr-2" />
-            {saving ? 'Saving...' : 'Save All Changes'}
+            {saving ? 'Saving...' : 'Save All'}
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <Accordion type="single" collapsible className="w-full">
+      {/* Main Content Area */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Editor Panel */}
+        <div className={cn(
+          "overflow-auto transition-all duration-300",
+          showPreview ? "w-1/2 border-r" : "w-full"
+        )}>
+          <div className="p-4">
+            <Accordion 
+              type="single" 
+              collapsible 
+              className="w-full"
+              value={expandedAccordion}
+              onValueChange={(value) => {
+                setExpandedAccordion(value);
+                setSelectedSection(value || null);
+              }}
+            >
           {sections.map((section) => {
             const config = getConfig(section.section_key);
             
@@ -785,8 +827,29 @@ const AdminHomepageContent = () => {
               </AccordionItem>
             );
           })}
-        </Accordion>
+          </Accordion>
+          </div>
+        </div>
+        
+        {/* Preview Panel */}
+        {showPreview && (
+          <div className="w-1/2 p-4 bg-muted/10">
+            <HomepageLivePreview 
+              sections={sections}
+              activeSection={selectedSection}
+              isFullscreen={previewFullscreen}
+              onToggleFullscreen={() => setPreviewFullscreen(!previewFullscreen)}
+            />
+          </div>
+        )}
       </div>
+      
+      {/* Fullscreen Overlay */}
+      {previewFullscreen && (
+        <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm" 
+          onClick={() => setPreviewFullscreen(false)} 
+        />
+      )}
     </div>
   );
 };
