@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useCurrency } from '@/context/CurrencyContext';
 import QRCode from 'qrcode';
-
+import { escapeHtml, sanitizeUrl } from '@/utils/htmlSanitizer';
 interface ShippingAddress {
   full_name?: string;
   phone?: string;
@@ -106,12 +106,48 @@ const InvoiceGenerator = ({ order, orderItems, siteContact, customerEmail, onEma
   const generateInvoiceHTML = () => {
     const shippingAddress = order.shipping_address;
     
+    // Sanitize all user-controlled data to prevent XSS
+    const safeAddress = {
+      full_name: escapeHtml(shippingAddress?.full_name),
+      phone: escapeHtml(shippingAddress?.phone),
+      email: escapeHtml(shippingAddress?.email),
+      address_line1: escapeHtml(shippingAddress?.address_line1),
+      address_line2: escapeHtml(shippingAddress?.address_line2),
+      city: escapeHtml(shippingAddress?.city),
+      state: escapeHtml(shippingAddress?.state),
+      postal_code: escapeHtml(shippingAddress?.postal_code),
+      country: escapeHtml(shippingAddress?.country || 'India'),
+    };
+    
+    const safeSiteContact = {
+      company_name: escapeHtml(siteContact?.company_name || 'NOIR925'),
+      company_logo: sanitizeUrl(siteContact?.company_logo),
+      company_signature: sanitizeUrl(siteContact?.company_signature),
+      address: escapeHtml(siteContact?.address),
+      phone: escapeHtml(siteContact?.phone),
+      email: escapeHtml(siteContact?.email),
+      gst_number: escapeHtml(siteContact?.gst_number),
+      instagram_url: sanitizeUrl(siteContact?.instagram_url),
+      facebook_url: sanitizeUrl(siteContact?.facebook_url),
+      twitter_url: sanitizeUrl(siteContact?.twitter_url),
+      whatsapp: escapeHtml(siteContact?.whatsapp),
+    };
+    
+    const safeOrder = {
+      status: escapeHtml(order.status),
+      payment_method: escapeHtml(order.payment_method || 'N/A'),
+      payment_status: escapeHtml(order.payment_status || 'N/A'),
+    };
+    
+    const safeInvoiceNumber = escapeHtml(invoiceNumber);
+    const safeOrderDate = escapeHtml(orderDate);
+    
     return `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Invoice ${invoiceNumber}</title>
+  <title>Invoice ${safeInvoiceNumber}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #333; background: #fff; }
@@ -175,16 +211,16 @@ const InvoiceGenerator = ({ order, orderItems, siteContact, customerEmail, onEma
   <div class="invoice-container">
     <div class="header">
       <div class="company-info">
-        ${siteContact?.company_logo ? `<img src="${siteContact.company_logo}" alt="${siteContact?.company_name || 'NOIR925'}" class="company-logo" />` : ''}
-        <div class="company-name">${siteContact?.company_name || 'NOIR925'}</div>
+        ${safeSiteContact.company_logo ? `<img src="${safeSiteContact.company_logo}" alt="${safeSiteContact.company_name}" class="company-logo" />` : ''}
+        <div class="company-name">${safeSiteContact.company_name}</div>
         <div class="company-tagline">Premium 925 Sterling Silver Jewellery</div>
       </div>
       <div class="invoice-meta">
         <div class="invoice-title">INVOICE</div>
-        <div class="invoice-number">${invoiceNumber}</div>
-        <div class="invoice-date">${orderDate}</div>
+        <div class="invoice-number">${safeInvoiceNumber}</div>
+        <div class="invoice-date">${safeOrderDate}</div>
         <div style="margin-top: 10px;">
-          <span class="status-badge status-${order.status}">${order.status}</span>
+          <span class="status-badge status-${safeOrder.status}">${safeOrder.status}</span>
         </div>
       </div>
     </div>
@@ -193,23 +229,23 @@ const InvoiceGenerator = ({ order, orderItems, siteContact, customerEmail, onEma
       <div class="address-block">
         <div class="address-title">Bill To</div>
         <div class="address-content">
-          <p><strong>${shippingAddress?.full_name || 'N/A'}</strong></p>
-          <p>${shippingAddress?.address_line1 || ''}</p>
-          ${shippingAddress?.address_line2 ? `<p>${shippingAddress.address_line2}</p>` : ''}
-          <p>${shippingAddress?.city || ''}, ${shippingAddress?.state || ''} ${shippingAddress?.postal_code || ''}</p>
-          <p>${shippingAddress?.country || 'India'}</p>
-          <p>📞 ${shippingAddress?.phone || ''}</p>
-          ${shippingAddress?.email ? `<p>✉️ ${shippingAddress.email}</p>` : ''}
+          <p><strong>${safeAddress.full_name || 'N/A'}</strong></p>
+          <p>${safeAddress.address_line1 || ''}</p>
+          ${safeAddress.address_line2 ? `<p>${safeAddress.address_line2}</p>` : ''}
+          <p>${safeAddress.city || ''}, ${safeAddress.state || ''} ${safeAddress.postal_code || ''}</p>
+          <p>${safeAddress.country}</p>
+          <p>📞 ${safeAddress.phone || ''}</p>
+          ${safeAddress.email ? `<p>✉️ ${safeAddress.email}</p>` : ''}
         </div>
       </div>
       <div class="address-block">
         <div class="address-title">From</div>
         <div class="address-content">
-          <p><strong>${siteContact?.company_name || 'NOIR925'}</strong></p>
-          <p>${siteContact?.address || ''}</p>
-          <p>📞 ${siteContact?.phone || ''}</p>
-          <p>✉️ ${siteContact?.email || ''}</p>
-          ${siteContact?.gst_number ? `<p><strong>GSTIN:</strong> ${siteContact.gst_number}</p>` : ''}
+          <p><strong>${safeSiteContact.company_name}</strong></p>
+          <p>${safeSiteContact.address || ''}</p>
+          <p>📞 ${safeSiteContact.phone || ''}</p>
+          <p>✉️ ${safeSiteContact.email || ''}</p>
+          ${safeSiteContact.gst_number ? `<p><strong>GSTIN:</strong> ${safeSiteContact.gst_number}</p>` : ''}
         </div>
       </div>
     </div>
@@ -224,15 +260,22 @@ const InvoiceGenerator = ({ order, orderItems, siteContact, customerEmail, onEma
         </tr>
       </thead>
       <tbody>
-        ${orderItems.map(item => `
+        ${orderItems.map(item => {
+          const safeItem = {
+            product_name: escapeHtml(item.product_name),
+            product_image: sanitizeUrl(item.product_image),
+            size: escapeHtml(item.size),
+            variant: escapeHtml(item.variant),
+          };
+          return `
           <tr>
             <td>
               <div class="item-details">
-                ${item.product_image ? `<img src="${item.product_image}" alt="${item.product_name}" class="item-image" />` : ''}
+                ${safeItem.product_image ? `<img src="${safeItem.product_image}" alt="${safeItem.product_name}" class="item-image" />` : ''}
                 <div>
-                  <div class="item-name">${item.product_name}</div>
-                  ${item.size ? `<div class="item-meta">Size: ${item.size}</div>` : ''}
-                  ${item.variant ? `<div class="item-meta">Variant: ${item.variant}</div>` : ''}
+                  <div class="item-name">${safeItem.product_name}</div>
+                  ${safeItem.size ? `<div class="item-meta">Size: ${safeItem.size}</div>` : ''}
+                  ${safeItem.variant ? `<div class="item-meta">Variant: ${safeItem.variant}</div>` : ''}
                 </div>
               </div>
             </td>
@@ -240,7 +283,7 @@ const InvoiceGenerator = ({ order, orderItems, siteContact, customerEmail, onEma
             <td style="text-align: right;">${formatPrice(item.price)}</td>
             <td style="text-align: right;">${formatPrice(item.price * item.quantity)}</td>
           </tr>
-        `).join('')}
+        `}).join('')}
       </tbody>
     </table>
 
@@ -283,31 +326,31 @@ const InvoiceGenerator = ({ order, orderItems, siteContact, customerEmail, onEma
       <div class="social-links">
         <div class="social-title">Connect With Us</div>
         <div class="social-icons">
-          ${siteContact?.instagram_url ? `<a href="${siteContact.instagram_url}" target="_blank">📸 Instagram</a>` : ''}
-          ${siteContact?.facebook_url ? `<a href="${siteContact.facebook_url}" target="_blank">📘 Facebook</a>` : ''}
-          ${siteContact?.twitter_url ? `<a href="${siteContact.twitter_url}" target="_blank">🐦 Twitter</a>` : ''}
-          ${siteContact?.whatsapp ? `<a href="https://wa.me/${siteContact.whatsapp.replace(/\D/g, '')}" target="_blank">💬 WhatsApp</a>` : ''}
+          ${safeSiteContact.instagram_url ? `<a href="${safeSiteContact.instagram_url}" target="_blank">📸 Instagram</a>` : ''}
+          ${safeSiteContact.facebook_url ? `<a href="${safeSiteContact.facebook_url}" target="_blank">📘 Facebook</a>` : ''}
+          ${safeSiteContact.twitter_url ? `<a href="${safeSiteContact.twitter_url}" target="_blank">🐦 Twitter</a>` : ''}
+          ${safeSiteContact.whatsapp ? `<a href="https://wa.me/${safeSiteContact.whatsapp.replace(/\\D/g, '')}" target="_blank">💬 WhatsApp</a>` : ''}
         </div>
         <div style="margin-top: 15px; font-size: 11px; color: #666;">
-          <p><strong>Payment Method:</strong> ${order.payment_method || 'N/A'}</p>
-          <p><strong>Payment Status:</strong> ${order.payment_status || 'N/A'}</p>
+          <p><strong>Payment Method:</strong> ${safeOrder.payment_method}</p>
+          <p><strong>Payment Status:</strong> ${safeOrder.payment_status}</p>
         </div>
       </div>
     </div>
 
-    ${siteContact?.company_signature ? `
+    ${safeSiteContact.company_signature ? `
       <div class="signature">
-        <img src="${siteContact.company_signature}" alt="Authorized Signature" />
+        <img src="${safeSiteContact.company_signature}" alt="Authorized Signature" />
         <div class="signature-text">Authorized Signature</div>
       </div>
     ` : ''}
 
     <div class="footer">
       <div class="footer-text">
-        Thank you for shopping with ${siteContact?.company_name || 'NOIR925'}!
+        Thank you for shopping with ${safeSiteContact.company_name}!
       </div>
       <div class="footer-text">
-        For queries: ${siteContact?.email || 'support@noir925.com'} | ${siteContact?.phone || ''}
+        For queries: ${safeSiteContact.email || 'support@noir925.com'} | ${safeSiteContact.phone || ''}
       </div>
       <div class="footer-text" style="margin-top: 15px; font-size: 10px; color: #aaa;">
         This is a computer-generated invoice and does not require a physical signature.
