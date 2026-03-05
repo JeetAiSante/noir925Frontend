@@ -6,8 +6,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
+  // Handle CORS preflight
   
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
