@@ -119,7 +119,8 @@ const OptimizedImage = memo(({
           alt={alt}
           loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          fetchPriority={priority ? 'high' : 'auto'}
+          // @ts-ignore - fetchpriority is valid HTML but React 18 doesn't type it
+          fetchpriority={priority ? 'high' : 'auto'}
           srcSet={srcSet}
           sizes={srcSet ? imageSizes : undefined}
           onLoad={() => setIsLoaded(true)}
