@@ -232,11 +232,11 @@ const AdminProducts = () => {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl lg:text-4xl mb-2">Products</h1>
-          <p className="text-muted-foreground">{products?.length || 0} products in catalog</p>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mb-1 sm:mb-2">Products</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">{products?.length || 0} products in catalog</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2" onClick={() => setIsImportOpen(true)}>
