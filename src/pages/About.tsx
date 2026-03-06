@@ -90,7 +90,7 @@ const About = () => {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative h-[70vh] min-h-[500px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[50vh] sm:h-[60vh] md:h-[70vh] min-h-[400px] md:min-h-[500px] flex items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -100,20 +100,20 @@ const About = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/60 via-foreground/50 to-background" />
         </div>
         
-        {/* Decorative Elements */}
-        <div className="absolute top-20 right-20 w-64 h-64 rounded-full bg-accent/10 blur-[100px]" />
-        <div className="absolute bottom-40 left-20 w-48 h-48 rounded-full bg-primary/10 blur-[80px]" />
+        {/* Decorative Elements - hidden on mobile */}
+        <div className="hidden md:block absolute top-20 right-20 w-64 h-64 rounded-full bg-accent/10 blur-[100px]" />
+        <div className="hidden md:block absolute bottom-40 left-20 w-48 h-48 rounded-full bg-primary/10 blur-[80px]" />
         
         <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/10 backdrop-blur-sm border border-background/20 mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-background/10 backdrop-blur-sm border border-background/20 mb-4 md:mb-6">
             <Sparkles className="w-4 h-4 text-accent" />
             <span className="text-sm text-background/90 tracking-wide">Est. 2010</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display text-background mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display text-background mb-4 md:mb-6 leading-tight">
             The Art of
             <span className="block text-accent">Silver Craftsmanship</span>
           </h1>
-          <p className="text-xl text-background/80 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-background/80 max-w-2xl mx-auto leading-relaxed px-2">
             Where tradition meets innovation, and every piece tells a story of passion, precision, and timeless beauty.
           </p>
         </div>
@@ -157,7 +157,7 @@ const About = () => {
                 </Link>
               </div>
             </div>
-            <div className="relative">
+            <div className="relative mt-8 lg:mt-0">
               <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img
                   src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?w=800&q=80"
@@ -167,12 +167,12 @@ const About = () => {
                 />
               </div>
               {/* Floating Stats Card */}
-              <div className="absolute -bottom-8 -left-8 bg-primary text-primary-foreground p-8 rounded-2xl shadow-xl">
-                <p className="text-5xl font-display">14+</p>
-                <p className="text-sm opacity-80 mt-1">Years of Excellence</p>
+              <div className="absolute -bottom-4 left-2 sm:-bottom-6 sm:-left-4 md:-bottom-8 md:-left-8 bg-primary text-primary-foreground p-4 sm:p-6 md:p-8 rounded-xl md:rounded-2xl shadow-xl">
+                <p className="text-3xl sm:text-4xl md:text-5xl font-display">14+</p>
+                <p className="text-xs sm:text-sm opacity-80 mt-1">Years of Excellence</p>
               </div>
-              {/* Decorative Ring */}
-              <div className="absolute -top-6 -right-6 w-24 h-24 border-4 border-accent/30 rounded-full" />
+              {/* Decorative Ring - hidden on small screens */}
+              <div className="hidden sm:block absolute -top-6 -right-6 w-24 h-24 border-4 border-accent/30 rounded-full" />
             </div>
           </div>
         </div>

@@ -51,7 +51,6 @@ const Wishlist = () => {
           />
         )}
         <Header />
-        <Header />
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto text-center">
             <div className="w-28 h-28 mx-auto mb-8 rounded-full bg-gradient-to-br from-pink-100 to-rose-100 dark:from-pink-900/30 dark:to-rose-900/30 flex items-center justify-center">
