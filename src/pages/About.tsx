@@ -247,21 +247,21 @@ const About = () => {
               {milestones.map((milestone, index) => (
                 <div 
                   key={index} 
-                  className={`relative flex items-start gap-8 mb-12 last:mb-0 ${
+                  className={`relative flex items-start gap-4 md:gap-8 mb-8 md:mb-12 last:mb-0 pl-16 md:pl-0 ${
                     index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
                   }`}
                 >
                   {/* Year Badge */}
-                  <div className={`shrink-0 relative z-10 ${index % 2 === 0 ? 'md:text-right md:w-1/2 md:pr-12' : 'md:w-1/2 md:pl-12'}`}>
-                    <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-primary-foreground font-display text-lg shadow-lg">
+                  <div className={`absolute left-0 md:relative md:left-auto shrink-0 z-10 ${index % 2 === 0 ? 'md:text-right md:w-1/2 md:pr-12' : 'md:w-1/2 md:pl-12'}`}>
+                    <span className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-primary text-primary-foreground font-display text-sm md:text-lg shadow-lg">
                       {milestone.year}
                     </span>
                   </div>
                   
                   {/* Content */}
                   <div className={`flex-1 ${index % 2 === 0 ? 'md:pl-12' : 'md:pr-12 md:text-right'}`}>
-                    <div className="bg-card p-6 rounded-xl border border-border shadow-sm">
-                      <p className="text-foreground">{milestone.event}</p>
+                    <div className="bg-card p-4 md:p-6 rounded-xl border border-border shadow-sm">
+                      <p className="text-foreground text-sm md:text-base">{milestone.event}</p>
                     </div>
                   </div>
                 </div>
