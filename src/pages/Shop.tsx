@@ -352,8 +352,8 @@ const Shop = () => {
             {/* Sidebar Filters - Desktop Only */}
             <aside
               className={`${
-                showFilters ? 'block' : 'hidden'
-              } hidden lg:block w-full lg:w-60 shrink-0 space-y-6`}
+                showFilters ? 'hidden md:block' : 'hidden'
+              } lg:!block w-full lg:w-60 shrink-0 space-y-6`}
             >
               {/* Categories */}
               <div className="bg-card rounded-xl p-5 border border-border">

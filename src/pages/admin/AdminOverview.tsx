@@ -158,14 +158,14 @@ const AdminOverview = () => {
   }
 
   return (
-    <div className="p-6 lg:p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl lg:text-4xl mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back! Here's your store overview.</p>
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl mb-1 sm:mb-2">Dashboard</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Welcome back! Here's your store overview.</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-500 text-sm">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-500 text-sm w-fit">
           <Bell className="w-4 h-4" />
           <span>Live Updates</span>
         </div>
