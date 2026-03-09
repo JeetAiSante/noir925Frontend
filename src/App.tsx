@@ -196,6 +196,7 @@ const App = memo(() => (
                     <Route path="categories" element={<AdminCategories />} />
                     <Route path="reviews" element={<AdminReviews />} />
                     <Route path="reels" element={<AdminReels />} />
+                    <Route path="marketing" element={<AdminMarketing />} />
                     <Route path="settings" element={<AdminSettings />} />
                   </Route>
                   
