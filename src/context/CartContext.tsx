@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CartItem {
   id: string;
@@ -64,6 +65,45 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
+  // Sync cart to abandoned_carts table for logged-in users (debounced)
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  useEffect(() => {
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+    
+    syncTimerRef.current = setTimeout(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user || cartItems.length === 0) return;
+
+        const cartTotal = cartItems.reduce((t, i) => t + i.price * i.quantity, 0);
+
+        // Upsert: find existing non-recovered cart or create new
+        const { data: existing } = await supabase
+          .from('abandoned_carts')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('is_recovered', false)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase.from('abandoned_carts')
+            .update({ cart_items: cartItems as any, cart_total: cartTotal, email_sent: false })
+            .eq('id', existing.id);
+        } else {
+          await supabase.from('abandoned_carts')
+            .insert({ user_id: session.user.id, cart_items: cartItems as any, cart_total: cartTotal });
+        }
+      } catch (e) {
+        // Silent fail - don't disrupt shopping
+      }
+    }, 5000); // 5s debounce
+
+    return () => { if (syncTimerRef.current) clearTimeout(syncTimerRef.current); };
+  }, [cartItems]);
+
   const addToCart = (item: Omit<CartItem, 'quantity'>, quantity = 1) => {
     setCartItems(prev => {
       const existing = prev.find(i => i.id === item.id);
@@ -98,9 +138,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = useCallback(async () => {
     setCartItems([]);
-  };
+    // Mark abandoned cart as recovered
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await supabase.from('abandoned_carts')
+          .update({ is_recovered: true, recovered_at: new Date().toISOString() })
+          .eq('user_id', session.user.id)
+          .eq('is_recovered', false);
+      }
+    } catch (e) { /* silent */ }
+  }, []);
 
   const addToWishlist = (item: WishlistItem) => {
     if (!wishlistItems.find(i => i.id === item.id)) {

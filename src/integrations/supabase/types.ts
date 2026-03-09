@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      abandoned_carts: {
+        Row: {
+          cart_items: Json
+          cart_total: number
+          created_at: string
+          email_sent: boolean
+          email_sent_at: string | null
+          id: string
+          is_recovered: boolean
+          recovered_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cart_items?: Json
+          cart_total?: number
+          created_at?: string
+          email_sent?: boolean
+          email_sent_at?: string | null
+          id?: string
+          is_recovered?: boolean
+          recovered_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cart_items?: Json
+          cart_total?: number
+          created_at?: string
+          email_sent?: boolean
+          email_sent_at?: string | null
+          id?: string
+          is_recovered?: boolean
+          recovered_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           address_line1: string
@@ -895,6 +934,66 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_campaigns: {
+        Row: {
+          campaign_type: string
+          content: string | null
+          created_at: string
+          html_content: string | null
+          id: string
+          name: string
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          target_audience: string
+          total_clicked: number | null
+          total_opened: number | null
+          total_recipients: number | null
+          total_sent: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_type?: string
+          content?: string | null
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          target_audience?: string
+          total_clicked?: number | null
+          total_opened?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_type?: string
+          content?: string | null
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          target_audience?: string
+          total_clicked?: number | null
+          total_opened?: number | null
+          total_recipients?: number | null
+          total_sent?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           email: string
@@ -1343,6 +1442,81 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      push_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          icon: string | null
+          id: string
+          notification_type: string
+          sent_at: string | null
+          status: string
+          title: string
+          total_sent: number | null
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          notification_type?: string
+          sent_at?: string | null
+          status?: string
+          title: string
+          total_sent?: number | null
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          notification_type?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          total_sent?: number | null
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

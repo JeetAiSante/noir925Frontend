@@ -35,7 +35,8 @@ import {
   PanelTop,
   MessageCircle,
   Film,
-  Edit3
+  Edit3,
+  Megaphone
 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,7 @@ const navItems = [
   { icon: Disc, label: 'Spin & Win', path: '/admin/spin-wheel' },
   { icon: Star, label: 'Loyalty Program', path: '/admin/loyalty' },
   { icon: CreditCard, label: 'Gift Cards', path: '/admin/gift-cards' },
+  { icon: Megaphone, label: 'Marketing', path: '/admin/marketing' },
   { icon: ToggleLeft, label: 'Feature Toggles', path: '/admin/feature-toggles' },
   { icon: Shield, label: 'Trust Badges', path: '/admin/trust-badges' },
   { icon: Receipt, label: 'Tax & GST', path: '/admin/tax-settings' },
