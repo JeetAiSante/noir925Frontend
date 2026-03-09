@@ -138,9 +138,19 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = useCallback(async () => {
     setCartItems([]);
-  };
+    // Mark abandoned cart as recovered
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await supabase.from('abandoned_carts')
+          .update({ is_recovered: true, recovered_at: new Date().toISOString() })
+          .eq('user_id', session.user.id)
+          .eq('is_recovered', false);
+      }
+    } catch (e) { /* silent */ }
+  }, []);
 
   const addToWishlist = (item: WishlistItem) => {
     if (!wishlistItems.find(i => i.id === item.id)) {
