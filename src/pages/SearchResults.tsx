@@ -151,7 +151,7 @@ const SearchResults = () => {
   );
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
       <SEOHead
         title={query ? `Search results for "${query}" | NOIR925` : 'Search | NOIR925'}
         description={`Find premium silver jewellery matching "${query}". Browse our collection of handcrafted 925 sterling silver pieces.`}
@@ -159,7 +159,7 @@ const SearchResults = () => {
       
       <Header />
       
-      <main className="min-h-screen bg-background pt-20">
+      <main>
         {/* Search Header */}
         <div className="bg-gradient-to-b from-muted/50 to-background py-8 md:py-12">
           <div className="container mx-auto px-4">
@@ -343,7 +343,7 @@ const SearchResults = () => {
       </main>
       
       <Footer />
-    </>
+    </div>
   );
 };
 
