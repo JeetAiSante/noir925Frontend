@@ -277,47 +277,48 @@ const Checkout = () => {
     
     setIsApplyingCoupon(true);
     
-    const { data: coupon } = await supabase
-      .from('coupons')
-      .select('*')
-      .eq('code', couponCode.toUpperCase())
-      .eq('is_active', true)
-      .single();
-    
-    if (coupon) {
-      if (coupon.min_order_value && cartTotal < Number(coupon.min_order_value)) {
+    try {
+      const { data, error } = await supabase.rpc('atomic_use_coupon', {
+        coupon_code_input: couponCode.toUpperCase()
+      });
+
+      const result = data?.[0];
+      
+      if (error || !result?.success) {
+        toast({
+          title: 'Invalid Coupon',
+          description: result?.error_message || 'This coupon code is not valid.',
+          variant: 'destructive',
+        });
+        setIsApplyingCoupon(false);
+        return;
+      }
+
+      if (result.min_order_value && cartTotal < Number(result.min_order_value)) {
         toast({
           title: 'Minimum Order Not Met',
-          description: `This coupon requires a minimum order of ₹${coupon.min_order_value}`,
+          description: `This coupon requires a minimum order of ₹${result.min_order_value}`,
           variant: 'destructive',
         });
+        // Rollback usage since we're not using it
+        await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: couponCode.toUpperCase() });
         setIsApplyingCoupon(false);
         return;
       }
 
-      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
-        toast({
-          title: 'Coupon Expired',
-          description: 'This coupon has reached its usage limit',
-          variant: 'destructive',
-        });
-        setIsApplyingCoupon(false);
-        return;
-      }
+      const discountValue = result.discount_type === 'percentage' 
+        ? Number(result.discount_value) 
+        : (Number(result.discount_value) / cartTotal) * 100;
 
-      const discountValue = coupon.discount_type === 'percentage' 
-        ? Number(coupon.discount_value) 
-        : (Number(coupon.discount_value) / cartTotal) * 100;
-
-      setAppliedCoupon({ code: coupon.code, discount: discountValue });
+      setAppliedCoupon({ code: result.code, discount: discountValue });
       toast({
         title: 'Coupon Applied!',
-        description: `${coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `₹${coupon.discount_value}`} discount applied`,
+        description: `${result.discount_type === 'percentage' ? `${result.discount_value}%` : `₹${result.discount_value}`} discount applied`,
       });
-    } else {
+    } catch {
       toast({
-        title: 'Invalid Coupon',
-        description: 'This coupon code is not valid.',
+        title: 'Error',
+        description: 'Failed to validate coupon.',
         variant: 'destructive',
       });
     }

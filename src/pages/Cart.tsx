@@ -32,58 +32,47 @@ const Cart = () => {
 
     setIsValidating(true);
     try {
-      // Check if coupon exists and is active in admin
-      const { data: coupon, error } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('code', couponCode.toUpperCase())
-        .eq('is_active', true)
-        .single();
+      // Use atomic_use_coupon function (security definer, bypasses RLS)
+      const { data, error } = await supabase.rpc('atomic_use_coupon', {
+        coupon_code_input: couponCode.toUpperCase()
+      });
 
-      if (error || !coupon) {
-        toast.error('Invalid or expired coupon code');
+      if (error) {
+        toast.error('Failed to validate coupon');
         setDiscount(0);
         setAppliedCoupon(null);
         return;
       }
 
-      // Check date validity
-      const now = new Date();
-      if (coupon.start_date && new Date(coupon.start_date) > now) {
-        toast.error('This coupon is not yet active');
-        return;
-      }
-      if (coupon.end_date && new Date(coupon.end_date) < now) {
-        toast.error('This coupon has expired');
+      const result = data?.[0];
+      if (!result?.success) {
+        toast.error(result?.error_message || 'Invalid or expired coupon code');
+        setDiscount(0);
+        setAppliedCoupon(null);
         return;
       }
 
       // Check minimum order value
-      if (coupon.min_order_value && cartTotal < Number(coupon.min_order_value)) {
-        toast.error(`Minimum order value of ${formatPrice(Number(coupon.min_order_value))} required`);
-        return;
-      }
-
-      // Check usage limit
-      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
-        toast.error('This coupon has reached its usage limit');
+      if (result.min_order_value && cartTotal < Number(result.min_order_value)) {
+        toast.error(`Minimum order value of ${formatPrice(Number(result.min_order_value))} required`);
+        // Rollback the usage count since we're not actually using it
+        await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: couponCode.toUpperCase() });
         return;
       }
 
       // Calculate discount
       let discountAmount = 0;
-      if (coupon.discount_type === 'percentage') {
-        discountAmount = Math.round(cartTotal * (Number(coupon.discount_value) / 100));
-        // Apply max discount cap if set
-        if (coupon.max_discount_amount && discountAmount > Number(coupon.max_discount_amount)) {
-          discountAmount = Number(coupon.max_discount_amount);
+      if (result.discount_type === 'percentage') {
+        discountAmount = Math.round(cartTotal * (Number(result.discount_value) / 100));
+        if (result.max_discount_amount && discountAmount > Number(result.max_discount_amount)) {
+          discountAmount = Number(result.max_discount_amount);
         }
       } else {
-        discountAmount = Number(coupon.discount_value);
+        discountAmount = Number(result.discount_value);
       }
 
       setDiscount(discountAmount);
-      setAppliedCoupon(coupon.code);
+      setAppliedCoupon(result.code);
       toast.success(`Coupon applied! You save ${formatPrice(discountAmount)}`);
     } catch (err) {
       toast.error('Failed to validate coupon');

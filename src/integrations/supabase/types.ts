@@ -1907,6 +1907,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_loyalty_points: {
+        Args: { _points_to_redeem: number; _user_id: string }
+        Returns: boolean
+      }
+      redeem_spin_prize: { Args: { _spin_id: string }; Returns: boolean }
+      use_lucky_discount_claim: {
+        Args: { _claim_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
