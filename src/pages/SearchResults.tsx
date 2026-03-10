@@ -343,7 +343,7 @@ const SearchResults = () => {
       </main>
       
       <Footer />
-    </>
+    </div>
   );
 };
 
