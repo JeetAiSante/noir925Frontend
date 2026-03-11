@@ -1900,6 +1900,14 @@ export type Database = {
         }[]
       }
       cleanup_old_rate_limits: { Args: never; Returns: number }
+      earn_loyalty_points: {
+        Args: {
+          _points_earned: number
+          _user_id: string
+          _welcome_bonus?: number
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
