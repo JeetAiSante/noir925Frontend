@@ -78,34 +78,14 @@ export const useEarnPoints = () => {
 
       const pointsEarned = Math.floor(orderTotal * settings.points_per_rupee);
 
-      // Check if user has loyalty points record
-      const { data: existing } = await supabase
-        .from('user_loyalty_points')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Use secure RPC to earn points (handles both insert and update)
+      const { error } = await supabase.rpc('earn_loyalty_points', {
+        _user_id: user.id,
+        _points_earned: pointsEarned,
+        _welcome_bonus: settings.welcome_bonus_points || 0,
+      });
 
-      if (existing) {
-        // Update existing points
-        await supabase
-          .from('user_loyalty_points')
-          .update({
-            total_points: existing.total_points + pointsEarned,
-            available_points: (existing.available_points || 0) + pointsEarned,
-          })
-          .eq('user_id', user.id);
-      } else {
-        // Create new record
-        await supabase
-          .from('user_loyalty_points')
-          .insert({
-            user_id: user.id,
-            total_points: pointsEarned + (settings.welcome_bonus_points || 0),
-            available_points: pointsEarned + (settings.welcome_bonus_points || 0),
-            redeemed_points: 0,
-            tier: 'bronze',
-          });
-      }
+      if (error) throw error;
 
       // Log transaction
       await supabase
