@@ -115,7 +115,7 @@ const SearchModal = ({ open, onOpenChange }: SearchModalProps) => {
   const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Fetch initial data on mount
   useEffect(() => {

@@ -134,16 +134,14 @@ export const useRedeemPoints = () => {
     mutationFn: async ({ points, orderId }: { points: number; orderId?: string }) => {
       if (!user) throw new Error('User not authenticated');
 
-      // Get user's current points
-      const { data: userPoints } = await supabase
-        .from('user_loyalty_points')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      // Use the secure RPC function to redeem points (bypasses dropped UPDATE policy)
+      const { data: success, error } = await supabase.rpc('redeem_loyalty_points', {
+        _user_id: user.id,
+        _points_to_redeem: points,
+      });
 
-      if (!userPoints || (userPoints.available_points || 0) < points) {
-        throw new Error('Insufficient points');
-      }
+      if (error) throw error;
+      if (!success) throw new Error('Insufficient points');
 
       // Get settings for value calculation
       const { data: settings } = await supabase
@@ -153,15 +151,6 @@ export const useRedeemPoints = () => {
         .single();
 
       const discountValue = Math.floor(points * (settings?.points_value_per_rupee || 0.25));
-
-      // Update points
-      await supabase
-        .from('user_loyalty_points')
-        .update({
-          available_points: (userPoints.available_points || 0) - points,
-          redeemed_points: userPoints.redeemed_points + points,
-        })
-        .eq('user_id', user.id);
 
       // Log transaction
       await supabase

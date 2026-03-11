@@ -32,8 +32,8 @@ const Cart = () => {
 
     setIsValidating(true);
     try {
-      // Use atomic_use_coupon function (security definer, bypasses RLS)
-      const { data, error } = await supabase.rpc('atomic_use_coupon', {
+      // Use validate_coupon (read-only, no usage_count increment)
+      const { data, error } = await supabase.rpc('validate_coupon', {
         coupon_code_input: couponCode.toUpperCase()
       });
 
@@ -55,8 +55,6 @@ const Cart = () => {
       // Check minimum order value
       if (result.min_order_value && cartTotal < Number(result.min_order_value)) {
         toast.error(`Minimum order value of ${formatPrice(Number(result.min_order_value))} required`);
-        // Rollback the usage count since we're not actually using it
-        await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: couponCode.toUpperCase() });
         return;
       }
 

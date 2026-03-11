@@ -278,7 +278,8 @@ const Checkout = () => {
     setIsApplyingCoupon(true);
     
     try {
-      const { data, error } = await supabase.rpc('atomic_use_coupon', {
+      // Use validate_coupon (read-only, no usage_count increment)
+      const { data, error } = await supabase.rpc('validate_coupon', {
         coupon_code_input: couponCode.toUpperCase()
       });
 
@@ -300,8 +301,6 @@ const Checkout = () => {
           description: `This coupon requires a minimum order of ₹${result.min_order_value}`,
           variant: 'destructive',
         });
-        // Rollback usage since we're not using it
-        await supabase.rpc('atomic_rollback_coupon', { coupon_code_input: couponCode.toUpperCase() });
         setIsApplyingCoupon(false);
         return;
       }
