@@ -1916,6 +1916,19 @@ export type Database = {
         Args: { _claim_id: string }
         Returns: boolean
       }
+      validate_coupon: {
+        Args: { coupon_code_input: string }
+        Returns: {
+          code: string
+          discount_type: string
+          discount_value: number
+          error_message: string
+          id: string
+          max_discount_amount: number
+          min_order_value: number
+          success: boolean
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
