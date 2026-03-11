@@ -1900,6 +1900,14 @@ export type Database = {
         }[]
       }
       cleanup_old_rate_limits: { Args: never; Returns: number }
+      earn_loyalty_points: {
+        Args: {
+          _points_earned: number
+          _user_id: string
+          _welcome_bonus?: number
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1915,6 +1923,19 @@ export type Database = {
       use_lucky_discount_claim: {
         Args: { _claim_id: string }
         Returns: boolean
+      }
+      validate_coupon: {
+        Args: { coupon_code_input: string }
+        Returns: {
+          code: string
+          discount_type: string
+          discount_value: number
+          error_message: string
+          id: string
+          max_discount_amount: number
+          min_order_value: number
+          success: boolean
+        }[]
       }
     }
     Enums: {
