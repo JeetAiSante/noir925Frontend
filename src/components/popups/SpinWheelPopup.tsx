@@ -35,29 +35,33 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Fetch prizes from database
+  // Fetch prizes from database via secure RPC (no coupon codes exposed)
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
         const { data, error } = await supabase
-          .from('spin_wheel_prizes')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order');
+          .rpc('get_spin_wheel_display_prizes');
 
         if (!error && data && data.length > 0) {
-          setPrizes(data);
+          setPrizes(data.map((p: any) => ({
+            id: p.id,
+            label: p.label,
+            value: '', // codes not exposed to client
+            discount_percent: p.discount_percent,
+            color: p.color,
+            weight: p.weight,
+          })));
         } else {
-          // Fallback to default prizes if none in database
+          // Fallback to default prizes
           setPrizes([
-            { id: '1', label: '5% OFF', value: 'SPIN5', discount_percent: 5, color: '#e63946', weight: 20 },
-            { id: '2', label: '10% OFF', value: 'SPIN10', discount_percent: 10, color: '#9d4edd', weight: 15 },
+            { id: '1', label: '5% OFF', value: '', discount_percent: 5, color: '#e63946', weight: 20 },
+            { id: '2', label: '10% OFF', value: '', discount_percent: 10, color: '#9d4edd', weight: 15 },
             { id: '3', label: 'Try Again', value: '', discount_percent: null, color: '#6b7280', weight: 25 },
-            { id: '4', label: '15% OFF', value: 'SPIN15', discount_percent: 15, color: '#3b82f6', weight: 10 },
-            { id: '5', label: 'Free Ship', value: 'FREESHIP', discount_percent: null, color: '#22c55e', weight: 15 },
-            { id: '6', label: '20% OFF', value: 'SPIN20', discount_percent: 20, color: '#eab308', weight: 5 },
+            { id: '4', label: '15% OFF', value: '', discount_percent: 15, color: '#3b82f6', weight: 10 },
+            { id: '5', label: 'Free Ship', value: '', discount_percent: null, color: '#22c55e', weight: 15 },
+            { id: '6', label: '20% OFF', value: '', discount_percent: 20, color: '#eab308', weight: 5 },
             { id: '7', label: 'Try Again', value: '', discount_percent: null, color: '#6b7280', weight: 25 },
-            { id: '8', label: '25% OFF', value: 'SPIN25', discount_percent: 25, color: '#ec4899', weight: 5 },
+            { id: '8', label: '25% OFF', value: '', discount_percent: 25, color: '#ec4899', weight: 5 },
           ]);
         }
       } catch (error) {
@@ -168,60 +172,60 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
     setIsSpinning(true);
     setResult(null);
 
-    // Calculate winning segment (weighted)
-    const totalWeight = prizes.reduce((a, b) => a + b.weight, 0);
-    let random = Math.random() * totalWeight;
-    let winningIndex = 0;
+    try {
+      // Perform spin server-side (validates limits, selects prize, records history)
+      const { data: spinResult, error: spinError } = await supabase
+        .rpc('perform_spin', { _user_id: user.id });
 
-    for (let i = 0; i < prizes.length; i++) {
-      random -= prizes[i].weight;
-      if (random <= 0) {
-        winningIndex = i;
-        break;
+      if (spinError) {
+        throw new Error(spinError.message);
       }
-    }
 
-    // Calculate rotation
-    const spins = 5;
-    const targetRotation = spins * 360 + (360 - winningIndex * segmentAngle - segmentAngle / 2);
-    
-    setRotation(prev => prev + targetRotation);
+      const serverPrize = spinResult?.[0];
+      if (!serverPrize) throw new Error('No prize returned');
 
-    // Wait for animation
-    setTimeout(async () => {
-      const winner = prizes[winningIndex];
-      setResult(winner);
-      setIsSpinning(false);
-      setHasSpun(true);
+      // Find matching prize index for wheel animation
+      const winningIndex = prizes.findIndex(p => p.label === serverPrize.prize_label);
+      const targetIndex = winningIndex >= 0 ? winningIndex : 0;
 
-      // Save to database and localStorage
-      try {
-        await supabase.from('spin_wheel_history').insert({
-          user_id: user.id,
-          prize_type: winner.value ? 'discount' : 'try_again',
-          prize_value: winner.label,
-          coupon_code: winner.value || null,
-          is_redeemed: false,
-        });
+      // Calculate rotation
+      const spins = 5;
+      const targetRotation = spins * 360 + (360 - targetIndex * segmentAngle - segmentAngle / 2);
+      
+      setRotation(prev => prev + targetRotation);
+
+      // Wait for animation
+      setTimeout(() => {
+        const winnerSegment: WheelSegment = {
+          ...prizes[targetIndex],
+          value: serverPrize.coupon_code || '',
+        };
+        setResult(winnerSegment);
+        setIsSpinning(false);
+        setHasSpun(true);
         
-        // Store spin date in localStorage to hide the floating button
         localStorage.setItem('spinWheelLastSpin', new Date().toISOString());
-      } catch (error) {
-        console.error('Error saving spin result:', error);
-      }
 
-      if (winner.value) {
-        toast({
-          title: '🎉 Congratulations!',
-          description: `You won ${winner.label}! Use code: ${winner.value}`,
-        });
-      } else {
-        toast({
-          title: 'Almost there!',
-          description: 'Better luck next time!',
-        });
-      }
-    }, 4000);
+        if (serverPrize.coupon_code) {
+          toast({
+            title: '🎉 Congratulations!',
+            description: `You won ${serverPrize.prize_label}! Use code: ${serverPrize.coupon_code}`,
+          });
+        } else {
+          toast({
+            title: 'Almost there!',
+            description: 'Better luck next time!',
+          });
+        }
+      }, 4000);
+    } catch (error: any) {
+      setIsSpinning(false);
+      toast({
+        title: 'Spin Failed',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const copyCode = () => {

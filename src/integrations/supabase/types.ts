@@ -1908,12 +1908,32 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_spin_wheel_display_prizes: {
+        Args: never
+        Returns: {
+          color: string
+          discount_percent: number
+          id: string
+          label: string
+          sort_order: number
+          weight: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      perform_spin: {
+        Args: { _user_id: string }
+        Returns: {
+          coupon_code: string
+          prize_label: string
+          prize_type: string
+          prize_value: string
+        }[]
       }
       redeem_loyalty_points: {
         Args: { _points_to_redeem: number; _user_id: string }
