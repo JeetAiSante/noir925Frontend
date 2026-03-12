@@ -1996,6 +1996,17 @@ export type Database = {
           attempts_remaining: number
         }[]
       }
+      check_newsletter_rate_limit: {
+        Args: {
+          _identifier: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: {
+          allowed: boolean
+          attempts_remaining: number
+        }[]
+      }
       cleanup_old_rate_limits: { Args: never; Returns: number }
       earn_loyalty_points: {
         Args: {
