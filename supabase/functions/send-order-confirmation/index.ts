@@ -5,6 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const escapeHtml = (text: string | null | undefined): string => {
+  if (text == null) return '';
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return String(text).replace(/[&<>"']/g, (char) => map[char]);
+};
+
 const sendEmail = async (to: string, subject: string, html: string) => {
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -67,7 +79,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       <tr>
         <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
           <div style="display: flex; align-items: center; gap: 15px;">
-            <span style="font-weight: 500; color: #1a1a1a;">${item.name}</span>
+            <span style="font-weight: 500; color: #1a1a1a;">${escapeHtml(item.name)}</span>
           </div>
         </td>
         <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
@@ -96,7 +108,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
           <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; text-align: center;">
             <div style="font-size: 40px; margin-bottom: 10px;">✓</div>
             <h2 style="color: #ffffff; margin: 0; font-size: 22px;">Order Confirmed!</h2>
-            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">Thank you for your purchase, ${orderData.customerName}!</p>
+            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">Thank you for your purchase, ${escapeHtml(orderData.customerName)}!</p>
           </div>
           
           <!-- Order Info -->
@@ -106,7 +118,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
                 <tr>
                   <td style="padding: 5px 0;">
                     <span style="color: #666;">Order Number:</span>
-                    <strong style="color: #1a1a1a; margin-left: 10px;">${orderData.orderNumber}</strong>
+                    <strong style="color: #1a1a1a; margin-left: 10px;">${escapeHtml(orderData.orderNumber)}</strong>
                   </td>
                 </tr>
                 <tr>
@@ -118,13 +130,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
                 <tr>
                   <td style="padding: 5px 0;">
                     <span style="color: #666;">Payment Method:</span>
-                    <strong style="color: #1a1a1a; margin-left: 10px;">${orderData.paymentMethod}</strong>
+                    <strong style="color: #1a1a1a; margin-left: 10px;">${escapeHtml(orderData.paymentMethod)}</strong>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding: 5px 0;">
                     <span style="color: #666;">Estimated Delivery:</span>
-                    <strong style="color: #10b981; margin-left: 10px;">${orderData.estimatedDelivery}</strong>
+                    <strong style="color: #10b981; margin-left: 10px;">${escapeHtml(orderData.estimatedDelivery)}</strong>
                   </td>
                 </tr>
               </table>
@@ -177,17 +189,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
             <div style="margin-top: 25px; padding: 20px; background: #f9fafb; border-radius: 12px;">
               <h3 style="color: #1a1a1a; margin: 0 0 15px; font-size: 16px;">📦 Shipping Address</h3>
               <p style="margin: 0; color: #374151; line-height: 1.6;">
-                ${orderData.customerName}<br>
-                ${orderData.shippingAddress.addressLine1}<br>
-                ${orderData.shippingAddress.addressLine2 ? orderData.shippingAddress.addressLine2 + "<br>" : ""}
-                ${orderData.shippingAddress.city}, ${orderData.shippingAddress.state} ${orderData.shippingAddress.postalCode}<br>
-                ${orderData.shippingAddress.country}
+                ${escapeHtml(orderData.customerName)}<br>
+                ${escapeHtml(orderData.shippingAddress.addressLine1)}<br>
+                ${orderData.shippingAddress.addressLine2 ? escapeHtml(orderData.shippingAddress.addressLine2) + "<br>" : ""}
+                ${escapeHtml(orderData.shippingAddress.city)}, ${escapeHtml(orderData.shippingAddress.state)} ${escapeHtml(orderData.shippingAddress.postalCode)}<br>
+                ${escapeHtml(orderData.shippingAddress.country)}
               </p>
             </div>
             
             <!-- Track Order Button -->
             <div style="text-align: center; margin-top: 30px;">
-              <a href="https://noir925.lovable.app/track-order?order=${orderData.orderNumber}" 
+              <a href="https://noir925.lovable.app/track-order?order=${encodeURIComponent(orderData.orderNumber)}" 
                  style="display: inline-block; background: linear-gradient(135deg, #D4AF37 0%, #B8962E 100%); color: #000; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
                 Track Your Order
               </a>
@@ -212,7 +224,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     console.log(`Sending order confirmation to ${orderData.customerEmail}`);
     const emailResponse = await sendEmail(
       orderData.customerEmail,
-      `Order Confirmed! 🎉 Your NOIR925 Order #${orderData.orderNumber}`,
+      `Order Confirmed! 🎉 Your NOIR925 Order #${escapeHtml(orderData.orderNumber)}`,
       emailHtml
     );
 

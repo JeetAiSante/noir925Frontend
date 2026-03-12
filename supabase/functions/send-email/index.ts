@@ -221,7 +221,7 @@ const getOrderStatusContent = (data: any) => `
       ${data.status === 'shipped' ? 'background: #e9d5ff; color: #9333ea;' : ''}
       ${data.status === 'delivered' ? 'background: #dcfce7; color: #16a34a;' : ''}
       ${data.status === 'cancelled' ? 'background: #fee2e2; color: #dc2626;' : ''}
-    ">${data.status}</span>
+    ">${escapeHtml(data.status)}</span>
   </div>
   
   <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
