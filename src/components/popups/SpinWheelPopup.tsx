@@ -172,60 +172,60 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
     setIsSpinning(true);
     setResult(null);
 
-    // Calculate winning segment (weighted)
-    const totalWeight = prizes.reduce((a, b) => a + b.weight, 0);
-    let random = Math.random() * totalWeight;
-    let winningIndex = 0;
+    try {
+      // Perform spin server-side (validates limits, selects prize, records history)
+      const { data: spinResult, error: spinError } = await supabase
+        .rpc('perform_spin', { _user_id: user.id });
 
-    for (let i = 0; i < prizes.length; i++) {
-      random -= prizes[i].weight;
-      if (random <= 0) {
-        winningIndex = i;
-        break;
+      if (spinError) {
+        throw new Error(spinError.message);
       }
-    }
 
-    // Calculate rotation
-    const spins = 5;
-    const targetRotation = spins * 360 + (360 - winningIndex * segmentAngle - segmentAngle / 2);
-    
-    setRotation(prev => prev + targetRotation);
+      const serverPrize = spinResult?.[0];
+      if (!serverPrize) throw new Error('No prize returned');
 
-    // Wait for animation
-    setTimeout(async () => {
-      const winner = prizes[winningIndex];
-      setResult(winner);
-      setIsSpinning(false);
-      setHasSpun(true);
+      // Find matching prize index for wheel animation
+      const winningIndex = prizes.findIndex(p => p.label === serverPrize.prize_label);
+      const targetIndex = winningIndex >= 0 ? winningIndex : 0;
 
-      // Save to database and localStorage
-      try {
-        await supabase.from('spin_wheel_history').insert({
-          user_id: user.id,
-          prize_type: winner.value ? 'discount' : 'try_again',
-          prize_value: winner.label,
-          coupon_code: winner.value || null,
-          is_redeemed: false,
-        });
+      // Calculate rotation
+      const spins = 5;
+      const targetRotation = spins * 360 + (360 - targetIndex * segmentAngle - segmentAngle / 2);
+      
+      setRotation(prev => prev + targetRotation);
+
+      // Wait for animation
+      setTimeout(() => {
+        const winnerSegment: WheelSegment = {
+          ...prizes[targetIndex],
+          value: serverPrize.coupon_code || '',
+        };
+        setResult(winnerSegment);
+        setIsSpinning(false);
+        setHasSpun(true);
         
-        // Store spin date in localStorage to hide the floating button
         localStorage.setItem('spinWheelLastSpin', new Date().toISOString());
-      } catch (error) {
-        console.error('Error saving spin result:', error);
-      }
 
-      if (winner.value) {
-        toast({
-          title: '🎉 Congratulations!',
-          description: `You won ${winner.label}! Use code: ${winner.value}`,
-        });
-      } else {
-        toast({
-          title: 'Almost there!',
-          description: 'Better luck next time!',
-        });
-      }
-    }, 4000);
+        if (serverPrize.coupon_code) {
+          toast({
+            title: '🎉 Congratulations!',
+            description: `You won ${serverPrize.prize_label}! Use code: ${serverPrize.coupon_code}`,
+          });
+        } else {
+          toast({
+            title: 'Almost there!',
+            description: 'Better luck next time!',
+          });
+        }
+      }, 4000);
+    } catch (error: any) {
+      setIsSpinning(false);
+      toast({
+        title: 'Spin Failed',
+        description: error.message || 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const copyCode = () => {
