@@ -87,17 +87,6 @@ export const useEarnPoints = () => {
 
       if (error) throw error;
 
-      // Log transaction
-      await supabase
-        .from('loyalty_transactions')
-        .insert({
-          user_id: user.id,
-          order_id: orderId,
-          points: pointsEarned,
-          transaction_type: 'earn',
-          description: `Earned ${pointsEarned} points on order`,
-        });
-
       return pointsEarned;
     },
     onSuccess: () => {
@@ -131,17 +120,6 @@ export const useRedeemPoints = () => {
         .single();
 
       const discountValue = Math.floor(points * (settings?.points_value_per_rupee || 0.25));
-
-      // Log transaction
-      await supabase
-        .from('loyalty_transactions')
-        .insert({
-          user_id: user.id,
-          order_id: orderId || null,
-          points: -points,
-          transaction_type: 'redeem',
-          description: `Redeemed ${points} points for ₹${discountValue} discount`,
-        });
 
       return { points, discountValue };
     },
