@@ -130,9 +130,9 @@ const getOrderConfirmationContent = (data: any) => `
 const getShippingUpdateContent = (data: any) => `
   <h2 style="color: #333; font-size: 20px; margin-bottom: 20px; text-align: center;">📦 Your Order Has Shipped!</h2>
   
-  <p style="color: #666; line-height: 1.6;">Dear ${data.customerName},</p>
+  <p style="color: #666; line-height: 1.6;">Dear ${escapeHtml(data.customerName)},</p>
   <p style="color: #666; line-height: 1.6; margin-top: 10px;">
-    Great news! Your order <strong style="color: #D4AF37;">#${data.orderNumber}</strong> is on its way to you.
+    Great news! Your order <strong style="color: #D4AF37;">#${escapeHtml(data.orderNumber)}</strong> is on its way to you.
   </p>
   
   <div style="background: linear-gradient(135deg, #e9d5ff 0%, #f3e8ff 100%); padding: 20px; border-radius: 10px; margin: 25px 0; text-align: center;">
