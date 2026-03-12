@@ -361,22 +361,27 @@ const handler = async (req: Request): Promise<Response> => {
           html: getEmailTemplate(content, data.companyName, data.companyLogo),
         });
         console.log("Order status email sent successfully");
-      } else if (type === 'invoice') {
+      } else if (type === 'invoice' || type === 'generic') {
+        // Admin-only: verify the user has admin role before allowing arbitrary email sends
+        const userId = claimsData.claims.sub;
+        const { data: roleData } = await userClient
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+          .single();
+        
+        if (!roleData) {
+          throw new Error('Admin access required');
+        }
+
         await sendEmail({
           from: fromEmail,
           to: [data.to],
           subject: data.subject,
           html: data.html,
         });
-        console.log("Invoice email sent successfully");
-      } else if (type === 'generic') {
-        await sendEmail({
-          from: fromEmail,
-          to: [data.to],
-          subject: data.subject,
-          html: data.html,
-        });
-        console.log("Generic email sent successfully");
+        console.log(`${type} email sent successfully by admin`);
       }
     }
 

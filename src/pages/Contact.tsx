@@ -86,6 +86,19 @@ const Contact = () => {
 
     setIsSubmitting(true);
     try {
+      // Check rate limit before proceeding
+      const identifier = formData.email.toLowerCase().trim();
+      const { data: rateLimitData, error: rateLimitError } = await supabase
+        .rpc('check_contact_rate_limit', { _identifier: identifier });
+      
+      if (rateLimitError) {
+        console.error('Rate limit check failed:', rateLimitError);
+      } else if (rateLimitData && rateLimitData.length > 0 && !rateLimitData[0].allowed) {
+        toast.error('Too many submissions. Please try again later.');
+        setIsSubmitting(false);
+        return;
+      }
+
       // Save to database
       const { error: dbError } = await supabase.from('contact_messages').insert({
         name: formData.name,

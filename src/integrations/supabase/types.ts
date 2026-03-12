@@ -325,6 +325,24 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_rate_limits: {
+        Row: {
+          attempt_time: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          attempt_time?: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          attempt_time?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       countdown_timers: {
         Row: {
           accent_color: string | null
@@ -1550,6 +1568,13 @@ export type Database = {
             referencedRelation: "product_reviews"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "review_images_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "public_product_reviews"
+            referencedColumns: ["id"]
+          },
         ]
       }
       site_contact: {
@@ -1857,7 +1882,68 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_product_reviews: {
+        Row: {
+          admin_reply: string | null
+          admin_reply_at: string | null
+          content: string | null
+          created_at: string | null
+          helpful_count: number | null
+          id: string | null
+          is_approved: boolean | null
+          is_featured: boolean | null
+          is_verified_purchase: boolean | null
+          product_id: string | null
+          rating: number | null
+          reviewer_avatar: string | null
+          reviewer_name: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          is_verified_purchase?: boolean | null
+          product_id?: string | null
+          rating?: number | null
+          reviewer_avatar?: string | null
+          reviewer_name?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_reply?: string | null
+          admin_reply_at?: string | null
+          content?: string | null
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          is_verified_purchase?: boolean | null
+          product_id?: string | null
+          rating?: number | null
+          reviewer_avatar?: string | null
+          reviewer_name?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       atomic_decrement_stock: {
@@ -1897,6 +1983,17 @@ export type Database = {
           allowed: boolean
           attempts_remaining: number
           retry_after_seconds: number
+        }[]
+      }
+      check_contact_rate_limit: {
+        Args: {
+          _identifier: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: {
+          allowed: boolean
+          attempts_remaining: number
         }[]
       }
       cleanup_old_rate_limits: { Args: never; Returns: number }
