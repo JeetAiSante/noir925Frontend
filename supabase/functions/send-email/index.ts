@@ -89,7 +89,7 @@ const getEmailTemplate = (content: string, companyName?: string, companyLogo?: s
 const getOrderConfirmationContent = (data: any) => `
   <h2 style="color: #333; font-size: 20px; margin-bottom: 20px; text-align: center;">🎉 Order Confirmed!</h2>
   
-  <p style="color: #666; line-height: 1.6;">Dear ${data.customerName},</p>
+  <p style="color: #666; line-height: 1.6;">Dear ${escapeHtml(data.customerName)},</p>
   <p style="color: #666; line-height: 1.6; margin-top: 10px;">
     Thank you for your order! We're thrilled to have you as our customer.
   </p>
