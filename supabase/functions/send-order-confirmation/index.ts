@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
@@ -69,7 +71,43 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verify JWT authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+    const userEmail = claimsData.claims.email;
+
     const orderData: OrderData = await req.json();
+
+    // Verify the authenticated user's email matches the customer email
+    if (userEmail && orderData.customerEmail !== userEmail) {
+      return new Response(JSON.stringify({ error: 'Email mismatch' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const formatCurrency = (amount: number) => `₹${amount.toLocaleString("en-IN")}`;
 
@@ -221,7 +259,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    console.log(`Sending order confirmation to ${orderData.customerEmail}`);
+    console.log(`Sending order confirmation for user ${userId}`);
     const emailResponse = await sendEmail(
       orderData.customerEmail,
       `Order Confirmed! 🎉 Your NOIR925 Order #${escapeHtml(orderData.orderNumber)}`,
@@ -236,7 +274,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     });
   } catch (error: any) {
     console.error("Error sending order confirmation:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Failed to send order confirmation" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
