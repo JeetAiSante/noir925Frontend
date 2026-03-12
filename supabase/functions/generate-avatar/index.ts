@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -11,16 +12,47 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { initials, fullName, style } = await req.json();
     
-    if (!initials) {
+    // Validate and sanitize inputs
+    if (!initials || typeof initials !== 'string') {
       throw new Error('Initials are required');
+    }
+    const safeInitials = initials.replace(/[^a-zA-Z]/g, '').slice(0, 2);
+    const safeFullName = fullName && typeof fullName === 'string' ? fullName.slice(0, 100) : null;
+
+    if (!safeInitials) {
+      throw new Error('Valid initials are required');
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       console.log('LOVABLE_API_KEY not configured, using fallback');
-      const fallbackSvg = generateFallbackAvatar(initials, fullName);
+      const fallbackSvg = generateFallbackAvatar(safeInitials, safeFullName);
       return new Response(JSON.stringify({ 
         success: true, 
         avatarUrl: fallbackSvg,
@@ -30,10 +62,9 @@ serve(async (req) => {
       });
     }
 
-    // Generate a luxury avatar prompt
-    const prompt = `Create a luxurious minimalist avatar design featuring the initials "${initials}" in an elegant serif font. The design should have a circular gradient background with subtle metallic shimmer effects, premium jewelry brand aesthetic, high-end boutique style with rose gold and champagne tones. Ultra high resolution, professional quality, suitable for a luxury silver jewelry brand profile picture. The initials should be prominently displayed in the center with artistic flourishes. Aspect ratio 1:1, circular avatar format.`;
+    const prompt = `Create a luxurious minimalist avatar design featuring the initials "${safeInitials}" in an elegant serif font. The design should have a circular gradient background with subtle metallic shimmer effects, premium jewelry brand aesthetic, high-end boutique style with rose gold and champagne tones. Ultra high resolution, professional quality, suitable for a luxury silver jewelry brand profile picture. The initials should be prominently displayed in the center with artistic flourishes. Aspect ratio 1:1, circular avatar format.`;
 
-    console.log('Generating avatar with Lovable AI');
+    console.log('Generating avatar with Lovable AI for authenticated user');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -54,11 +85,9 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI gateway error:', response.status, errorText);
+      console.error('AI gateway error:', response.status);
       
-      // Return fallback on error
-      const fallbackSvg = generateFallbackAvatar(initials, fullName);
+      const fallbackSvg = generateFallbackAvatar(safeInitials, safeFullName);
       return new Response(JSON.stringify({ 
         success: true, 
         avatarUrl: fallbackSvg,
@@ -70,14 +99,11 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('AI response received');
-
-    // Extract the generated image
     const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
 
     if (!imageData) {
       console.log('No image generated, returning fallback');
-      const fallbackSvg = generateFallbackAvatar(initials, fullName);
+      const fallbackSvg = generateFallbackAvatar(safeInitials, safeFullName);
       return new Response(JSON.stringify({ 
         success: true, 
         avatarUrl: fallbackSvg,
@@ -111,7 +137,7 @@ serve(async (req) => {
 });
 
 function generateFallbackAvatar(initials: string, fullName: string | null): string {
-  // Generate color based on name
+  const safeInitials = initials.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase() || 'U';
   const colorIndex = fullName ? fullName.charCodeAt(0) % 6 : 0;
   const colors = [
     { bg1: '#fce4ec', bg2: '#f8bbd9', text: '#c2185b' },
@@ -132,7 +158,7 @@ function generateFallbackAvatar(initials: string, fullName: string | null): stri
         </linearGradient>
       </defs>
       <circle cx="100" cy="100" r="100" fill="url(#grad)"/>
-      <text x="100" y="115" font-family="serif" font-size="72" font-weight="600" fill="${color.text}" text-anchor="middle">${initials.toUpperCase().slice(0, 2)}</text>
+      <text x="100" y="115" font-family="serif" font-size="72" font-weight="600" fill="${color.text}" text-anchor="middle">${safeInitials}</text>
     </svg>
   `;
   
