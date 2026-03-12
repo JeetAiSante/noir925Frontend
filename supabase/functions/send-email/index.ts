@@ -145,7 +145,7 @@ const getShippingUpdateContent = (data: any) => `
   ${data.trackingNumber ? `
     <div style="background: #f9f9f9; padding: 15px; border-radius: 10px; margin: 20px 0;">
       <p style="color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Tracking Number</p>
-      <p style="color: #333; font-size: 16px; font-weight: bold;">${data.trackingNumber}</p>
+      <p style="color: #333; font-size: 16px; font-weight: bold;">${escapeHtml(data.trackingNumber)}</p>
     </div>
   ` : ''}
   
