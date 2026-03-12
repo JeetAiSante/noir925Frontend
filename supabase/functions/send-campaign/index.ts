@@ -16,31 +16,36 @@ Deno.serve(async (req) => {
     const resendApiKey = Deno.env.get('RESEND_API_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Verify admin
+    // Verify admin - MANDATORY
     const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-      if (authError || !user) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-      
-      if (!roleData) {
-        return new Response(JSON.stringify({ error: 'Admin access required' }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .single();
+    
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: 'Admin access required' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { campaign_id } = await req.json();
