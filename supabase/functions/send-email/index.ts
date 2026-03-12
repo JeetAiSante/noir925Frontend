@@ -171,9 +171,9 @@ const getShippingUpdateContent = (data: any) => `
 const getDeliveryNotificationContent = (data: any) => `
   <h2 style="color: #333; font-size: 20px; margin-bottom: 20px; text-align: center;">✅ Order Delivered!</h2>
   
-  <p style="color: #666; line-height: 1.6;">Dear ${data.customerName},</p>
+  <p style="color: #666; line-height: 1.6;">Dear ${escapeHtml(data.customerName)},</p>
   <p style="color: #666; line-height: 1.6; margin-top: 10px;">
-    Your order <strong style="color: #D4AF37;">#${data.orderNumber}</strong> has been delivered successfully!
+    Your order <strong style="color: #D4AF37;">#${escapeHtml(data.orderNumber)}</strong> has been delivered successfully!
   </p>
   
   <div style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); padding: 20px; border-radius: 10px; margin: 25px 0; text-align: center;">
