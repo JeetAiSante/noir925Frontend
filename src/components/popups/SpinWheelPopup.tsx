@@ -35,29 +35,33 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   const navigate = useNavigate();
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Fetch prizes from database
+  // Fetch prizes from database via secure RPC (no coupon codes exposed)
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
         const { data, error } = await supabase
-          .from('spin_wheel_prizes')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order');
+          .rpc('get_spin_wheel_display_prizes');
 
         if (!error && data && data.length > 0) {
-          setPrizes(data);
+          setPrizes(data.map((p: any) => ({
+            id: p.id,
+            label: p.label,
+            value: '', // codes not exposed to client
+            discount_percent: p.discount_percent,
+            color: p.color,
+            weight: p.weight,
+          })));
         } else {
-          // Fallback to default prizes if none in database
+          // Fallback to default prizes
           setPrizes([
-            { id: '1', label: '5% OFF', value: 'SPIN5', discount_percent: 5, color: '#e63946', weight: 20 },
-            { id: '2', label: '10% OFF', value: 'SPIN10', discount_percent: 10, color: '#9d4edd', weight: 15 },
+            { id: '1', label: '5% OFF', value: '', discount_percent: 5, color: '#e63946', weight: 20 },
+            { id: '2', label: '10% OFF', value: '', discount_percent: 10, color: '#9d4edd', weight: 15 },
             { id: '3', label: 'Try Again', value: '', discount_percent: null, color: '#6b7280', weight: 25 },
-            { id: '4', label: '15% OFF', value: 'SPIN15', discount_percent: 15, color: '#3b82f6', weight: 10 },
-            { id: '5', label: 'Free Ship', value: 'FREESHIP', discount_percent: null, color: '#22c55e', weight: 15 },
-            { id: '6', label: '20% OFF', value: 'SPIN20', discount_percent: 20, color: '#eab308', weight: 5 },
+            { id: '4', label: '15% OFF', value: '', discount_percent: 15, color: '#3b82f6', weight: 10 },
+            { id: '5', label: 'Free Ship', value: '', discount_percent: null, color: '#22c55e', weight: 15 },
+            { id: '6', label: '20% OFF', value: '', discount_percent: 20, color: '#eab308', weight: 5 },
             { id: '7', label: 'Try Again', value: '', discount_percent: null, color: '#6b7280', weight: 25 },
-            { id: '8', label: '25% OFF', value: 'SPIN25', discount_percent: 25, color: '#ec4899', weight: 5 },
+            { id: '8', label: '25% OFF', value: '', discount_percent: 25, color: '#ec4899', weight: 5 },
           ]);
         }
       } catch (error) {
