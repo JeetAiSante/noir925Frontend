@@ -5,6 +5,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const escapeHtml = (text: string | null | undefined): string => {
+  if (text == null) return '';
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return String(text).replace(/[&<>"']/g, (char) => map[char]);
+};
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -60,24 +72,27 @@ Deno.serve(async (req) => {
       const itemsHtml = items.map((item: any) => `
         <tr>
           <td style="padding:12px;border-bottom:1px solid #2a2a2a;">
-            <img src="${item.image}" alt="${item.name}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;" />
+            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;" />
           </td>
-          <td style="padding:12px;border-bottom:1px solid #2a2a2a;color:#e0e0e0;">${item.name}</td>
-          <td style="padding:12px;border-bottom:1px solid #2a2a2a;color:#D4AF37;">₹${item.price.toLocaleString()}</td>
-          <td style="padding:12px;border-bottom:1px solid #2a2a2a;color:#e0e0e0;">${item.quantity}</td>
+          <td style="padding:12px;border-bottom:1px solid #2a2a2a;color:#e0e0e0;">${escapeHtml(item.name)}</td>
+          <td style="padding:12px;border-bottom:1px solid #2a2a2a;color:#D4AF37;">₹${Number(item.price).toLocaleString()}</td>
+          <td style="padding:12px;border-bottom:1px solid #2a2a2a;color:#e0e0e0;">${Number(item.quantity)}</td>
         </tr>
       `).join('');
+
+      const escapedCompanyName = escapeHtml(companyName);
+      const escapedFullName = escapeHtml(profile.full_name);
 
       const emailHtml = `
         <div style="background:#0a0a0a;padding:40px 0;font-family:'Helvetica Neue',Arial,sans-serif;">
           <div style="max-width:600px;margin:0 auto;background:#141414;border-radius:12px;overflow:hidden;border:1px solid #2a2a2a;">
             <div style="background:linear-gradient(135deg,#1a1a1a,#0a0a0a);padding:30px;text-align:center;border-bottom:1px solid #D4AF37;">
-              ${companyLogo ? `<img src="${companyLogo}" alt="${companyName}" style="max-height:40px;margin-bottom:12px;" />` : ''}
-              <h1 style="color:#D4AF37;font-size:24px;margin:0;letter-spacing:2px;">${companyName}</h1>
+              ${companyLogo ? `<img src="${escapeHtml(companyLogo)}" alt="${escapedCompanyName}" style="max-height:40px;margin-bottom:12px;" />` : ''}
+              <h1 style="color:#D4AF37;font-size:24px;margin:0;letter-spacing:2px;">${escapedCompanyName}</h1>
             </div>
             <div style="padding:30px;">
               <h2 style="color:#ffffff;font-size:20px;margin:0 0 8px;">You left something behind!</h2>
-              <p style="color:#999;font-size:14px;margin:0 0 24px;">Hi ${profile.full_name || 'there'}, your cart is waiting for you.</p>
+              <p style="color:#999;font-size:14px;margin:0 0 24px;">Hi ${escapedFullName || 'there'}, your cart is waiting for you.</p>
               <table style="width:100%;border-collapse:collapse;">
                 <thead>
                   <tr style="border-bottom:2px solid #D4AF37;">
@@ -91,14 +106,14 @@ Deno.serve(async (req) => {
               </table>
               <div style="margin:24px 0;padding:16px;background:#1a1a1a;border-radius:8px;text-align:right;">
                 <span style="color:#999;font-size:14px;">Cart Total: </span>
-                <span style="color:#D4AF37;font-size:20px;font-weight:bold;">₹${cart.cart_total.toLocaleString()}</span>
+                <span style="color:#D4AF37;font-size:20px;font-weight:bold;">₹${Number(cart.cart_total).toLocaleString()}</span>
               </div>
               <div style="text-align:center;">
                 <a href="https://noir925-silver-grace.lovable.app/cart" style="display:inline-block;background:#D4AF37;color:#0a0a0a;padding:14px 40px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;letter-spacing:1px;text-transform:uppercase;">Complete Your Purchase</a>
               </div>
             </div>
             <div style="padding:20px;background:#0a0a0a;text-align:center;border-top:1px solid #2a2a2a;">
-              <p style="color:#666;font-size:12px;margin:0;">© ${new Date().getFullYear()} ${companyName}. All rights reserved.</p>
+              <p style="color:#666;font-size:12px;margin:0;">© ${new Date().getFullYear()} ${escapedCompanyName}. All rights reserved.</p>
             </div>
           </div>
         </div>
@@ -113,7 +128,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: `${companyName} <onboarding@resend.dev>`,
           to: [profile.email],
-          subject: `${profile.full_name || 'Hey'}, you left items in your cart!`,
+          subject: `${escapedFullName || 'Hey'}, you left items in your cart!`,
           html: emailHtml,
         }),
       });
