@@ -121,17 +121,6 @@ export const useRedeemPoints = () => {
 
       const discountValue = Math.floor(points * (settings?.points_value_per_rupee || 0.25));
 
-      // Log transaction
-      await supabase
-        .from('loyalty_transactions')
-        .insert({
-          user_id: user.id,
-          order_id: orderId || null,
-          points: -points,
-          transaction_type: 'redeem',
-          description: `Redeemed ${points} points for ₹${discountValue} discount`,
-        });
-
       return { points, discountValue };
     },
     onSuccess: () => {
