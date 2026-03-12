@@ -18,9 +18,25 @@ const NewsletterSection = () => {
     setIsSubmitting(true);
     
     try {
+      const trimmedEmail = email.toLowerCase().trim();
+      
+      // Rate limit check
+      const { data: rateCheck } = await supabase.rpc('check_newsletter_rate_limit', {
+        _identifier: `newsletter:${trimmedEmail}`
+      });
+      if (rateCheck && rateCheck.length > 0 && !rateCheck[0].allowed) {
+        toast({
+          title: 'Too many attempts',
+          description: 'Please try again later.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase
         .from('newsletter_subscribers')
-        .insert({ email: email.toLowerCase().trim() });
+        .insert({ email: trimmedEmail });
       
       if (error) {
         if (error.code === '23505') {

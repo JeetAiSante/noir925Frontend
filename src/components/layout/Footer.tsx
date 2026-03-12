@@ -39,9 +39,19 @@ const Footer = () => {
   // Newsletter subscription
   const subscribeMutation = useMutation({
     mutationFn: async (subscriberEmail: string) => {
+      const trimmedEmail = subscriberEmail.toLowerCase().trim();
+      
+      // Rate limit check
+      const { data: rateCheck } = await supabase.rpc('check_newsletter_rate_limit', {
+        _identifier: `newsletter:${trimmedEmail}`
+      });
+      if (rateCheck && rateCheck.length > 0 && !rateCheck[0].allowed) {
+        throw new Error('Too many attempts. Please try again later.');
+      }
+
       const { error } = await supabase
         .from('newsletter_subscribers')
-        .insert({ email: subscriberEmail });
+        .insert({ email: trimmedEmail });
       if (error) throw error;
     },
     onSuccess: () => {
