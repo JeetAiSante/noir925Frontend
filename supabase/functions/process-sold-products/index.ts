@@ -173,10 +173,9 @@ Deno.serve(async (req) => {
     });
 
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error in process-sold-products:', error);
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: 'An internal error occurred.',
       status: 'error'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

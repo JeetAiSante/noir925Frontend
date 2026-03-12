@@ -205,7 +205,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   } catch (error: any) {
     console.error("Error sending low stock alert:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
