@@ -87,17 +87,6 @@ export const useEarnPoints = () => {
 
       if (error) throw error;
 
-      // Log transaction
-      await supabase
-        .from('loyalty_transactions')
-        .insert({
-          user_id: user.id,
-          order_id: orderId,
-          points: pointsEarned,
-          transaction_type: 'earn',
-          description: `Earned ${pointsEarned} points on order`,
-        });
-
       return pointsEarned;
     },
     onSuccess: () => {
