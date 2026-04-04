@@ -161,7 +161,7 @@ const Shop = () => {
         <main className="pt-4 pb-16">
         {/* Breadcrumb */}
         <div className="container mx-auto px-4">
-          <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
             <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3" />
             <span className="text-foreground font-medium">Shop</span>

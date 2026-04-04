@@ -187,7 +187,7 @@ const ProductPage = () => {
 
       <main className="container mx-auto px-4 py-4 md:py-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-4 md:mb-8 overflow-x-auto whitespace-nowrap">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground mb-4 md:mb-8 overflow-x-auto whitespace-nowrap">
           <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
           <ChevronRight className="w-3 h-3 md:w-4 md:h-4 shrink-0" />
           <Link to="/shop" className="hover:text-foreground transition-colors">Shop</Link>
