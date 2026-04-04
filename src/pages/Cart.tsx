@@ -90,6 +90,7 @@ const Cart = () => {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead title="Shopping Cart" noIndex={true} />
         <Header />
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto text-center">
