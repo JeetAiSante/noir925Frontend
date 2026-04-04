@@ -143,7 +143,7 @@ const Index = memo(() => {
     <FirstTimePopup>
       <div className="min-h-screen bg-background">
         <SEOHead 
-          title="Premium 925 Sterling Silver Jewellery | NOIR925"
+          title="NOIR925 | Premium 925 Sterling Silver Jewellery India"
           description="Discover exquisite handcrafted 925 sterling silver jewellery at NOIR925. Shop luxury rings, necklaces, bracelets & earrings with BIS Hallmark certification. Free shipping on ₹2000+."
           keywords="925 sterling silver jewellery India, silver rings online, silver necklace for women, silver bracelet, silver earrings, handcrafted silver jewellery, BIS hallmark silver, luxury silver jewellery, pure silver jewellery online, NOIR925"
           canonicalUrl="https://noir925.com"
