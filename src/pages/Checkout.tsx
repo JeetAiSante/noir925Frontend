@@ -28,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SEOHead } from "@/components/seo/SEOHead";
 import {
   Dialog,
   DialogContent,

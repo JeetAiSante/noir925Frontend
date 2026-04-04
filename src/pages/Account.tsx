@@ -118,6 +118,7 @@ const Account = () => {
           pullProgress={pullProgress}
         />
       )}
+      <SEOHead title="My Account" noIndex={true} />
       <Header />
       
       <main className="container mx-auto px-4 py-8">
