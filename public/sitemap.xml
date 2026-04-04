@@ -6,7 +6,7 @@
   <!-- Homepage - Highest Priority -->
   <url>
     <loc>https://noir925.com/</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -14,7 +14,7 @@
   <!-- Shop Page - High Priority -->
   <url>
     <loc>https://noir925.com/shop</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
@@ -22,56 +22,71 @@
   <!-- Category Pages - High Priority -->
   <url>
     <loc>https://noir925.com/shop?category=rings</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=necklaces</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=earrings</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=bracelets</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=pendants</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=anklets</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=chains</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shop?category=bridal</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  
+  <!-- Gender Shop Pages -->
+  <url>
+    <loc>https://noir925.com/shop-for?gender=women</loc>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  
+  <url>
+    <loc>https://noir925.com/shop-for?gender=men</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -79,7 +94,15 @@
   <!-- Collections Pages -->
   <url>
     <loc>https://noir925.com/collections</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  
+  <!-- Bridal Collection -->
+  <url>
+    <loc>https://noir925.com/bridal-collection</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -87,7 +110,15 @@
   <!-- Gifting Page -->
   <url>
     <loc>https://noir925.com/gifting</loc>
-    <lastmod>2025-12-25</lastmod>
+    <lastmod>2026-04-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Festival Page -->
+  <url>
+    <loc>https://noir925.com/festival</loc>
+    <lastmod>2026-04-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -95,15 +126,23 @@
   <!-- Silver Care Guide - Educational Content -->
   <url>
     <loc>https://noir925.com/silver-care</loc>
-    <lastmod>2025-12-20</lastmod>
+    <lastmod>2026-03-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
+  </url>
+  
+  <!-- Size Guide -->
+  <url>
+    <loc>https://noir925.com/size-guide</loc>
+    <lastmod>2026-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   
   <!-- About Page - Brand Story -->
   <url>
     <loc>https://noir925.com/about</loc>
-    <lastmod>2025-12-20</lastmod>
+    <lastmod>2026-03-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -111,7 +150,7 @@
   <!-- Contact Page -->
   <url>
     <loc>https://noir925.com/contact</loc>
-    <lastmod>2025-12-20</lastmod>
+    <lastmod>2026-03-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
   </url>
@@ -119,15 +158,23 @@
   <!-- FAQ Page -->
   <url>
     <loc>https://noir925.com/faq</loc>
-    <lastmod>2025-12-20</lastmod>
+    <lastmod>2026-03-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
+  </url>
+  
+  <!-- Help Center -->
+  <url>
+    <loc>https://noir925.com/help</loc>
+    <lastmod>2026-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   
   <!-- Track Order -->
   <url>
     <loc>https://noir925.com/track-order</loc>
-    <lastmod>2025-12-20</lastmod>
+    <lastmod>2026-03-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -135,53 +182,30 @@
   <!-- Legal Pages -->
   <url>
     <loc>https://noir925.com/privacy-policy</loc>
-    <lastmod>2025-12-15</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/terms-conditions</loc>
-    <lastmod>2025-12-15</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/shipping-policy</loc>
-    <lastmod>2025-12-15</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   
   <url>
     <loc>https://noir925.com/returns-policy</loc>
-    <lastmod>2025-12-15</lastmod>
+    <lastmod>2026-01-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
-  </url>
-  
-  <!-- Authentication -->
-  <url>
-    <loc>https://noir925.com/auth</loc>
-    <lastmod>2025-12-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <!-- Cart & Wishlist -->
-  <url>
-    <loc>https://noir925.com/cart</loc>
-    <lastmod>2025-12-25</lastmod>
-    <changefreq>always</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://noir925.com/wishlist</loc>
-    <lastmod>2025-12-25</lastmod>
-    <changefreq>always</changefreq>
-    <priority>0.55</priority>
   </url>
 
 </urlset>
