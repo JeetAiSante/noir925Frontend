@@ -116,6 +116,12 @@ const Collections = () => {
             pullProgress={pullProgress}
           />
         )}
+        <SEOHead 
+          title={`${collection.name} Collection - Silver Jewellery`}
+          description={collection.description}
+          canonicalUrl={`https://noir925.com/collections/${collection.slug}`}
+          keywords={`${collection.name} silver jewellery, ${collection.name} collection, 925 sterling silver ${collection.name}`}
+        />
         <Header />
         
         <main>
