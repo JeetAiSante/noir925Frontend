@@ -220,6 +220,12 @@ const Collections = () => {
           pullProgress={pullProgress}
         />
       )}
+      <SEOHead 
+        title="Collections - Curated Silver Jewellery"
+        description="Explore NOIR925's curated collections of handcrafted 925 sterling silver jewellery. Bridal, minimalist, statement, vintage and more."
+        canonicalUrl="https://noir925.com/collections"
+        keywords="silver jewellery collections, curated silver collections, bridal silver, minimalist silver jewellery, statement silver"
+      />
       <Header />
       
       <main>
