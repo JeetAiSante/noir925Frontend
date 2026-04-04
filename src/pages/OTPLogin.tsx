@@ -10,6 +10,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
+import { SEOHead } from '@/components/seo/SEOHead';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 
