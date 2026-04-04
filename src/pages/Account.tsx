@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import AddressManager from '@/components/account/AddressManager';
+import { SEOHead } from '@/components/seo/SEOHead';
 import OrderHistory from '@/components/account/OrderHistory';
 import ProfileAvatar from '@/components/account/ProfileAvatar';
 import LoyaltyPointsCard from '@/components/account/LoyaltyPointsCard';
