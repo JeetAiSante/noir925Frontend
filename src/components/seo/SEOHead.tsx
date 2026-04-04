@@ -42,7 +42,7 @@ export const SEOHead = ({
   product,
 }: SEOHeadProps) => {
   const pageTitle = title 
-    ? `${title} | NOIR925 - Premium Silver Jewellery`
+    ? (title.includes('NOIR925') ? title : `${title} | NOIR925`)
     : defaultMeta.title;
   const pageDescription = description || defaultMeta.description;
   const pageKeywords = keywords || defaultMeta.keywords;

@@ -14,6 +14,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead title="Page Not Found" noIndex={true} />
       <Header />
       
       <main className="flex-1 flex items-center justify-center px-4 py-16 md:py-24">
