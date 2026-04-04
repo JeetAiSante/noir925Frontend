@@ -13,6 +13,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator, PullToRefreshWrapper } from '@/components/ui/pull-to-refresh';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { SEOHead } from '@/components/seo/SEOHead';
 const collectionData = [
   {
     slug: 'bridal-heritage',
