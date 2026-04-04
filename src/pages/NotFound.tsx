@@ -4,6 +4,7 @@ import { Home, ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 const NotFound = () => {
   const location = useLocation();
