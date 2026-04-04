@@ -153,8 +153,9 @@ const SearchResults = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title={query ? `Search results for "${query}" | NOIR925` : 'Search | NOIR925'}
+        title={query ? `Search results for "${query}"` : 'Search'}
         description={`Find premium silver jewellery matching "${query}". Browse our collection of handcrafted 925 sterling silver pieces.`}
+        noIndex={true}
       />
       
       <Header />
