@@ -4,6 +4,7 @@ import { Home, ArrowLeft, Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { SEOHead } from "@/components/seo/SEOHead";
 
 const NotFound = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead title="Page Not Found" noIndex={true} />
       <Header />
       
       <main className="flex-1 flex items-center justify-center px-4 py-16 md:py-24">

@@ -42,7 +42,7 @@ export const SEOHead = ({
   product,
 }: SEOHeadProps) => {
   const pageTitle = title 
-    ? `${title} | NOIR925 - Premium Silver Jewellery`
+    ? (title.includes('NOIR925') ? title : `${title} | NOIR925`)
     : defaultMeta.title;
   const pageDescription = description || defaultMeta.description;
   const pageKeywords = keywords || defaultMeta.keywords;
@@ -78,8 +78,12 @@ export const SEOHead = ({
     updateMetaTag('og:image', pageImage, true);
     updateMetaTag('og:url', pageUrl, true);
     updateMetaTag('og:type', ogType, true);
+    updateMetaTag('og:site_name', 'NOIR925', true);
+    updateMetaTag('og:locale', 'en_IN', true);
 
     // Twitter
+    updateMetaTag('twitter:card', 'summary_large_image');
+    updateMetaTag('twitter:site', '@noir925');
     updateMetaTag('twitter:title', pageTitle);
     updateMetaTag('twitter:description', pageDescription);
     updateMetaTag('twitter:image', pageImage);

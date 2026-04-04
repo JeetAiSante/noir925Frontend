@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const signUpSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -141,6 +142,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Sign In" noIndex={true} />
       <Header />
       
       <main className="container mx-auto px-4 py-20">

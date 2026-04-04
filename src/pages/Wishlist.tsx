@@ -10,6 +10,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator } from '@/components/ui/pull-to-refresh';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const Wishlist = () => {
   const { wishlistItems, removeFromWishlist, moveToCart, wishlistCount } = useCart();
@@ -50,6 +51,7 @@ const Wishlist = () => {
             pullProgress={pullProgress}
           />
         )}
+        <SEOHead title="Wishlist" noIndex={true} />
         <Header />
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto text-center">
@@ -90,6 +92,7 @@ const Wishlist = () => {
           pullProgress={pullProgress}
         />
       )}
+      <SEOHead title="Wishlist" noIndex={true} />
       <Header />
 
       <main className="container mx-auto px-4 py-6 md:py-8">

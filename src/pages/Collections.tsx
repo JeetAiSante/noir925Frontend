@@ -13,6 +13,7 @@ import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import { PullToRefreshIndicator, PullToRefreshWrapper } from '@/components/ui/pull-to-refresh';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { SEOHead } from '@/components/seo/SEOHead';
 const collectionData = [
   {
     slug: 'bridal-heritage',
@@ -115,6 +116,12 @@ const Collections = () => {
             pullProgress={pullProgress}
           />
         )}
+        <SEOHead 
+          title={`${collection.name} Collection - Silver Jewellery`}
+          description={collection.description}
+          canonicalUrl={`https://noir925.com/collections/${collection.slug}`}
+          keywords={`${collection.name} silver jewellery, ${collection.name} collection, 925 sterling silver ${collection.name}`}
+        />
         <Header />
         
         <main>
@@ -213,6 +220,12 @@ const Collections = () => {
           pullProgress={pullProgress}
         />
       )}
+      <SEOHead 
+        title="Collections - Curated Silver Jewellery"
+        description="Explore NOIR925's curated collections of handcrafted 925 sterling silver jewellery. Bridal, minimalist, statement, vintage and more."
+        canonicalUrl="https://noir925.com/collections"
+        keywords="silver jewellery collections, curated silver collections, bridal silver, minimalist silver jewellery, statement silver"
+      />
       <Header />
       
       <main>

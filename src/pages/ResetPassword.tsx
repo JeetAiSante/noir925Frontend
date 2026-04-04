@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const passwordSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
@@ -90,6 +91,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Reset Password" noIndex={true} />
       <Header />
       
       <main className="container mx-auto px-4 py-12 md:py-20">

@@ -28,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SEOHead } from "@/components/seo/SEOHead";
 import {
   Dialog,
   DialogContent,
@@ -656,6 +657,7 @@ const Checkout = () => {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead title="Checkout" noIndex={true} />
         <Header />
         <main className="container mx-auto px-4 py-16 md:py-24 text-center">
           <div className="max-w-md mx-auto">
@@ -677,6 +679,7 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Checkout" noIndex={true} />
       <Header />
       <main className="container mx-auto px-4 py-6 md:py-8">
         <button

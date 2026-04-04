@@ -10,6 +10,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
+import { SEOHead } from '@/components/seo/SEOHead';
 import Footer from '@/components/layout/Footer';
 import { useAuth } from '@/context/AuthContext';
 
@@ -158,6 +159,7 @@ const OTPLogin = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="OTP Login" noIndex={true} />
       <Header />
       
       <main className="container mx-auto px-4 py-12 md:py-20">

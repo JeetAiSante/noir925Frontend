@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { SEOHead } from '@/components/seo/SEOHead';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
@@ -89,6 +90,7 @@ const Cart = () => {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-background">
+        <SEOHead title="Shopping Cart" noIndex={true} />
         <Header />
         <main className="container mx-auto px-4 py-16 md:py-24">
           <div className="max-w-md mx-auto text-center">
@@ -117,6 +119,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Shopping Cart" noIndex={true} />
       <Header />
 
       <main className="container mx-auto px-4 py-6 md:py-8">
