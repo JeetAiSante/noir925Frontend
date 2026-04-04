@@ -92,6 +92,7 @@ const Wishlist = () => {
           pullProgress={pullProgress}
         />
       )}
+      <SEOHead title="Wishlist" noIndex={true} />
       <Header />
 
       <main className="container mx-auto px-4 py-6 md:py-8">
