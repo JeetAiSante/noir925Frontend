@@ -155,7 +155,7 @@ const Cart = () => {
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Image */}
-                <Link to={`/product/${item.id}`} className="shrink-0">
+                <Link to={`/product/${(item as any).slug || item.id}`} className="shrink-0">
                   <div className="relative overflow-hidden rounded-lg">
                     <img
                       src={item.image}
