@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -333,12 +334,12 @@ const Contact = () => {
               or reach out directly.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="/silver-care" className="px-6 py-3 bg-card border border-border rounded-full hover:border-primary transition-colors">
+              <Link to="/silver-care" className="px-6 py-3 bg-card border border-border rounded-full hover:border-primary transition-colors">
                 Silver Care Guide
-              </a>
-              <a href="/shop" className="px-6 py-3 bg-card border border-border rounded-full hover:border-primary transition-colors">
+              </Link>
+              <Link to="/shop" className="px-6 py-3 bg-card border border-border rounded-full hover:border-primary transition-colors">
                 Browse Collection
-              </a>
+              </Link>
             </div>
           </div>
         </section>

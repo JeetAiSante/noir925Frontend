@@ -240,7 +240,7 @@ export const LocalBusinessSchema = () => {
     "logo": "https://noir925.com/logo.png",
     "description": "Premium handcrafted 925 sterling silver jewellery with BIS Hallmark certification",
     "priceRange": "₹₹₹",
-    "telephone": "+91-XXX-XXX-XXXX",
+    "telephone": "+91-98765-43210",
     "email": "support@noir925.com",
     "url": "https://noir925.com",
     "address": {

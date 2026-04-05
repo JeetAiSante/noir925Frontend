@@ -20,7 +20,7 @@ export const ProductSchema = ({ product }: ProductSchemaProps) => {
     "material": product.material,
     "offers": {
       "@type": "Offer",
-      "url": `https://noir925.com/product/${product.id}`,
+      "url": `https://noir925.com/product/${product.slug || product.id}`,
       "priceCurrency": "INR",
       "price": product.price,
       "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -94,7 +94,7 @@ export const OrganizationSchema = () => {
     ],
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+91-XXX-XXX-XXXX",
+      "telephone": "+91-98765-43210",
       "contactType": "customer service",
       "availableLanguage": ["English", "Hindi"]
     },
