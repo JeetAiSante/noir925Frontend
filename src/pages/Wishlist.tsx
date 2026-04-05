@@ -160,7 +160,7 @@ const Wishlist = () => {
                   {item.category}
                 </p>
                 <Link
-                  to={`/product/${item.id}`}
+                  to={`/product/${(item as any).slug || item.id}`}
                   className="font-display text-sm md:text-base text-foreground hover:text-primary transition-colors line-clamp-1"
                 >
                   {item.name}
