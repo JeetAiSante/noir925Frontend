@@ -14,7 +14,6 @@ interface CursorState {
 }
 
 const LuxuryCursor = () => {
-  const [position, setPosition] = useState<CursorPosition>({ x: -100, y: -100 });
   const [cursorState, setCursorState] = useState<CursorState>({
     isHoveringProduct: false,
     isHoveringButton: false,
@@ -23,13 +22,16 @@ const LuxuryCursor = () => {
   });
   const [isVisible, setIsVisible] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(true);
+  const posRef = useRef<CursorPosition>({ x: -100, y: -100 });
   const trailRef = useRef<CursorPosition>({ x: -100, y: -100 });
+  const mainElRef = useRef<HTMLDivElement>(null);
+  const trailElRef = useRef<HTMLDivElement>(null);
+  const dotElRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
   const isMobile = useIsMobile();
 
-  // Detect touch/mobile devices - completely disable on mobile
+  // Detect touch/mobile devices
   useEffect(() => {
-    // Always disable on mobile
     if (isMobile) {
       setIsTouchDevice(true);
       return;
@@ -37,14 +39,10 @@ const LuxuryCursor = () => {
 
     const checkTouchDevice = () => {
       const hasTouchScreen = 'ontouchstart' in window || 
-        navigator.maxTouchPoints > 0 ||
-        // @ts-ignore
-        navigator.msMaxTouchPoints > 0;
-      
+        navigator.maxTouchPoints > 0;
       const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
       const isSmallScreen = window.innerWidth < 1024;
-      
       setIsTouchDevice(hasTouchScreen || isMobileUA || isCoarsePointer || isSmallScreen);
     };
 
@@ -58,31 +56,33 @@ const LuxuryCursor = () => {
     const isButton = target.closest('button, a, [data-cursor="button"], [role="button"]') !== null;
     const isCard = target.closest('[data-cursor="card"]') !== null;
 
-    setCursorState(prev => ({
-      ...prev,
-      isHoveringProduct: isProduct,
-      isHoveringButton: isButton && !isProduct,
-      isHoveringCard: isCard && !isProduct && !isButton,
-    }));
+    setCursorState(prev => {
+      const next = {
+        ...prev,
+        isHoveringProduct: isProduct,
+        isHoveringButton: isButton && !isProduct,
+        isHoveringCard: isCard && !isProduct && !isButton,
+      };
+      // Only update if changed
+      if (prev.isHoveringProduct === next.isHoveringProduct &&
+          prev.isHoveringButton === next.isHoveringButton &&
+          prev.isHoveringCard === next.isHoveringCard) return prev;
+      return next;
+    });
   }, []);
 
+  // Single RAF loop for both cursor and trail - no state deps
   useEffect(() => {
     if (isTouchDevice || isMobile) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
+      posRef.current = { x: e.clientX, y: e.clientY };
       updateCursorState(e.target as HTMLElement);
       setIsVisible(true);
     };
 
-    const handleMouseDown = () => {
-      setCursorState(prev => ({ ...prev, isClicking: true }));
-    };
-
-    const handleMouseUp = () => {
-      setCursorState(prev => ({ ...prev, isClicking: false }));
-    };
-
+    const handleMouseDown = () => setCursorState(prev => ({ ...prev, isClicking: true }));
+    const handleMouseUp = () => setCursorState(prev => ({ ...prev, isClicking: false }));
     const handleMouseLeave = () => setIsVisible(false);
     const handleMouseEnter = () => setIsVisible(true);
 
@@ -92,34 +92,40 @@ const LuxuryCursor = () => {
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
 
+    // Single animation loop
+    const animate = () => {
+      // Update trail position with lerp
+      trailRef.current = {
+        x: trailRef.current.x + (posRef.current.x - trailRef.current.x) * 0.2,
+        y: trailRef.current.y + (posRef.current.y - trailRef.current.y) * 0.2,
+      };
+
+      // Directly update DOM - no re-renders needed
+      const main = mainElRef.current;
+      const trail = trailElRef.current;
+      if (main) {
+        const size = main.offsetWidth;
+        main.style.transform = `translate3d(${posRef.current.x - size / 2}px, ${posRef.current.y - size / 2}px, 0)`;
+      }
+      if (trail) {
+        trail.style.transform = `translate3d(${trailRef.current.x - 6}px, ${trailRef.current.y - 6}px, 0)`;
+      }
+
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mouseleave', handleMouseLeave);
       document.removeEventListener('mouseenter', handleMouseEnter);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [isTouchDevice, isMobile, updateCursorState]);
 
-  // Optimized RAF-based trail animation
-  useEffect(() => {
-    if (isTouchDevice || isMobile) return;
-
-    const animate = () => {
-      trailRef.current = {
-        x: trailRef.current.x + (position.x - trailRef.current.x) * 0.25,
-        y: trailRef.current.y + (position.y - trailRef.current.y) * 0.25,
-      };
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [position, isTouchDevice, isMobile]);
-
-  // Don't render on touch/mobile devices
   if (isTouchDevice || isMobile) return null;
 
   const getCursorSize = () => {
@@ -154,8 +160,9 @@ const LuxuryCursor = () => {
         }
       `}</style>
 
-      {/* Main cursor - GPU accelerated */}
+      {/* Main cursor - GPU accelerated, positioned via RAF */}
       <div
+        ref={mainElRef}
         style={{
           position: 'fixed',
           left: 0,
@@ -167,14 +174,13 @@ const LuxuryCursor = () => {
           borderRadius: '50%',
           pointerEvents: 'none',
           zIndex: 9999,
-          transform: `translate3d(${position.x - size / 2}px, ${position.y - size / 2}px, 0)`,
           transition: 'width 0.15s, height 0.15s, background-color 0.15s, border-color 0.15s',
           opacity: isVisible ? 1 : 0,
           willChange: 'transform',
         }}
       >
-        {/* Inner dot */}
         <div
+          ref={dotElRef}
           style={{
             position: 'absolute',
             top: '50%',
@@ -189,8 +195,9 @@ const LuxuryCursor = () => {
         />
       </div>
 
-      {/* Trail cursor - follows with delay */}
+      {/* Trail cursor - follows with delay via RAF */}
       <div
+        ref={trailElRef}
         style={{
           position: 'fixed',
           left: 0,
@@ -201,7 +208,6 @@ const LuxuryCursor = () => {
           borderRadius: '50%',
           pointerEvents: 'none',
           zIndex: 9998,
-          transform: `translate3d(${trailRef.current.x - 6}px, ${trailRef.current.y - 6}px, 0)`,
           opacity: isVisible ? 0.6 : 0,
           willChange: 'transform',
         }}
