@@ -148,10 +148,7 @@ const Index = memo(() => {
           canonicalUrl="https://noir925.com"
           ogType="website"
         />
-        <OrganizationSchema />
-        <WebsiteSchema />
-        <FAQSchema />
-        <LocalBusinessSchema />
+        {/* Organization, WebSite, JewelryStore schemas are in index.html to avoid duplicates */}
         
         <Header />
         
