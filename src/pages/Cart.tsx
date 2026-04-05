@@ -155,7 +155,7 @@ const Cart = () => {
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Image */}
-                <Link to={`/product/${item.id}`} className="shrink-0">
+                <Link to={`/product/${(item as any).slug || item.id}`} className="shrink-0">
                   <div className="relative overflow-hidden rounded-lg">
                     <img
                       src={item.image}
@@ -171,7 +171,7 @@ const Cart = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
                       <Link
-                        to={`/product/${item.id}`}
+                        to={`/product/${(item as any).slug || item.id}`}
                         className="font-display text-base md:text-lg text-foreground hover:text-primary transition-colors line-clamp-1"
                       >
                         {item.name}

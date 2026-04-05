@@ -127,7 +127,7 @@ const Wishlist = () => {
               style={{ animationDelay: `${index * 50}ms` }}
             >
               {/* Image */}
-              <Link to={`/product/${item.id}`} className="block">
+              <Link to={`/product/${(item as any).slug || item.id}`} className="block">
                 <div className="relative aspect-square overflow-hidden">
                   <img
                     src={item.image}
@@ -160,7 +160,7 @@ const Wishlist = () => {
                   {item.category}
                 </p>
                 <Link
-                  to={`/product/${item.id}`}
+                  to={`/product/${(item as any).slug || item.id}`}
                   className="font-display text-sm md:text-base text-foreground hover:text-primary transition-colors line-clamp-1"
                 >
                   {item.name}
