@@ -1,4 +1,5 @@
 import { memo, lazy, Suspense } from 'react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useHomepageSections } from '@/hooks/useHomepageSections';

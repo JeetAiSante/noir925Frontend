@@ -45,7 +45,7 @@ const CountdownBanner = () => {
         .eq('position', 'banner')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (!error && data) {
         // Type assertion for new columns that may not be in generated types yet

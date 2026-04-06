@@ -251,7 +251,9 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[340px] p-0 overflow-hidden bg-gradient-to-b from-card to-background border-primary/30 rounded-2xl">
+        <DialogContent className="sm:max-w-[340px] p-0 overflow-hidden bg-gradient-to-b from-card to-background border-primary/30 rounded-2xl" aria-describedby="spin-wheel-desc">
+        <VisuallyHidden><DialogTitle>Spin & Win</DialogTitle></VisuallyHidden>
+        <VisuallyHidden><DialogDescription id="spin-wheel-desc">Spin the wheel to win exclusive discounts.</DialogDescription></VisuallyHidden>
         {/* Header */}
         <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-2">

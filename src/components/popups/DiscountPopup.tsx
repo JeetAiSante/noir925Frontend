@@ -32,7 +32,9 @@ const DiscountPopup = ({ open, onOpenChange }: DiscountPopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs sm:max-w-sm p-0 gap-0 overflow-hidden bg-card border-primary/10 shadow-luxury">
+      <DialogContent className="max-w-xs sm:max-w-sm p-0 gap-0 overflow-hidden bg-card border-primary/10 shadow-luxury" aria-describedby="discount-popup-desc">
+        <VisuallyHidden><DialogTitle>Exclusive Discount Offer</DialogTitle></VisuallyHidden>
+        <VisuallyHidden><DialogDescription id="discount-popup-desc">Get 15% off your first order by subscribing to our newsletter.</DialogDescription></VisuallyHidden>
         {/* Close Button */}
         <button
           onClick={() => onOpenChange(false)}
