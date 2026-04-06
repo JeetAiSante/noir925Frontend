@@ -180,8 +180,6 @@ const Index = () => {
       </div>
     </FirstTimePopup>
   );
-});
-
-Index.displayName = 'Index';
+};
 
 export default Index;
