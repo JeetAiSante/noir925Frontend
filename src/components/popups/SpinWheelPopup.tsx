@@ -240,7 +240,9 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[340px] p-6 flex items-center justify-center">
+        <DialogContent className="sm:max-w-[340px] p-6 flex items-center justify-center" aria-describedby="spin-loading-desc">
+          <VisuallyHidden><DialogTitle>Spin & Win</DialogTitle></VisuallyHidden>
+          <VisuallyHidden><DialogDescription id="spin-loading-desc">Loading spin wheel prizes.</DialogDescription></VisuallyHidden>
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </DialogContent>
       </Dialog>
