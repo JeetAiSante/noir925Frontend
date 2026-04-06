@@ -1,4 +1,5 @@
 import { memo, lazy, Suspense } from 'react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useHomepageSections } from '@/hooks/useHomepageSections';
@@ -117,7 +118,7 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   final_cta: FinalCTA,
 };
 
-const Index = memo(() => {
+const Index = () => {
   const { sections, loading, isSectionVisible } = useHomepageSections();
   
   // Enable sold products automation - auto marks products sold and removes after 7 days
@@ -180,8 +181,6 @@ const Index = memo(() => {
       </div>
     </FirstTimePopup>
   );
-});
-
-Index.displayName = 'Index';
+};
 
 export default Index;

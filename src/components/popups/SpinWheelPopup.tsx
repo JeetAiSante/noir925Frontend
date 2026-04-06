@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Sparkles, Copy, Check, LogIn } from 'lucide-react';
@@ -239,7 +240,9 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[340px] p-6 flex items-center justify-center">
+        <DialogContent className="sm:max-w-[340px] p-6 flex items-center justify-center" aria-describedby="spin-loading-desc">
+          <VisuallyHidden><DialogTitle>Spin & Win</DialogTitle></VisuallyHidden>
+          <VisuallyHidden><DialogDescription id="spin-loading-desc">Loading spin wheel prizes.</DialogDescription></VisuallyHidden>
           <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </DialogContent>
       </Dialog>
@@ -248,7 +251,9 @@ const SpinWheelPopup = ({ open, onOpenChange }: SpinWheelPopupProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[340px] p-0 overflow-hidden bg-gradient-to-b from-card to-background border-primary/30 rounded-2xl">
+        <DialogContent className="sm:max-w-[340px] p-0 overflow-hidden bg-gradient-to-b from-card to-background border-primary/30 rounded-2xl" aria-describedby="spin-wheel-desc">
+        <VisuallyHidden><DialogTitle>Spin & Win</DialogTitle></VisuallyHidden>
+        <VisuallyHidden><DialogDescription id="spin-wheel-desc">Spin the wheel to win exclusive discounts.</DialogDescription></VisuallyHidden>
         {/* Header */}
         <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 px-4 py-3 text-center">
           <div className="flex items-center justify-center gap-2">
