@@ -117,6 +117,7 @@ const App = memo(() => (
               <Suspense fallback={null}>
               <LuxuryCursor />
               <InstallPWAPrompt />
+              <OfflineBanner />
             </Suspense>
             <Toaster />
             <Sonner />
