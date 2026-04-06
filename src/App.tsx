@@ -82,6 +82,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 // Performance-optimized cursor - lazy load as non-critical
 const LuxuryCursor = lazy(() => import("@/components/LuxuryCursor"));
 const InstallPWAPrompt = lazy(() => import("@/components/pwa/InstallPWAPrompt"));
+const OfflineBanner = lazy(() => import("@/components/pwa/OfflineBanner"));
 const ScrollToTop = lazy(() => import("@/components/ScrollToTop"));
 
 // Optimized QueryClient with caching and stale time
