@@ -117,7 +117,7 @@ const sectionComponents: Record<string, React.LazyExoticComponent<React.Componen
   final_cta: FinalCTA,
 };
 
-const Index = memo(() => {
+const Index = () => {
   const { sections, loading, isSectionVisible } = useHomepageSections();
   
   // Enable sold products automation - auto marks products sold and removes after 7 days
