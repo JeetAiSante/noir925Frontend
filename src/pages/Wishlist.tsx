@@ -155,22 +155,22 @@ const Wishlist = () => {
               )}
 
               {/* Info */}
-              <div className="p-3 md:p-4">
-                <p className="font-body text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-1">
+              <div className="p-2.5 sm:p-3 md:p-4 space-y-1.5">
+                <p className="font-body text-[9px] sm:text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">
                   {item.category}
                 </p>
                 <Link
                   to={`/product/${(item as any).slug || item.id}`}
-                  className="font-display text-sm md:text-base text-foreground hover:text-primary transition-colors line-clamp-1"
+                  className="block font-display text-xs sm:text-sm md:text-base text-foreground hover:text-primary transition-colors line-clamp-1 leading-tight"
                 >
                   {item.name}
                 </Link>
-                <div className="flex items-center gap-2 mt-2 mb-3">
-                  <span className="font-display font-semibold text-foreground text-sm md:text-base">
+                <div className="flex items-baseline gap-1.5 sm:gap-2">
+                  <span className="font-display font-semibold text-foreground text-sm sm:text-base">
                     {formatPrice(item.price)}
                   </span>
                   {item.originalPrice && (
-                    <span className="font-body text-xs text-muted-foreground line-through">
+                    <span className="font-body text-[10px] sm:text-xs text-muted-foreground line-through">
                       {formatPrice(item.originalPrice)}
                     </span>
                   )}
@@ -178,12 +178,11 @@ const Wishlist = () => {
                 <Button
                   variant="luxury"
                   size="sm"
-                  className="w-full text-xs md:text-sm group/btn"
+                  className="w-full h-8 sm:h-9 text-[10px] sm:text-xs md:text-sm group/btn mt-1"
                   onClick={() => moveToCart(item)}
                 >
-                  <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
-                  Move to Cart
-                  <Sparkles className="w-3 h-3 ml-1.5 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                  <ShoppingBag className="w-3.5 h-3.5 mr-1" />
+                  <span className="uppercase tracking-wide">Move to Cart</span>
                 </Button>
               </div>
             </div>

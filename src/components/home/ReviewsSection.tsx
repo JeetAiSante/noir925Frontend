@@ -124,18 +124,18 @@ const ReviewsSection = () => {
         </div>
 
         {/* Trust Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16 pt-12 border-t border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 mt-10 sm:mt-12 md:mt-16 pt-8 sm:pt-10 md:pt-12 border-t border-border">
           {[
-            { number: '50K+', label: 'Happy Customers' },
-            { number: '4.9', label: 'Average Rating' },
+            { number: '50,000+', label: 'Happy Customers' },
+            { number: '4.9/5', label: 'Average Rating' },
             { number: '99%', label: 'Satisfaction Rate' },
-            { number: '15K+', label: '5-Star Reviews' },
+            { number: '15,000+', label: '5-Star Reviews' },
           ].map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="font-display text-4xl md:text-5xl text-primary mb-2">
+            <div key={stat.label} className="text-center p-3 sm:p-4 rounded-xl bg-card/50 border border-border/30">
+              <p className="font-display text-2xl sm:text-3xl md:text-4xl text-primary mb-1">
                 {stat.number}
               </p>
-              <p className="font-body text-muted-foreground">{stat.label}</p>
+              <p className="font-body text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
             </div>
           ))}
         </div>

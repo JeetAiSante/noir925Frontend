@@ -307,16 +307,16 @@ const PremiumReviewsSection = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mt-12 md:mt-16 max-w-4xl mx-auto">
           {stats.map((stat, index) => (
             <div 
               key={index}
-              className="text-center p-6 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary/30 transition-colors group"
+              className="text-center p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl bg-card/50 backdrop-blur-sm border border-border/30 hover:border-primary/30 transition-colors group"
             >
-              <p className="font-display text-3xl md:text-4xl text-primary group-hover:scale-105 transition-transform">
+              <p className="font-display text-2xl sm:text-3xl md:text-4xl text-primary group-hover:scale-105 transition-transform">
                 {stat.value}
               </p>
-              <p className="font-body text-sm text-muted-foreground mt-2">
+              <p className="font-body text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">
                 {stat.label}
               </p>
             </div>

@@ -200,14 +200,14 @@ const Shop = () => {
 
         <div className="container mx-auto px-4">
           {/* Quick Filters - Sticky Pills */}
-          <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md py-3 -mx-4 px-4 md:px-6 lg:px-8 mb-4 border-b border-border/50">
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-md py-2.5 sm:py-3 -mx-4 px-4 md:px-6 lg:px-8 mb-4 border-b border-border/50">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => {
                   setPriceRange([0, 999]);
                   setSortBy('featured');
                 }}
-                className="shrink-0 px-4 py-2 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground text-sm font-medium transition-all border border-secondary/20 shadow-sm"
+                className="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-secondary/80 hover:bg-secondary text-secondary-foreground text-xs sm:text-sm font-medium transition-all border border-secondary/20 shadow-sm whitespace-nowrap"
               >
                 Under {formatPrice(999)}
               </button>
@@ -216,7 +216,7 @@ const Shop = () => {
                   setSortBy('rating');
                   setSelectedCategory(null);
                 }}
-                className="shrink-0 px-4 py-2 rounded-full bg-accent/80 hover:bg-accent text-accent-foreground text-sm font-medium transition-all border border-accent/20 shadow-sm"
+                className="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-accent/80 hover:bg-accent text-accent-foreground text-xs sm:text-sm font-medium transition-all border border-accent/20 shadow-sm whitespace-nowrap"
               >
                 Best Sellers
               </button>
@@ -225,7 +225,7 @@ const Shop = () => {
                   setSortBy('newest');
                   setSelectedCategory(null);
                 }}
-                className="shrink-0 px-4 py-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-all border border-primary/20"
+                className="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-xs sm:text-sm font-medium transition-all border border-primary/20 whitespace-nowrap"
               >
                 New Arrivals
               </button>
@@ -233,9 +233,8 @@ const Shop = () => {
                 onClick={() => {
                   setSelectedCategory(null);
                   setSortBy('featured');
-                  // Filter will show on-sale items from the filtered products
                 }}
-                className="shrink-0 px-4 py-2 rounded-full bg-gradient-to-r from-rose-500/10 to-pink-500/10 hover:from-rose-500/20 hover:to-pink-500/20 text-foreground text-sm font-medium transition-all border border-rose-500/20"
+                className="shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-rose-500/10 to-pink-500/10 hover:from-rose-500/20 hover:to-pink-500/20 text-foreground text-xs sm:text-sm font-medium transition-all border border-rose-500/20 whitespace-nowrap"
               >
                 On Sale
               </button>
