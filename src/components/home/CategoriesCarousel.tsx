@@ -83,11 +83,11 @@ const CategoriesCarousel = () => {
         </div>
 
         {/* Mobile scroll indicator */}
-        <div className="flex justify-center gap-1 mt-6 md:hidden">
+        <div className="flex items-center justify-center gap-1.5 mt-4 md:hidden">
           {categories.slice(0, 5).map((_, index) => (
             <div
               key={index}
-              className="w-2 h-2 rounded-full bg-border"
+              className="w-1.5 h-1.5 rounded-full bg-border"
             />
           ))}
         </div>

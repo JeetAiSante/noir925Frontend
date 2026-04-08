@@ -186,10 +186,10 @@ const Account = () => {
               {/* Profile Tab */}
               <TabsContent value="profile">
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
+                  <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <CardTitle>Profile Information</CardTitle>
-                      <CardDescription>Manage your personal details</CardDescription>
+                      <CardTitle className="text-lg sm:text-xl">Profile Information</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm">Manage your personal details</CardDescription>
                     </div>
                     <Button
                       variant={isEditing ? 'default' : 'outline'}

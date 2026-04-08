@@ -176,39 +176,39 @@ const ProductCard = ({ product, className = '', isLoading }: ProductCardProps) =
             {/* Wishlist button - always visible on mobile, hover on desktop */}
             <button
               onClick={handleWishlistClick}
-              className={`absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${
+              className={`absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 z-20 ${
                 inWishlist
                   ? 'bg-secondary text-secondary-foreground scale-100'
                   : `bg-background/90 backdrop-blur-sm text-foreground hover:bg-secondary hover:text-secondary-foreground ${showActions ? 'opacity-100 scale-100' : 'md:opacity-0 opacity-100 scale-100 md:scale-90'}`
               }`}
               aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${inWishlist ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 ${inWishlist ? 'fill-current' : ''}`} />
             </button>
 
             {/* Quick actions - always visible on mobile, hover on desktop */}
             <div
-              className={`absolute bottom-1.5 left-1.5 right-8 sm:bottom-2 sm:left-2 sm:right-10 md:right-12 flex gap-1 sm:gap-1.5 transition-all duration-300 z-10 ${
+              className={`absolute bottom-1.5 left-1.5 right-9 sm:bottom-2 sm:left-2 sm:right-11 md:right-12 flex items-center gap-1.5 sm:gap-2 transition-all duration-300 z-10 ${
                 showActions ? 'opacity-100 translate-y-0' : 'md:opacity-0 md:translate-y-4 opacity-100 translate-y-0'
               }`}
             >
               <Button
                 variant="glass"
                 size="sm"
-                className="flex-1 h-7 sm:h-8 md:h-9 text-[10px] sm:text-xs md:text-sm px-2 sm:px-3 md:px-4 min-w-0 rounded-md"
+                className="flex-1 h-8 sm:h-9 md:h-9 text-[11px] sm:text-xs md:text-sm px-2.5 sm:px-3 md:px-4 min-w-0 rounded-lg"
                 onClick={handleAddToCart}
               >
-                <ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 shrink-0" />
-                <span className="ml-0.5 sm:ml-1 truncate">Add</span>
+                <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span className="ml-1 truncate">Add to Cart</span>
               </Button>
               <Button 
                 variant="glass" 
                 size="icon" 
-                className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 rounded-md"
+                className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 md:h-9 md:w-9 rounded-lg"
                 onClick={handleQuickView}
                 title="Quick View"
               >
-                <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
+                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </Button>
             </div>
 
